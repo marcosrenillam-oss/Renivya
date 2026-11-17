@@ -1,0 +1,27 @@
+{
+  "name": "Source",
+  "type": "object",
+  "description": "Fuente de información de RENIVYA (medio, agencia, medio oficial, feed RSS). Catálogo reutilizable de salida.",
+  "properties": {
+    "name": { "type": "string", "description": "Nombre de la fuente" },
+    "url": { "type": "string", "description": "URL oficial de la fuente" },
+    "feed_url": { "type": "string", "description": "URL de ingesta (RSS/API) si aplica" },
+    "country": { "type": "string", "description": "País de origen (ISO)" },
+    "language": { "type": "string", "description": "Idioma principal (código ISO-639-1)" },
+    "type": { "type": "string", "enum": ["agency", "newspaper", "broadcast", "official", "data"], "description": "Tipo de fuente" },
+    "reliability": { "type": "number", "description": "Fiabilidad canónica 0-100" },
+    "reliability_score": { "type": "number", "description": "Fiabilidad 0-100 (alias legacy)" },
+    "bias_profile": { "type": "string", "description": "Perfil de sesgo editorial (opcional, futuro). Marca 'reliability:provisional' cuando aún no hay metodología sólida." },
+    "category": { "type": "string", "description": "Categoría principal de la fuente" },
+    "is_active": { "type": "boolean", "default": true, "description": "Fuente activa en la ingesta" },
+    "last_fetched_at": { "type": "string", "format": "date-time", "description": "Última consulta del feed (rate limiting)" },
+    "is_demo": { "type": "boolean", "default": true }
+  },
+  "required": ["name"],
+  // Añadido en la reconstrucción: lectura abierta, escritura solo admin.
+  "rls": {
+    "create": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}

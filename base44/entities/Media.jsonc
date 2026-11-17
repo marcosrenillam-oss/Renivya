@@ -1,0 +1,30 @@
+{
+  "name": "Media",
+  "type": "object",
+  "description": "Media (imágenes, vídeo) asociado a Stories y NewsItems con procedencia completa. Una imagen NUNCA se atribuye a RENIVYA sin saber de dónde procede. Deduplicada por URL canónica exacta (no fuzzy matching).",
+  "properties": {
+    "url": { "type": "string", "description": "URL canónica del recurso (clave de deduplicación)" },
+    "type": { "type": "string", "enum": ["image", "video", "audio"], "default": "image", "description": "Tipo de media" },
+    "story_id": { "type": "string", "description": "Story a la que pertenece (null si solo asociada a NewsItem)" },
+    "news_item_id": { "type": "string", "description": "NewsItem del que proviene" },
+    "source_id": { "type": "string", "description": "Referencia al catálogo Source (opcional)" },
+    "source_name": { "type": "string", "description": "Nombre de la fuente (denormalizado)" },
+    "source_article_url": { "type": "string", "description": "URL del artículo original donde apareció la imagen" },
+    "author": { "type": "string", "description": "Autor/fotógrafo cuando está disponible (null si desconocido — nunca inventar)" },
+    "credit": { "type": "string", "description": "Crédito editorial (null si no disponible)" },
+    "license": { "type": "string", "description": "Licencia cuando está disponible (null si desconocida — nunca inventar free/CC)" },
+    "alt_text": { "type": "string", "description": "Texto alternativo para accesibilidad (null si no disponible)" },
+    "caption": { "type": "string", "description": "Caption/descripción de la imagen (null si no disponible)" },
+    "published_at": { "type": "string", "format": "date-time", "description": "Fecha de publicación del artículo que contenía la imagen" },
+    "is_primary": { "type": "boolean", "default": false, "description": "Imagen principal de la Story (selección determinista)" },
+    "status": { "type": "string", "enum": ["active", "unavailable", "rejected"], "default": "active", "description": "active=disponible, unavailable=rota/inaccesible, rejected=atribución incorrecta" },
+    "is_demo": { "type": "boolean", "default": false }
+  },
+  "required": ["url"],
+  // Añadido en la reconstrucción: lectura abierta, escritura solo admin.
+  "rls": {
+    "create": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}

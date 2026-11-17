@@ -1,0 +1,37 @@
+{
+  "name": "NewsItem",
+  "type": "object",
+  "description": "Artículo crudo ingerido por un NewsProvider antes/después de ser normalizado, clusterizado y convertido en Story. Capa de ingesta/auditoría del cerebro de RENIVYA.",
+  "properties": {
+    "provider": { "type": "string", "description": "Proveedor que entregó el artículo (ej. MockNewsProvider)" },
+    "source_name": { "type": "string" },
+    "url": { "type": "string", "description": "URL del artículo original" },
+    "title": { "type": "string" },
+    "description": { "type": "string" },
+    "content": { "type": "string", "description": "Contenido crudo recibido" },
+    "author": { "type": "string" },
+    "image_url": { "type": "string", "description": "URL de la imagen original del feed (enclosure/media:content/media:thumbnail)." },
+    "published_at": { "type": "string", "format": "date-time" },
+    "retrieved_at": { "type": "string", "format": "date-time" },
+    "language": { "type": "string" },
+    "country": { "type": "string" },
+    "cleaned_content": { "type": "string", "description": "Contenido tras limpieza/normalización" },
+    "normalized_language": { "type": "string", "description": "Idioma detectado/normalizado" },
+    "detected_country": { "type": "string" },
+    "semantic_signature": { "type": "string", "description": "Representación semántica para comparación/clustering" },
+    "detected_entities": { "type": "array", "items": { "type": "string" } },
+    "status": { "type": "string", "enum": ["pending", "normalized", "clustered", "created", "ignored"], "default": "pending" },
+    "duplicate_group_id": { "type": "string" },
+    "story_id": { "type": "string", "description": "Story resultante del clustering" },
+    "processed_at": { "type": "string", "format": "date-time" },
+    "error": { "type": "string", "description": "Error de procesamiento si lo hubo" },
+    "is_demo": { "type": "boolean", "default": false }
+  },
+  "required": ["title"],
+  // Añadido en la reconstrucción: solo admin (el motor usa asServiceRole).
+  "rls": {
+    "create": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}

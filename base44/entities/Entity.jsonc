@@ -1,0 +1,27 @@
+{
+  "name": "Entity",
+  "type": "object",
+  "description": "Entidades extraídas de las noticias (personas, organizaciones, países, ciudades, equipos, empresas, gobiernos, instituciones). Reutilizable: una misma Entity aparece en muchas Stories sin duplicarse.",
+  "properties": {
+    "name": { "type": "string", "description": "Nombre canónico de la entidad (formato display)" },
+    "normalized_name": { "type": "string", "description": "Forma normalizada para comparación (lowercase, sin puntuación, espacios colapsados)" },
+    "type": { "type": "string", "enum": ["person", "organization", "country", "city", "location", "sports_team", "sports_event", "political_party", "company", "government", "institution", "other"], "description": "Tipo de entidad" },
+    "description": { "type": "string", "description": "Descripción breve (opcional, no inventar)" },
+    "country_code": { "type": "string", "description": "Código ISO del país asociado cuando aplica (ej. ES, FR, US)" },
+    "aliases": { "type": "array", "items": { "type": "string" }, "description": "Nombres alternativos reconocidos (incluye variantes multilingües)" },
+    "image_url": { "type": "string", "description": "URL de imagen (opcional, futuro bloque de media)" },
+    "external_id": { "type": "string", "description": "ID externo (ej. Wikidata Q-ID, opcional, no inventar)" },
+    "external_source": { "type": "string", "description": "Fuente del external_id (ej. wikidata, opcional)" },
+    "category": { "type": "string", "description": "Categoría habitual relacionada (opcional)" },
+    "country": { "type": "string", "description": "País asociado cuando aplica (ISO) — alias legacy de country_code" },
+    "wikidata_id": { "type": "string", "description": "Identificador Wikidata (alias legacy de external_id)" },
+    "is_demo": { "type": "boolean", "default": false }
+  },
+  "required": ["name", "type"],
+  // Añadido en la reconstrucción: lectura abierta, escritura solo admin.
+  "rls": {
+    "create": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}

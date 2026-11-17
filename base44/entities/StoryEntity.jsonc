@@ -1,0 +1,22 @@
+{
+  "name": "StoryEntity",
+  "type": "object",
+  "description": "Relación entre una Story y una Entity. Indica el rol de la entidad en la historia y la confianza de la asociación. NO es Story.confidence. Idempotente: (story_id, entity_id) no debe duplicarse.",
+  "properties": {
+    "story_id": { "type": "string", "description": "Story a la que pertenece" },
+    "entity_id": { "type": "string", "description": "Entity relacionada" },
+    "entity_name": { "type": "string", "description": "Nombre denormalizado de la entidad (para display sin join)" },
+    "entity_type": { "type": "string", "description": "Tipo denormalizado (para display sin join)" },
+    "role": { "type": "string", "enum": ["subject", "mentioned", "location", "source", "affected", "organization", "person", "other"], "default": "mentioned", "description": "Papel de la entidad en la historia" },
+    "confidence": { "type": "number", "description": "Confianza de la asociación Story↔Entity (0-100). NO es Story.confidence." },
+    "first_seen_version": { "type": "number", "description": "Versión de la Story en la que la entidad apareció por primera vez" },
+    "is_demo": { "type": "boolean", "default": false }
+  },
+  "required": ["story_id", "entity_id"],
+  // Añadido en la reconstrucción: lectura abierta, escritura solo admin.
+  "rls": {
+    "create": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}

@@ -1,0 +1,176 @@
+{
+  "name": "Story",
+  "type": "object",
+  "description": "Unidad central de RENIVYA: una historia construida al agrupar y contrastar varias fuentes que cubren el mismo acontecimiento. Es un objeto vivo: evoluciona, se corrige, se resuelve y se archiva.",
+  "properties": {
+    "title": { "type": "string", "description": "Titular editorial propio de la historia" },
+    "summary": { "type": "string", "description": "Entradilla periodística (qué ha ocurrido y por qué importa)" },
+    "body": { "type": "array", "items": { "type": "string" }, "description": "Cuerpo de la noticia: 2-6 párrafos periodísticos adaptados a la complejidad" },
+    "key_points": { "type": "array", "items": { "type": "string" }, "description": "Lo más importante: 3-5 puntos clave" },
+    "why_it_matters": { "type": "string", "description": "Análisis editorial: impacto, consecuencias, a quién afecta, próximos pasos (sin opinión)" },
+    "known_facts": {
+      "type": "array",
+      "description": "Hechos con su grado de verificación y fuentes que los respaldan (trazabilidad)",
+      "items": {
+        "type": "object",
+        "properties": {
+          "text": { "type": "string" },
+          "type": { "type": "string", "enum": ["fact", "interpretation"], "description": "Compatibilidad UI" },
+          "status": { "type": "string", "enum": ["confirmed", "reported", "unconfirmed", "context"], "description": "CONFIRMED / REPORTED / UNCONFIRMED / ANALYTICAL CONTEXT" },
+          "sources": { "type": "array", "items": { "type": "object", "properties": { "name": { "type": "string" }, "url": { "type": "string" } } } }
+        }
+      }
+    },
+    "timeline": {
+      "type": "array",
+      "description": "Cronología (solo cuando hay suficientes acontecimientos; si no, vacío)",
+      "items": { "type": "object", "properties": { "date": { "type": "string" }, "event": { "type": "string" } } }
+    },
+    "contrast": {
+      "type": "object",
+      "description": "Contraste entre fuentes",
+      "properties": {
+        "coincidencias": { "type": "array", "items": { "type": "string" } },
+        "diferencias": { "type": "array", "items": { "type": "string" } },
+        "ausencias": { "type": "array", "items": { "type": "string" }, "description": "Información importante que solo aparece en una fuente" },
+        "unconfirmed": { "type": "array", "items": { "type": "string" } },
+        "primary_source": { "type": "object", "properties": { "found": { "type": "boolean" }, "description": { "type": "string" } } }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "description": "Trazabilidad: qué fuente respalda cada parte del contenido (body, key_points, known_facts)",
+      "properties": {
+        "body": { "type": "array", "items": { "type": "array", "items": { "type": "object", "properties": { "name": { "type": "string" }, "url": { "type": "string" } } } } },
+        "key_points": { "type": "array", "items": { "type": "array", "items": { "type": "object", "properties": { "name": { "type": "string" }, "url": { "type": "string" } } } } },
+        "known_facts": { "type": "array", "items": { "type": "array", "items": { "type": "object", "properties": { "name": { "type": "string" }, "url": { "type": "string" } } } } }
+      }
+    },
+    "insufficient_info": { "type": "boolean", "default": false, "description": "Información insuficiente: el cerebro declara PENDING en lugar de inventar" },
+    "editorial_locale": { "type": "string", "default": "es", "description": "Idioma de la pieza editorial generada" },
+    "translations": {
+      "type": "object",
+      "description": "Traducciones indexadas por idioma. Nunca sobrescriben el original (editorial_locale).",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "headline": { "type": "string" },
+          "summary": { "type": "string" },
+          "body": { "type": "array", "items": { "type": "string" } },
+          "key_points": { "type": "array", "items": { "type": "string" } },
+          "why_it_matters": { "type": "string" },
+          "context": { "type": "string" },
+          "timeline": { "type": "array", "items": { "type": "object", "properties": { "date": { "type": "string" }, "event": { "type": "string" } } } },
+          "keywords": { "type": "array", "items": { "type": "string" } },
+          "assessment": { "type": "object" },
+          "contrast": { "type": "object" },
+          "translated_at": { "type": "string", "format": "date-time" },
+          "source_locale": { "type": "string" },
+          "status": { "type": "string", "enum": ["pending", "ready", "rejected"] }
+        }
+      }
+    },
+    "category": {
+      "type": "string",
+      "enum": ["world", "politics", "economy", "business", "technology", "artificial_intelligence", "science", "sports", "football", "culture", "entertainment", "health", "environment", "travel", "society"]
+    },
+    "subcategory": { "type": "string" },
+    "renivya_score": { "type": "number", "description": "SCORE global de relevancia (0-100). Alias de 'score'." },
+    "score": { "type": "number", "description": "SCORE global de relevancia (0-100). Importancia, no solidez." },
+    "importance": { "type": "number", "description": "Importancia estimada 0-100" },
+    "breaking_score": { "type": "number", "description": "Puntuación de breaking (urgencia+impacto+alcance)" },
+    "breaking_detected_at": { "type": "string", "format": "date-time" },
+    "is_breaking": { "type": "boolean", "default": false, "description": "Reservado a acontecimientos urgentes y relevantes" },
+    "is_featured": { "type": "boolean", "default": false },
+    "source_count": { "type": "number" },
+    "countries": { "type": "array", "items": { "type": "string" } },
+    "languages": { "type": "array", "items": { "type": "string" } },
+    "confidence_level": { "type": "string", "enum": ["confirmed", "unconfirmed", "developing"] },
+    "confidence_status": { "type": "string", "enum": ["confirmed", "high", "medium", "low", "pending"], "description": "Estado fino de confianza" },
+    "confidence": { "type": "number", "description": "Confianza 0-100 (solidez, distinta del SCORE)" },
+    "independent_sources": { "type": "number", "description": "Fuentes realmente independientes (excluye cables duplicados y misma fuente)" },
+    "agreement_ratio": { "type": "number", "description": "Porcentaje de coincidencia entre fuentes (0-100, null si no hay contraste)" },
+    "contradiction_flags": { "type": "array", "items": { "type": "string" }, "description": "Etiquetas de contradicción/diferencia factual detectadas entre fuentes" },
+    "confidence_breakdown": {
+      "type": "object",
+      "description": "Desglose explicable de la confidence. Métricas deterministas, no LLM.",
+      "properties": {
+        "total_sources": { "type": "number" },
+        "independent_sources": { "type": "number" },
+        "languages": { "type": "array", "items": { "type": "string" } },
+        "agreement_ratio": { "type": "number" },
+        "contradiction_count": { "type": "number" },
+        "minor_discrepancies": { "type": "number" },
+        "major_contradictions": { "type": "number" },
+        "confirmed_facts": { "type": "number" },
+        "reported_facts": { "type": "number" },
+        "unconfirmed_facts": { "type": "number" },
+        "disputed_facts": { "type": "number" },
+        "corrected_facts": { "type": "number" },
+        "recency_hours": { "type": "number" },
+        "primary_source_present": { "type": "boolean" },
+        "last_evidence_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "score_breakdown": {
+      "type": "object",
+      "description": "Desglose explicable del RENIVYA SCORE. Independiente de confidence.",
+      "properties": {
+        "impact": { "type": "number" },
+        "reach": { "type": "number" },
+        "international": { "type": "number" },
+        "development_potential": { "type": "number" },
+        "audience_relevance": { "type": "number" },
+        "magnitude": { "type": "number" },
+        "recency": { "type": "number" },
+        "confidence_context": { "type": "number", "description": "Contexto de confidence (5%, no dominante)" },
+        "final_score": { "type": "number" }
+      }
+    },
+    "keywords": { "type": "array", "items": { "type": "string" } },
+    "context": { "type": "string", "description": "Contexto: qué se necesita saber para entender por qué importa" },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "country": { "type": "string" },
+          "language": { "type": "string" },
+          "url": { "type": "string" },
+          "reliability": { "type": "number" },
+          "stance": { "type": "string" },
+          "published_at": { "type": "string", "format": "date-time" }
+        }
+      }
+    },
+    "entities": { "type": "array", "items": { "type": "string" } },
+    "related_stories": { "type": "array", "items": { "type": "string" } },
+    "duplicate_group_id": { "type": "string" },
+    "version": { "type": "number", "default": 1 },
+    "status": { "type": "string", "enum": ["developing", "active", "updated", "resolved", "archived"], "default": "active" },
+    "published_at": { "type": "string", "format": "date-time" },
+    "first_detected_at": { "type": "string", "format": "date-time" },
+    "image_url": { "type": "string" },
+    "trend": { "type": "string", "enum": ["rising", "stable", "declining"] },
+    "has_corrections": { "type": "boolean", "default": false },
+    "last_correction_summary": { "type": "string" },
+    "last_correction_at": { "type": "string", "format": "date-time" },
+    "resolved_at": { "type": "string", "format": "date-time" },
+    "archived_at": { "type": "string", "format": "date-time" },
+    "split_from": { "type": "array", "items": { "type": "string" }, "description": "IDs de Stories relacionadas por división/fusión" },
+    "ai_generated": { "type": "boolean", "default": false },
+    "ingestion_batch": { "type": "string", "description": "Identificador de la ejecución de ingesta REAL que produjo/actualizó esta Story (null para DEMO)." },
+    "is_demo": { "type": "boolean", "default": true },
+    "is_saved": { "type": "boolean", "default": false },
+    "world_mode": { "type": "boolean", "default": true }
+  },
+  "required": ["title", "summary", "category"],
+  // Añadido en la reconstrucción: lectura abierta, escritura solo admin.
+  // El motor escribe con asServiceRole (no le afecta la RLS).
+  "rls": {
+    "create": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}

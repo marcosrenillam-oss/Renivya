@@ -1,0 +1,32 @@
+{
+  "name": "StoryUpdate",
+  "type": "object",
+  "description": "Historial de cambios de una Story: qué cambió, de qué tipo, por qué fuente y entre qué versiones.",
+  "properties": {
+    "story_id": { "type": "string", "description": "Story afectada" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "source": { "type": "string", "description": "Fuente que originó el cambio" },
+    "action": { "type": "string", "enum": ["created", "updated", "merged", "breaking", "resolved", "archived", "correction", "split"] },
+    "change_type": { "type": "string", "enum": ["duplicate", "additional", "correction", "contradiction", "evolution", "new", "static", "split"], "description": "Naturaleza del cambio detectado" },
+    "summary_of_change": { "type": "string", "description": "Resumen legible del cambio" },
+    "whats_changed": { "type": "array", "items": { "type": "string" }, "description": "Diferencia legible para 'Qué ha cambiado'" },
+    "fields_changed": { "type": "array", "items": { "type": "string" }, "description": "Lista de campos modificados" },
+    "previous_version": { "type": "number" },
+    "new_version": { "type": "number" },
+    "previous_confidence_status": { "type": "string" },
+    "new_confidence_status": { "type": "string" },
+    "previous_confidence": { "type": "number" },
+    "new_confidence": { "type": "number" },
+    "article_url": { "type": "string", "description": "URL del artículo que originó este update (null si no aplica)" },
+    "previous_score": { "type": "number" },
+    "new_score": { "type": "number" },
+    "is_demo": { "type": "boolean", "default": false }
+  },
+  "required": ["story_id", "action"],
+  // Añadido en la reconstrucción: lectura abierta, escritura solo admin.
+  "rls": {
+    "create": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}

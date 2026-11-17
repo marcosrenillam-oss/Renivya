@@ -1,0 +1,22 @@
+{
+  "name": "ArticleEmbedding",
+  "type": "object",
+  "description": "Caché de embeddings de artículos para clustering semántico. Clave: content_hash del texto normalizado. Si el contenido cambia, el hash cambia y se genera un embedding nuevo (invalidación implícita).",
+  "properties": {
+    "content_hash": { "type": "string", "description": "Hash determinista del contenido normalizado (clave de caché)" },
+    "model": { "type": "string", "description": "Modelo que generó el embedding (ej. text-embedding-3-small)" },
+    "dimensions": { "type": "number", "description": "Número de dimensiones del vector" },
+    "embedding": { "type": "array", "items": { "type": "number" }, "description": "Vector denso (típicamente coseno-normalizado por el modelo)" },
+    "source_name": { "type": "string", "description": "Fuente del artículo (opcional, trazabilidad)" },
+    "url": { "type": "string", "description": "URL del artículo (opcional, trazabilidad)" },
+    "language": { "type": "string" },
+    "is_demo": { "type": "boolean", "default": false }
+  },
+  "required": ["content_hash", "model", "embedding"],
+  // Añadido en la reconstrucción: lectura abierta, escritura solo admin.
+  "rls": {
+    "create": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}

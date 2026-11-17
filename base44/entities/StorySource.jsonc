@@ -1,0 +1,30 @@
+{
+  "name": "StorySource",
+  "type": "object",
+  "description": "Vínculo entre una Story y cada una de sus fuentes. Permite saber qué aporta cada fuente, qué coincide y qué difiere.",
+  "properties": {
+    "story_id": { "type": "string", "description": "Story a la que pertenece" },
+    "source_id": { "type": "string", "description": "Referencia al catálogo Source (opcional)" },
+    "source_name": { "type": "string", "description": "Nombre de la fuente (denormalizado)" },
+    "url": { "type": "string", "description": "URL del artículo original en esta fuente" },
+    "country": { "type": "string" },
+    "language": { "type": "string" },
+    "source_type": { "type": "string", "enum": ["agency", "newspaper", "broadcast", "official", "data"] },
+    "published_at": { "type": "string", "format": "date-time" },
+    "retrieved_at": { "type": "string", "format": "date-time" },
+    "reliability": { "type": "number" },
+    "contribution": { "type": "string", "description": "Qué información concreta aporta a la historia" },
+    "agrees_with": { "type": "array", "items": { "type": "string" }, "description": "Puntos en los que coincide con el resto de fuentes" },
+    "diverges_on": { "type": "array", "items": { "type": "string" }, "description": "Puntos en los que difiere" },
+    "role": { "type": "string", "enum": ["primary", "corroboration", "contrast", "dissenting"], "description": "Papel de la fuente dentro del contraste" },
+    "stance": { "type": "string", "description": "Tono/posición editorial (opcional)" },
+    "is_demo": { "type": "boolean", "default": false }
+  },
+  "required": ["story_id", "source_name"],
+  // Añadido en la reconstrucción: lectura abierta, escritura solo admin.
+  "rls": {
+    "create": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}

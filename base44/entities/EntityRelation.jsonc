@@ -1,0 +1,20 @@
+{
+  "name": "EntityRelation",
+  "type": "object",
+  "description": "Relación entre dos entidades. Estructura mínima preparada para grafo futuro. NO generar relaciones sin evidencia explícita. Calidad sobre cantidad.",
+  "properties": {
+    "source_entity_id": { "type": "string", "description": "Entidad origen de la relación" },
+    "target_entity_id": { "type": "string", "description": "Entidad destino de la relación" },
+    "relation_type": { "type": "string", "enum": ["located_in", "part_of", "member_of", "leads", "owns", "operates_in", "affects", "related_to", "opponent_of", "participates_in"], "description": "Tipo de relación entre entidades" },
+    "confidence": { "type": "number", "description": "Confianza de la relación (0-100)" },
+    "story_id": { "type": "string", "description": "Story que evidenció la relación (opcional, trazabilidad)" },
+    "is_demo": { "type": "boolean", "default": false }
+  },
+  "required": ["source_entity_id", "target_entity_id", "relation_type"],
+  // Añadido en la reconstrucción: lectura abierta, escritura solo admin.
+  "rls": {
+    "create": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}

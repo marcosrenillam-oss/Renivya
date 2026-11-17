@@ -1,0 +1,14 @@
+{
+  "name": "SavedStory",
+  "type": "object",
+  "description": "Relación usuario ↔ Story guardada. El propietario se identifica por created_by_id (estampado por la plataforma). Sustituye al booleano global Story.is_saved para guardados personales. Sin restricción única a nivel de plataforma; el dedup se aplica en la capa de servicio (upsert por story_id + toggle query-then-act).",
+  "properties": {
+    "story_id": { "type": "string", "description": "ID de la Story guardada" }
+  },
+  "required": ["story_id"],
+  "rls": {
+    "read": { "created_by_id": "{{user.id}}" },
+    "update": { "created_by_id": "{{user.id}}" },
+    "delete": { "created_by_id": "{{user.id}}" }
+  }
+}

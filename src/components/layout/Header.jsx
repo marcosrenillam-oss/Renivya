@@ -40,8 +40,8 @@ export default function Header() {
   }
 
   return (
-    <header className="glass-panel sticky top-0 z-20 border-x-0 border-t-0">
-      <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4 sm:px-6 lg:px-10">
+    <header className="glass-panel safe-top sticky top-0 z-20 border-x-0 border-t-0">
+      <div className="safe-x mx-auto flex h-16 max-w-6xl items-center gap-3 sm:px-6 lg:px-10">
         <div className="md:hidden">
           <SymbolMenu size={34} />
         </div>

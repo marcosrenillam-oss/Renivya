@@ -61,7 +61,7 @@ export function SidebarNav({ footer }) {
   const { t } = useI18n()
   const { user } = useAuth()
   return (
-    <aside className="glass-panel fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-y-0 border-l-0 xl:flex">
+    <aside className="glass-panel safe-top fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-y-0 border-l-0 xl:flex">
       <div className="px-6 pb-6 pt-7">
         <NavLink to="/" aria-label={t('nav.home')}>
           <Logo size={36} withWordmark />
@@ -120,7 +120,7 @@ export function RailNav() {
   const { t } = useI18n()
   const { pathname } = useLocation()
   return (
-    <aside className="glass-panel fixed inset-y-0 left-0 z-30 hidden w-[76px] flex-col items-center border-y-0 border-l-0 py-5 md:flex xl:hidden">
+    <aside className="glass-panel fixed inset-y-0 left-0 z-30 hidden w-[calc(76px+env(safe-area-inset-left))] flex-col items-center border-y-0 border-l-0 pb-5 pl-[env(safe-area-inset-left)] pt-[calc(env(safe-area-inset-top)+1.25rem)] md:flex xl:hidden">
       <SymbolMenu size={40} />
       <nav className="mt-8 flex flex-1 flex-col items-center gap-1.5" aria-label={t('nav.menu')}>
         {RAIL_ITEMS.map((id) => {
@@ -158,8 +158,7 @@ export function BottomNav() {
   const { t } = useI18n()
   return (
     <nav
-      className="glass-strong fixed inset-x-3 bottom-3 z-40 rounded-2xl md:hidden"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      className="glass-strong bottom-safe fixed inset-x-3 z-40 rounded-2xl md:hidden"
       aria-label={t('nav.menu')}
     >
       <ul className="grid grid-cols-5">

@@ -47,17 +47,21 @@ export function buildLogoShapes() {
 }
 
 /** SVG serializado (favicon / uso fuera de React). */
-export function logoSvgString({ size = 64, withBackground = true } = {}) {
+export function logoSvgString({ size = 64, withBackground = true, radius = 15, scale = 1 } = {}) {
   const s = buildLogoShapes()
-  const bg = withBackground ? `<rect x="0" y="0" width="64" height="64" rx="15" fill="${LOGO_COLORS.ivory}"/>` : ''
+  const bg = withBackground ? `<rect x="0" y="0" width="64" height="64" rx="${radius}" fill="${LOGO_COLORS.ivory}"/>` : ''
+  // `scale` < 1 deja margen de seguridad (iconos "maskable" / iOS).
+  const tx = 32 - 32 * scale
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 64 64">`,
     bg,
+    `<g transform="translate(${tx} ${tx}) scale(${scale})">`,
     ...s.short.map((p) => `<polygon points="${p}" fill="${LOGO_COLORS.terracotta}"/>`),
     ...s.longLight.map((p) => `<polygon points="${p}" fill="${LOGO_COLORS.brown}"/>`),
     ...s.longDark.map((p) => `<polygon points="${p}" fill="${LOGO_COLORS.brown}" fill-opacity="0.78"/>`),
     `<circle cx="32" cy="32" r="6.4" fill="${LOGO_COLORS.ivory}"/>`,
     `<circle cx="32" cy="32" r="4.2" fill="${LOGO_COLORS.brown}"/>`,
+    '</g>',
     '</svg>',
   ].join('')
 }

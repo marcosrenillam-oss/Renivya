@@ -564,5 +564,12 @@ const pt = {
   'region.oceania': 'Oceânia',
 }
 
-export const dictionaries = { es, en, fr, pt }
+import { SECTIONS } from '@/lib/i18n/sections/index.js'
+
+const base = { es, en, fr, pt }
+
+/** Base + secciones por funcionalidad (cada sección aporta {es, en, fr, pt}). */
+export const dictionaries = Object.fromEntries(
+  Object.entries(base).map(([locale, dict]) => [locale, Object.assign({}, dict, ...SECTIONS.map((sec) => sec[locale] || {}))])
+)
 export default dictionaries

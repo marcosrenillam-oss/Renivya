@@ -10,7 +10,7 @@ export default function AuthLayout({ title, subtitle, children, footer }) {
   const { t } = useI18n()
   const { isLocalMode } = useAuth()
   return (
-    <div className="relative min-h-screen">
+    <div className="min-h-screen-dvh safe-top safe-bottom relative">
       <StageAtmosphere />
       <div className="relative mx-auto grid min-h-screen max-w-6xl grid-cols-1 lg:grid-cols-[1.1fr_1fr]">
         <aside className="hidden flex-col justify-between px-12 py-14 lg:flex">

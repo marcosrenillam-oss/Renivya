@@ -54,7 +54,7 @@ const LEXICON = {
   environment: [
     ['clima', 3], ['climate', 4], ['climatico', 4], ['cambio climatico', 5], ['climate change', 5], ['emisiones', 4], ['emissions', 4], ['co2', 4],
     ['sequia', 4], ['drought', 4], ['incendio forestal', 5], ['wildfire', 5], ['inundaciones', 4], ['floods', 4], ['biodiversidad', 5], ['biodiversity', 5],
-    ['contaminacion', 4], ['pollution', 4], ['renovables', 3], ['renewable', 3], ['cop', 2], ['ola de calor', 5], ['heatwave', 5], ['deforestacion', 5], ['oceano', 2],
+    ['contaminacion', 4], ['pollution', 4], ['renovables', 3], ['renovable', 3], ['renovavel', 3], ['renewable', 3], ['energia renovable', 5], ['renewable energy', 5], ['parque solar', 5], ['solar', 2], ['eolico', 3], ['megavatios', 3], ['megawatts', 3], ['ecologistas', 3], ['ambientalistas', 3], ['cop', 2], ['ola de calor', 5], ['heatwave', 5], ['deforestacion', 5], ['oceano', 2],
   ],
   sports: [
     ['deporte', 3], ['sport', 2], ['sports', 3], ['tenis', 4], ['tennis', 4], ['baloncesto', 4], ['basketball', 4], ['nba', 4], ['formula 1', 5],

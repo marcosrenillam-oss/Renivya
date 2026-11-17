@@ -4,7 +4,6 @@ import Header from '@/components/layout/Header'
 import StatusBar from '@/components/layout/StatusBar'
 import { BottomNav, RailNav, SidebarNav } from '@/components/layout/NavMenu'
 import StageAtmosphere from '@/components/common/StageAtmosphere'
-import InstallPrompt from '@/components/common/InstallPrompt'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { AppProvider } from '@/lib/AppContext'
 
@@ -35,7 +34,6 @@ export default function AppShell() {
                 transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
                 className="safe-x mx-auto max-w-6xl pb-36 pt-8 sm:px-6 md:pb-16 lg:px-10 lg:pt-12"
               >
-                <InstallPrompt />
                 <Outlet />
               </motion.main>
             </AnimatePresence>

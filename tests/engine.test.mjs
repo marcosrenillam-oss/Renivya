@@ -42,6 +42,9 @@ test('normalized_name exacto y conflicto ciudad/club', () => {
   assert.equal(byName['real valmar cf'], 'sports_team')
   assert.equal(byName['sevilla'], 'city')
   assert.equal(byName['marta ibarra'], 'person')
+  // Una pista de empresa posterior corrige una primera lectura como persona (titular).
+  const helios = extractEntities({ title: 'Helios Grid abre en Portugal un parque solar', text: 'El consorcio Helios Grid ha inaugurado la planta.' })
+  assert.equal(helios.find((e) => e.normalized_name === 'helios grid')?.type, 'company')
   const rels = extractRelations(ents, { title: '', text: 'El Real Valmar CF contra el Atlético Norte terminó 3-1. Marta Ibarra, entrenadora del Real Valmar CF, celebró.' })
   const types = rels.map((r) => `${r.source}>${r.relation_type}>${r.target}`)
   assert.ok(types.includes('real valmar cf>opponent_of>atlético norte'), types.join(' | '))

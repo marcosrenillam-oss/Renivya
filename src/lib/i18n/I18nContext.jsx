@@ -21,7 +21,7 @@ function readInitialLocale() {
 
 function interpolate(template, vars) {
   if (!vars) return template
-  return template.replace(/\{(\w+)\}/g, (match, key) => (vars[key] ?? vars[key] === 0 ? String(vars[key]) : match))
+  return template.replace(/\{(\w+)\}/g, (match, key) => (vars[key] != null ? String(vars[key]) : match))
 }
 
 /** Traducción pura (sin React) para usar en servicios. Respaldo: locale → es → clave. */

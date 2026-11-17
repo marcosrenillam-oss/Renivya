@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button'
 import { toast } from '@/components/ui/use-toast'
 import { useAuth } from '@/lib/AuthContext'
 import { useI18n } from '@/lib/i18n/I18nContext'
-import { loadFullDemo } from '@/lib/news/localEngine'
 
 /** Portada vacía. En modo local (o admin) permite cargar datos de demostración. */
 export default function DigestEmpty() {
@@ -18,6 +17,7 @@ export default function DigestEmpty() {
   async function onSeed() {
     setPending(true)
     try {
+      const { loadFullDemo } = await import('@/lib/news/localEngine') // el motor solo se descarga si se usa
       await loadFullDemo()
       await qc.invalidateQueries()
       toast({ title: t('home.demoLoaded') })

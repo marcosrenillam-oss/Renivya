@@ -62,6 +62,13 @@
     --orb-2: hsl(186 42% 42% / 0.05);
     --selection: hsl(12 72% 52% / 0.18);
 
+    /* Paleta categórica de gráficos (validada: banda de luminosidad, croma, CVD y contraste) */
+    --viz-1: #d5502b;
+    --viz-2: #008aa6;
+    --viz-3: #a8760f;
+    --viz-4: #5a5fc8;
+    --viz-5: #b0437e;
+
     /* Design system */
     --surface: 42 22% 93%;
     --surface-elevated: 40 18% 89%;
@@ -127,6 +134,12 @@
     --orb-1: hsl(12 70% 58% / 0.06);
     --orb-2: hsl(184 46% 52% / 0.045);
     --selection: hsl(12 70% 58% / 0.26);
+
+    --viz-1: #df5f3b;
+    --viz-2: #1b9db3;
+    --viz-3: #bf8a2c;
+    --viz-4: #7476e0;
+    --viz-5: #c9629a;
 
     --surface: 222 14% 13%;
     --surface-elevated: 220 12% 16%;
@@ -277,3 +290,8 @@
 }
 
 @keyframes skeleton-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* Mapa 2D: teselas atenuadas en modo oscuro, controles con el estilo del sistema */
+.dark .world-map .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.82) contrast(0.88) saturate(0.6); }
+.world-map .leaflet-control-attribution { font-size: 10px; background: hsl(var(--card) / 0.8); color: hsl(var(--muted-foreground)); }
+.world-map .leaflet-control-zoom a { background: hsl(var(--card)); color: hsl(var(--foreground)); border-color: hsl(var(--border)); }

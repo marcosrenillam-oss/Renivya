@@ -201,13 +201,14 @@ export function extractEntities({ title = '', text = '' }) {
     if (!key || key.length < 2) return
     const prev = found.get(key)
     if (prev) {
+      const prevConfidence = prev.confidence
       prev.mentions += mentions
       prev.inTitle ||= inTitle
       prev.confidence = Math.max(prev.confidence, e.confidence)
       for (const a of e.aliases || []) if (!prev.aliases.includes(a)) prev.aliases.push(a)
       // Un tipo más específico o con más confianza sustituye a uno genérico o heurístico.
       const weak = ['other', 'location', 'person']
-      if (weak.includes(prev.type) && e.type !== 'other' && e.type !== prev.type && (prev.type !== 'person' || e.confidence > prev.confidence)) prev.type = e.type
+      if (weak.includes(prev.type) && e.type !== 'other' && e.type !== prev.type && (prev.type !== 'person' || e.confidence > prevConfidence)) prev.type = e.type
     } else {
       found.set(key, { name: e.name, normalized_name: key, type: e.type, country_code: e.country_code ?? null, aliases: [...(e.aliases || [])], mentions, inTitle, confidence: e.confidence })
     }

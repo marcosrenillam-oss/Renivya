@@ -11,23 +11,29 @@ import ScrollToTop from './components/ScrollToTop'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import AppShell from '@/components/layout/AppShell'
 
+import { lazy, Suspense } from 'react'
 import Home from '@/pages/Home'
-import TopStories from '@/pages/TopStories'
-import Categories from '@/pages/Categories'
-import World from '@/pages/World'
-import Network from '@/pages/Network'
-import StoryDetail from '@/pages/StoryDetail'
-import SearchPage from '@/pages/Search'
-import SavedStories from '@/pages/SavedStories'
-import Profile from '@/pages/Profile'
-import Settings from '@/pages/Settings'
-import Analytics from '@/pages/Analytics'
-import Brain from '@/pages/Brain'
 import Login from '@/pages/Login'
 import Register from '@/pages/Register'
 import ForgotPassword from '@/pages/ForgotPassword'
 import ResetPassword from '@/pages/ResetPassword'
 import Mfa from '@/pages/Mfa'
+import Spinner from '@/components/common/Spinner'
+
+// Vistas pesadas (three.js, Leaflet, recharts, dnd) bajo demanda: la portada abre antes.
+const TopStories = lazy(() => import('@/pages/TopStories'))
+const Categories = lazy(() => import('@/pages/Categories'))
+const World = lazy(() => import('@/pages/World'))
+const Network = lazy(() => import('@/pages/Network'))
+const StoryDetail = lazy(() => import('@/pages/StoryDetail'))
+const SearchPage = lazy(() => import('@/pages/Search'))
+const SavedStories = lazy(() => import('@/pages/SavedStories'))
+const Profile = lazy(() => import('@/pages/Profile'))
+const Settings = lazy(() => import('@/pages/Settings'))
+const Analytics = lazy(() => import('@/pages/Analytics'))
+const Brain = lazy(() => import('@/pages/Brain'))
+
+const page = (el) => <Suspense fallback={<Spinner className="mt-10" />}>{el}</Suspense>
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError } = useAuth()
@@ -61,17 +67,17 @@ const AuthenticatedApp = () => {
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to={loginUrl} replace />} />}>
         <Route element={<AppShell />}>
           <Route path="/" element={<Home />} />
-          <Route path="/top-stories" element={<TopStories />} />
-          <Route path="/categories" element={<Categories />} />
-          <Route path="/world" element={<World />} />
-          <Route path="/network" element={<Network />} />
-          <Route path="/story/:id" element={<StoryDetail />} />
-          <Route path="/search" element={<SearchPage />} />
-          <Route path="/saved" element={<SavedStories />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/analytics" element={<Analytics />} />
-          <Route path="/brain" element={<Brain />} />
+          <Route path="/top-stories" element={page(<TopStories />)} />
+          <Route path="/categories" element={page(<Categories />)} />
+          <Route path="/world" element={page(<World />)} />
+          <Route path="/network" element={page(<Network />)} />
+          <Route path="/story/:id" element={page(<StoryDetail />)} />
+          <Route path="/search" element={page(<SearchPage />)} />
+          <Route path="/saved" element={page(<SavedStories />)} />
+          <Route path="/profile" element={page(<Profile />)} />
+          <Route path="/settings" element={page(<Settings />)} />
+          <Route path="/analytics" element={page(<Analytics />)} />
+          <Route path="/brain" element={page(<Brain />)} />
         </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />

@@ -55,7 +55,7 @@ export function layoutGraph(nodes, edges, { width = 800, height = 560, iteration
     const r = Math.min(width, height) * (0.25 + rand() * 0.2)
     return [n.id, { x: width / 2 + Math.cos(angle) * r, y: height / 2 + Math.sin(angle) * r, vx: 0, vy: 0 }]
   }))
-  const k = Math.sqrt((width * height) / Math.max(1, nodes.length)) * 0.55
+  const k = Math.sqrt((width * height) / Math.max(1, nodes.length)) * 0.5
   for (let it = 0; it < iterations; it++) {
     const t = 1 - it / iterations
     for (const a of nodes) {
@@ -66,6 +66,7 @@ export function layoutGraph(nodes, edges, { width = 800, height = 560, iteration
         const dx = pa.x - pb.x || 0.01
         const dy = pa.y - pb.y || 0.01
         const d2 = dx * dx + dy * dy
+        if (d2 > 9 * k * k) continue // repulsión solo local: los grupos sueltos no salen disparados
         const f = (k * k) / d2
         pa.vx += dx * f * 0.02
         pa.vy += dy * f * 0.02
@@ -86,8 +87,8 @@ export function layoutGraph(nodes, edges, { width = 800, height = 560, iteration
     }
     for (const n of nodes) {
       const p = pos.get(n.id)
-      p.vx += (width / 2 - p.x) * 0.004
-      p.vy += (height / 2 - p.y) * 0.004
+      p.vx += (width / 2 - p.x) * 0.012
+      p.vy += (height / 2 - p.y) * 0.012
       const v = Math.sqrt(p.vx * p.vx + p.vy * p.vy) || 1
       const max = 12 * t + 0.5
       p.x += (p.vx / v) * Math.min(v, max)

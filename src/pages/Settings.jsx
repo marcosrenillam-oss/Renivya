@@ -167,7 +167,7 @@ export default function Settings() {
         <InstallPrompt variant="inline" />
       </SettingsCard>
 
-      <div className="glass-strong fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+5.75rem)] z-30 mx-auto flex max-w-xl items-center justify-between gap-3 rounded-2xl p-3 pl-5 md:bottom-6 md:left-[calc(76px+env(safe-area-inset-left)+1.5rem)] xl:left-[calc(16rem+1.5rem)]">
+      <div className="glass-strong bg-card/95 fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+5.75rem)] z-30 mx-auto flex max-w-xl items-center justify-between gap-3 rounded-2xl p-3 pl-5 md:bottom-6 md:left-[calc(76px+env(safe-area-inset-left)+1.5rem)] xl:left-[calc(16rem+1.5rem)]">
         <span className="type-small text-muted-foreground">{dirty ? t('settings.unsaved') : t('settings.saved')}</span>
         <Button onClick={() => save.mutate()} disabled={!dirty || save.isPending}>
           {save.isPending && <Loader2 className="animate-spin" />}

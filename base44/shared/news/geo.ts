@@ -1,3 +1,4 @@
+// @ts-nocheck — JavaScript estándar en archivos .ts: se ejecuta igual en Deno (funciones) y en Vite (interfaz).
 // Geografía compartida por motor e interfaz: centroides, regiones y gazetteer de ciudades.
 
 export const COUNTRY_COORDINATES = {

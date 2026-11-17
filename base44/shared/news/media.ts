@@ -1,3 +1,4 @@
+// @ts-nocheck — JavaScript estándar en archivos .ts: se ejecuta igual en Deno (funciones) y en Vite (interfaz).
 // Paso 8: media con procedencia completa. Dedup por URL canónica EXACTA.
 // Una imagen nunca se atribuye a RENIVYA: autor/crédito/licencia solo si vienen del feed; si no, null.
 import { canonicalUrl } from './normalizer.ts'

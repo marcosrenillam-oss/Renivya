@@ -106,9 +106,9 @@ export class GlobeScene {
 
   applyTheme() {
     const dark = document.documentElement.classList.contains('dark')
-    const bg = cssColor('--background')
-    const ocean = bg.clone().lerp(cssColor('--accent'), dark ? 0.08 : 0.06)
-    this.ocean.material.color = dark ? ocean.offsetHSL(0, 0, 0.03) : ocean.offsetHSL(0, 0, -0.025)
+    // Océano casi neutro (tono de tarjeta) con un matiz mínimo de cian mineral: sin azul abusivo.
+    const base = cssColor(dark ? '--card' : '--surface')
+    this.ocean.material.color = base.lerp(cssColor('--accent'), dark ? 0.06 : 0.05)
     this.landColor = cssColor('--muted-foreground').lerp(cssColor('--foreground'), dark ? 0.1 : 0.25)
     if (this.land) this.land.material.color = this.landColor
     this.atmosphere.material.uniforms.glowColor.value = cssColor('--accent')

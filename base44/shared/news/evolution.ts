@@ -1,3 +1,4 @@
+// @ts-nocheck — JavaScript estándar en archivos .ts: se ejecuta igual en Deno (funciones) y en Vite (interfaz).
 // Paso 9: la Story es un objeto vivo. Detecta qué cambió, de qué tipo y si sube de versión.
 // Los textos de "Qué ha cambiado" son cualitativos (sin cifras de SCORE ni de confianza).
 import { foldAccents } from './normalizer.ts'

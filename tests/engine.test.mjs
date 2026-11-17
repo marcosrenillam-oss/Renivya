@@ -22,6 +22,7 @@ test('pesos del SCORE suman 1 y confidence_context es 5 %', () => {
 test('clasificador determinista y multilingüe', () => {
   assert.equal(classifyCategory({ title: 'El Real Valmar CF gana la final de la Copa', text: 'goles del delantero en el estadio de fútbol' }).category, 'football')
   assert.equal(classifyCategory({ title: 'Lumen Labs lanza un modelo de inteligencia artificial', text: '' }).category, 'artificial_intelligence')
+  assert.equal(classifyCategory({ title: 'El Real Valmar CF gana la final de la Copa' }).category, 'football')
   assert.equal(classifyCategory({ title: 'La inflation recule en zone euro', text: 'la banque centrale maintient ses taux' }).category, 'economy')
   const a = classifyCategory({ title: 'Floods displace thousands', text: 'Red Cross shelters' })
   const b = classifyCategory({ title: 'Floods displace thousands', text: 'Red Cross shelters' })
@@ -122,4 +123,31 @@ test('pipeline de demo: agrupa, versiona, contradicciones y sin atribución inve
   const r3 = await seedDemo(db, { round: 2, now: NOW })
   assert.equal(r3.ingest.created, 0)
   assert.equal((await db.Story.list()).length, 8)
+})
+
+test('ingesta real: RSS → NewsItems (sin duplicar) → Stories con fiabilidad provisional', async () => {
+  const { runIngestionCycle, ensureSources } = await import('../base44/shared/news/brain.ts')
+  const { createRealNewsProvider } = await import('../base44/shared/news/realIngestion.ts')
+  const db = createDataAdapter(createLocalClient({ memoryOnly: true }).entities)
+  await ensureSources(db, [{ name: 'Feed Prueba', feed_url: 'https://feed.test/rss', country: 'ES', language: 'es', type: 'newspaper', reliability: null, is_active: true, is_demo: false }])
+  const rss = `<rss><channel>
+    <item><title>Un terremoto sacude el sur de Chile</title><link>https://feed.test/a?utm_source=x</link>
+      <description>Un terremoto de magnitud 6,1 ha sacudido el sur de Chile este jueves según el servicio sismológico nacional. Las autoridades evacuaron varias localidades costeras de forma preventiva.</description>
+      <pubDate>Tue, 17 Nov 2026 10:00:00 GMT</pubDate><media:content url="https://img.test/1.jpg" medium="image"/></item>
+    <item><title>Un terremoto sacude el sur de Chile</title><link>https://feed.test/a</link><description>duplicado</description></item>
+  </channel></rss>`
+  const provider = createRealNewsProvider({ fetchImpl: async () => new Response(rss, { status: 200 }) })
+  const report = await runIngestionCycle(db, { provider, now: NOW })
+  assert.equal(report.created, 1, 'la URL con utm es la misma URL canónica')
+  assert.equal(report.pipeline.storiesCreated, 1)
+  const [story] = await db.Story.list()
+  assert.equal(story.is_demo, false)
+  assert.ok(story.ingestion_batch?.startsWith('batch_'))
+  const [media] = await db.Media.list()
+  assert.equal(media.url, 'https://img.test/1.jpg')
+  assert.equal(media.author, null)
+  assert.equal(media.license, null)
+  // Segundo ciclo inmediato: la fuente está limitada por last_fetched_at.
+  const again = await runIngestionCycle(db, { provider, now: NOW })
+  assert.equal(again.created, 0)
 })

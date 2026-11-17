@@ -1,3 +1,4 @@
+// @ts-nocheck — JavaScript estándar en archivos .ts: se ejecuta igual en Deno (funciones) y en Vite (interfaz).
 // Adaptador de entidades: misma interfaz para el SDK de Base44 (frontend o asServiceRole) y el cliente local.
 export const ENTITY_NAMES = [
   'Story', 'NewsItem', 'Source', 'StorySource', 'StoryUpdate', 'Entity',

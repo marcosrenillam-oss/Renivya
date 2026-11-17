@@ -1,3 +1,4 @@
+// @ts-nocheck — JavaScript estándar en archivos .ts: se ejecuta igual en Deno (funciones) y en Vite (interfaz).
 // Paso 5: RENIVYA SCORE (importancia) y CONFIDENCE (solidez). Conceptos distintos.
 // Ambos son 100 % deterministas y explicables: NUNCA se calculan con un LLM.
 import { foldAccents } from './normalizer.ts'

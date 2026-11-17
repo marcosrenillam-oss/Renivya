@@ -1,3 +1,4 @@
+// @ts-nocheck — JavaScript estándar en archivos .ts: se ejecuta igual en Deno (funciones) y en Vite (interfaz).
 // Proveedor LLM (solo backend). Usos permitidos: traducción y, opcionalmente, sugerir categoría
 // cuando el clasificador determinista no tiene señal. NUNCA calcula SCORE ni CONFIDENCE.
 

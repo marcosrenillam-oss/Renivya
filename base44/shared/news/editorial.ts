@@ -1,3 +1,4 @@
+// @ts-nocheck — JavaScript estándar en archivos .ts: se ejecuta igual en Deno (funciones) y en Vite (interfaz).
 // Paso 6: pieza editorial determinista (titular, entradilla, cuerpo, puntos clave, contexto,
 // cronología, contraste) con trazabilidad por párrafo. Un LLM puede pulir el estilo en backend,
 // pero nunca inventa hechos ni toca SCORE/CONFIDENCE.

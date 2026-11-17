@@ -1,3 +1,4 @@
+// @ts-nocheck — JavaScript estándar en archivos .ts: se ejecuta igual en Deno (funciones) y en Vite (interfaz).
 // Paso 1 del pipeline: limpieza, URL canónica, hash de contenido, idioma y país. Determinista.
 import { hash64 } from './stats.ts'
 import { CITY_GAZETTEER, COUNTRY_CODES, DEMONYMS } from './geo.ts'

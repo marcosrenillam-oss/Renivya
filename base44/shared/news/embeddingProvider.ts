@@ -1,3 +1,4 @@
+// @ts-nocheck — JavaScript estándar en archivos .ts: se ejecuta igual en Deno (funciones) y en Vite (interfaz).
 // Embeddings con caché por content_hash. Proveedor local determinista + proveedor remoto opcional.
 import { hash32 } from './stats.ts'
 import { extractConcepts, lightStem, tokenize } from './semantic.ts'

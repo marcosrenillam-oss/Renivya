@@ -1,3 +1,4 @@
+// @ts-nocheck — JavaScript estándar en archivos .ts: se ejecuta igual en Deno (funciones) y en Vite (interfaz).
 // Catálogo inicial de fuentes reales (feeds RSS públicos de cada medio).
 // La fiabilidad NO se inventa: queda null y se marca 'reliability:provisional' hasta tener metodología.
 // Las URL de feed deben verificarse desde el backend (los medios las cambian sin aviso).

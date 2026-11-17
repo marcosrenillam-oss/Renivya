@@ -1,3 +1,4 @@
+// @ts-nocheck — JavaScript estándar en archivos .ts: se ejecuta igual en Deno (funciones) y en Vite (interfaz).
 // ProcessNewsItems: pending → normalized → clustered → created. Determinista salvo el embedding remoto opcional.
 import { assignToStories, centroid, clusterDocuments, duplicateGroupId } from './clustering.ts'
 import { getEmbeddings } from './embeddingProvider.ts'

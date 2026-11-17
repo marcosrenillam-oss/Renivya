@@ -1,3 +1,4 @@
+// @ts-nocheck — JavaScript estándar en archivos .ts: se ejecuta igual en Deno (funciones) y en Vite (interfaz).
 // Construye o actualiza una Story a partir de sus artículos: análisis → scoring → editorial →
 // entidades → media → evolución. Guarda StorySource, StoryUpdate y sube `version` cuando procede.
 import { analyzeCluster } from './analysis.ts'

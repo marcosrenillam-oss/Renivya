@@ -1,3 +1,4 @@
+// @ts-nocheck — JavaScript estándar en archivos .ts: se ejecuta igual en Deno (funciones) y en Vite (interfaz).
 // "Cerebro" de RENIVYA: orquesta ingesta, procesamiento, mantenimiento y purga.
 // Lo usan las funciones backend (service role) y, en modo local, la página Brain.
 import { createDataAdapter } from './dataAdapter.ts'

@@ -1,3 +1,4 @@
+// @ts-nocheck — JavaScript estándar en archivos .ts: se ejecuta igual en Deno (funciones) y en Vite (interfaz).
 // Paso 4: hechos, coincidencias, diferencias, ausencias y contradicciones entre fuentes. Determinista.
 import { foldAccents, splitSentences } from './normalizer.ts'
 import { jaccard, shingles, tokenize } from './semantic.ts'

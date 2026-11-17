@@ -158,7 +158,7 @@ export function BottomNav() {
   const { t } = useI18n()
   return (
     <nav
-      className="glass-strong bottom-safe fixed inset-x-3 z-40 rounded-2xl md:hidden"
+      className="glass-strong bottom-safe fixed inset-x-3 z-40 rounded-2xl bg-card/90 md:hidden dark:bg-card/95"
       aria-label={t('nav.menu')}
     >
       <ul className="grid grid-cols-5">

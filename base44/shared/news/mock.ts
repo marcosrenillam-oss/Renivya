@@ -1,3 +1,4 @@
+// @ts-nocheck — JavaScript estándar en archivos .ts: se ejecuta igual en Deno (funciones) y en Vite (interfaz).
 // MockNewsProvider: datos de DEMOSTRACIÓN (is_demo: true) para desarrollo y modo local.
 // Fuentes y actores ficticios, dominio reservado .invalid (nunca resuelve), sin imágenes
 // ni autores inventados. Dos rondas para ejercitar evolución, correcciones y contradicciones.

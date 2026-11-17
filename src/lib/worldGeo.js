@@ -29,7 +29,8 @@ export function cssColor(token, fallback = '#888888') {
   try {
     const raw = getComputedStyle(document.documentElement).getPropertyValue(token).trim()
     const m = raw.match(/^([\d.]+)\s+([\d.]+)%\s+([\d.]+)%/)
-    if (m) return new THREE.Color().setHSL(Number(m[1]) / 360, Number(m[2]) / 100, Number(m[3]) / 100)
+    // Los tokens del tema están en sRGB: sin indicarlo, three.js los trataría como lineales y los aclararía.
+    if (m) return new THREE.Color().setHSL(Number(m[1]) / 360, Number(m[2]) / 100, Number(m[3]) / 100, THREE.SRGBColorSpace)
     if (raw) return new THREE.Color(raw)
   } catch {
     /* sin DOM */

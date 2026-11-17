@@ -1,3 +1,4 @@
+// @ts-nocheck — JavaScript estándar en archivos .ts: se ejecuta igual en Deno (funciones) y en Vite (interfaz).
 // Paso 3: agrupación de artículos en acontecimientos (Stories). Determinista.
 import { cosine, jaccard } from './semantic.ts'
 import { hash64, hoursBetween, stableSort } from './stats.ts'

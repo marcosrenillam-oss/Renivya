@@ -1,3 +1,4 @@
+// @ts-nocheck — JavaScript estándar en archivos .ts: se ejecuta igual en Deno (funciones) y en Vite (interfaz).
 // Limpieza determinista de titulares (compartida por motor e interfaz).
 const SECTION_PREFIXES = [
   'en directo', 'directo', 'última hora', 'ultima hora', 'breaking', 'live', 'exclusiva', 'exclusive', 'opinión', 'opinion',

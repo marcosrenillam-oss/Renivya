@@ -1,3 +1,4 @@
+// @ts-nocheck — JavaScript estándar en archivos .ts: se ejecuta igual en Deno (funciones) y en Vite (interfaz).
 // Paso 7: extracción, normalización y persistencia de entidades + relaciones con evidencia explícita.
 // Reglas: una Entity por normalized_name (sin duplicar), StoryEntity idempotente por (story_id, entity_id),
 // EntityRelation solo cuando una frase lo dice expresamente. Nada de descripciones o IDs inventados.

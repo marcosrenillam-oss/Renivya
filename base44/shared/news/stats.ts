@@ -1,3 +1,4 @@
+// @ts-nocheck — JavaScript estándar en archivos .ts: se ejecuta igual en Deno (funciones) y en Vite (interfaz).
 // Utilidades numéricas y de hash deterministas (sin dependencias, válidas en Deno y navegador).
 
 export function clamp(value, min = 0, max = 100) {

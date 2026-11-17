@@ -1,3 +1,4 @@
+// @ts-nocheck — JavaScript estándar en archivos .ts: se ejecuta igual en Deno (funciones) y en Vite (interfaz).
 // Historias relacionadas: entidades y palabras clave compartidas (Jaccard), determinista.
 import { jaccard } from './semantic.ts'
 

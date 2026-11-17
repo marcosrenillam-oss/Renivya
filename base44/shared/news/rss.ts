@@ -1,3 +1,4 @@
+// @ts-nocheck — JavaScript estándar en archivos .ts: se ejecuta igual en Deno (funciones) y en Vite (interfaz).
 // Parser RSS 2.0 / RDF / Atom sin dependencias (Deno no trae DOMParser). Determinista.
 import { decodeEntities, stripHtml } from './normalizer.ts'
 

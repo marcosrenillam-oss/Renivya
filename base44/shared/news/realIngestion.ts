@@ -1,3 +1,4 @@
+// @ts-nocheck — JavaScript estándar en archivos .ts: se ejecuta igual en Deno (funciones) y en Vite (interfaz).
 // RealNewsProvider: lee Source.is_active + feed_url (RSS/Atom) y produce NewsItems pendientes.
 import { parseFeed } from './rss.ts'
 

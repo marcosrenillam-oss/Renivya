@@ -1,3 +1,4 @@
+// @ts-nocheck — JavaScript estándar en archivos .ts: se ejecuta igual en Deno (funciones) y en Vite (interfaz).
 // Paso 2: representación semántica determinista (tokens, conceptos multilingües, firma).
 import { foldAccents } from './normalizer.ts'
 

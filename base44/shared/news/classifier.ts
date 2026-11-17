@@ -1,3 +1,4 @@
+// @ts-nocheck — JavaScript estándar en archivos .ts: se ejecuta igual en Deno (funciones) y en Vite (interfaz).
 // Clasificador de categorías DETERMINISTA y multilingüe. Tiene prioridad sobre cualquier LLM:
 // el LLM solo puede sugerir categoría cuando aquí no hay señal (method === 'fallback').
 import { foldAccents } from './normalizer.ts'
@@ -17,7 +18,7 @@ const LEXICON = {
   football: [
     ['futbol', 4], ['football', 3], ['soccer', 4], ['futebol', 4], ['laliga', 5], ['la liga', 4], ['premier league', 5], ['champions', 4],
     ['champions league', 5], ['uefa', 4], ['fifa', 4], ['mundial de clubes', 5], ['gol', 2], ['goles', 2], ['goal', 1], ['delantero', 3],
-    ['striker', 3], ['entrenador', 2], ['penalti', 3], ['penalty', 2], ['derbi', 3], ['derby', 2], ['estadio', 1], ['fichaje', 4], ['transfer', 1],
+    ['striker', 3], ['entrenador', 2], ['penalti', 3], ['copa', 2], ['final de la copa', 4], ['copa del rey', 5], ['cf', 3], ['fc', 3], ['club de futbol', 4], ['liga', 2], ['futbolista', 4], ['penalty', 2], ['derbi', 3], ['derby', 2], ['estadio', 1], ['fichaje', 4], ['transfer', 1],
   ],
   politics: [
     ['elecciones', 4], ['election', 4], ['elections', 4], ['electoral', 3], ['eleicoes', 4], ['parlamento', 3], ['parliament', 3], ['congreso', 3],

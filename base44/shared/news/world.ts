@@ -1,3 +1,4 @@
+// @ts-nocheck — JavaScript estándar en archivos .ts: se ejecuta igual en Deno (funciones) y en Vite (interfaz).
 // Informe mundial: agregación por país y región (lo usan getWorldReport y la vista World).
 import { COUNTRY_REGION, REGIONS } from './geo.ts'
 

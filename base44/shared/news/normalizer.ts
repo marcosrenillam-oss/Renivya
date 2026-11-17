@@ -63,9 +63,8 @@ export function canonicalUrl(url) {
     u.protocol = 'https:'
     const keep = [...u.searchParams.entries()].filter(([k]) => !TRACKING.test(k)).sort(([a], [b]) => a.localeCompare(b))
     u.search = keep.length ? `?${new URLSearchParams(keep).toString()}` : ''
-    let out = u.toString()
-    if (out.endsWith('/') && u.pathname !== '/') out = out.slice(0, -1)
-    return out
+    if (u.pathname.length > 1 && u.pathname.endsWith('/')) u.pathname = u.pathname.replace(/\/+$/, '')
+    return u.toString()
   } catch {
     return null
   }
@@ -132,10 +131,12 @@ function buildCountryMatchers() {
   const add = (code, alias, weight) => {
     if (!alias || alias.length < 3) return
     if (CASE_SENSITIVE.has(alias)) {
-      out.push({ code, weight, re: new RegExp(`(?<![\\p{L}])${escapeRegex(alias)}(?![\\p{L}])`, 'u'), folded: false })
+      out.push({ code, weight, re: new RegExp(`(?<![\\p{L}])${escapeRegex(alias)}(?![\\p{L}])`, 'u'), mode: 'raw' })
+    } else if (weight >= 2) {
+      // Nombres propios: sin acentos pero CON mayúscula ("gana" ≠ "Gana").
+      out.push({ code, weight, re: new RegExp(`(?<![\\p{L}])${escapeRegex(foldAccents(alias))}(?![\\p{L}])`, 'u'), mode: 'cased' })
     } else {
-      const f = foldAccents(alias.toLowerCase())
-      out.push({ code, weight, re: new RegExp(`(?<![\\p{L}])${escapeRegex(f)}(?![\\p{L}])`, 'u'), folded: true })
+      out.push({ code, weight, re: new RegExp(`(?<![\\p{L}])${escapeRegex(foldAccents(alias.toLowerCase()))}(?![\\p{L}])`, 'u'), mode: 'folded' })
     }
   }
   for (const code of COUNTRY_CODES) {
@@ -161,10 +162,11 @@ export function detectCountries(text) {
   if (!text) return []
   countryMatchers ??= buildCountryMatchers()
   const original = String(text)
-  const folded = foldAccents(original.toLowerCase())
+  const cased = foldAccents(original)
+  const folded = cased.toLowerCase()
   const totals = new Map()
   for (const m of countryMatchers) {
-    const hay = m.folded ? folded : original
+    const hay = m.mode === 'raw' ? original : m.mode === 'cased' ? cased : folded
     const matches = hay.match(new RegExp(m.re.source, 'gu'))
     if (matches) totals.set(m.code, (totals.get(m.code) || 0) + m.weight * Math.min(matches.length, 4))
   }

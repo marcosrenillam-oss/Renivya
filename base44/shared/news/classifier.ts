@@ -82,6 +82,8 @@ const LEXICON = {
     ['internacional', 2], ['international', 2], ['onu', 4], ['united nations', 4], ['naciones unidas', 4], ['otan', 4], ['nato', 4], ['guerra', 4],
     ['war', 4], ['conflicto', 3], ['conflict', 3], ['refugiados', 3], ['refugees', 3], ['frontera', 2], ['border', 2], ['ataque', 2], ['attack', 2],
     ['tregua', 4], ['ceasefire', 4], ['embajada', 3], ['embassy', 3], ['crisis humanitaria', 5], ['humanitarian', 3],
+    ['terremoto', 5], ['earthquake', 5], ['sismo', 4], ['seisme', 5], ['tsunami', 5], ['huracan', 4], ['hurricane', 4], ['tifon', 4], ['typhoon', 4],
+    ['desplazados', 3], ['displaced', 3], ['deplacees', 3], ['magnitud', 2], ['magnitude', 2],
   ],
 }
 

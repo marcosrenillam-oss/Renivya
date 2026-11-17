@@ -6,7 +6,8 @@ import { jaccard, tokenize } from './semantic.ts'
 import { cleanHeadline } from './headline.ts'
 import { stableSort, uniq } from './stats.ts'
 
-const MAX_BODY_SENTENCES = 18
+const MAX_BODY_SENTENCES = 12
+const JOURNALISTIC = new Set(['agency', 'newspaper', 'broadcast'])
 
 /** Orden editorial de los miembros: fiabilidad, extensión y antigüedad. */
 export function rankMembers(members) {
@@ -70,7 +71,11 @@ export function whyItMatters({ category, countries, analysis, status, locale = '
  */
 export function buildEditorial({ members, analysis, category, countries = [], status = 'active', locale = 'es' }) {
   const ranked = rankMembers(members)
-  const lead = ranked[0]
+  // Titular y entradilla: fuente periodística en el idioma editorial si la hay; si no, la mejor disponible.
+  const lead =
+    ranked.find((m) => m.language === locale && JOURNALISTIC.has(m.source_type ?? 'newspaper')) ||
+    ranked.find((m) => JOURNALISTIC.has(m.source_type ?? 'newspaper')) ||
+    ranked[0]
   const sourceNames = uniq(members.map((m) => m.source_name))
   const title = cleanHeadline(lead.title, sourceNames)
   const src = (m) => ({ name: m.source_name ?? null, url: m.url ?? null })
@@ -84,12 +89,12 @@ export function buildEditorial({ members, analysis, category, countries = [], st
   // Cuerpo: frases de todas las fuentes, sin repeticiones, con su procedencia.
   const chosen = []
   const summaryTokens = new Set(tokenize(summary))
-  for (const m of ranked) {
+  for (const m of [lead, ...ranked.filter((x) => x !== lead)]) {
     for (const s of splitSentences(m.text)) {
       const toks = new Set(tokenize(s))
       if (toks.size < 4) continue
-      if (jaccard(toks, summaryTokens) >= 0.5) continue
-      if (chosen.some((c) => jaccard(c.tokens, toks) >= 0.5)) continue
+      if (jaccard(toks, summaryTokens) >= 0.4) continue
+      if (chosen.some((c) => jaccard(c.tokens, toks) >= 0.4)) continue
       chosen.push({ text: s, tokens: toks, source: src(m) })
       if (chosen.length >= MAX_BODY_SENTENCES) break
     }

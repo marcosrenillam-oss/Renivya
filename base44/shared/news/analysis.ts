@@ -32,22 +32,58 @@ export function hasCorrectionMarker(text) {
   return has(text, CORRECTION_MARKERS)
 }
 
-/** Números con su contexto inmediato (para detectar cifras en conflicto). */
+/** Clases de magnitud comparables entre fuentes (raíces sin acentos). */
+const QUANTITY_CLASSES = {
+  deaths: ['muert', 'fallec', 'kill', 'dead', 'death', 'mort', 'victim', 'vitim', 'toll'],
+  injured: ['herid', 'injur', 'wound', 'bless', 'ferid'],
+  displaced: ['desplaz', 'displac', 'evacu', 'deplac', 'desaloj', 'refugi', 'deslocad'],
+  area: ['hectar', 'hectare', 'km2', 'kilometros cuadrados', 'square'],
+  attendance: ['espectador', 'aficionad', 'asistent', 'spectator', 'fans', 'attendance'],
+  magnitude: ['magnitud', 'magnitude'],
+  money: ['euro', 'dolar', 'dollar', 'libra', 'pound'],
+}
+
+function quantityClass(sentence, start, end) {
+  const before = tokenize(sentence.slice(0, start)).slice(-8).reverse()
+  const after = tokenize(sentence.slice(end)).slice(0, 4)
+  let best = null
+  let bestDist = Infinity
+  for (const [cls, stems] of Object.entries(QUANTITY_CLASSES)) {
+    const hit = (list, offset) => list.findIndex((t) => stems.some((s) => t.startsWith(s)))
+    const a = hit(after)
+    const b = hit(before)
+    const d = Math.min(a === -1 ? Infinity : a, b === -1 ? Infinity : b + 0.5)
+    if (d < bestDist) {
+      bestDist = d
+      best = cls
+    }
+  }
+  return best
+}
+
+/** Números con su clase de magnitud (para detectar cifras en conflicto). */
 export function extractNumbers(sentence) {
   const out = []
-  const re = /(\d{1,3}(?:[.,\s]\d{3})+|\d+(?:[.,]\d+)?)\s*(%|por ciento|percent|millones|millions|million|milliards|billion|mil millones|mil|k)?/gi
+  const re = /(\d{1,3}(?:[.,\s\u00a0]\d{3})+(?![.,]?\d)|\d+(?:[.,]\d{1,2})?)\s*(%|por ciento|percent|millones|millions|million|milliards|billion|mil millones|mil milhões|mil|k)?/gi
   let m
   while ((m = re.exec(sentence))) {
     const raw = m[1]
     if (/^(19|20)\d{2}$/.test(raw)) continue // años: no son cifras comparables
-    let value = Number(raw.replace(/[\s.](?=\d{3}\b)/g, '').replace(',', '.'))
+    const thousands = /^\d{1,3}(?:[.,\s\u00a0]\d{3})+$/.test(raw)
+    let value = Number(thousands ? raw.replace(/[.,\s\u00a0]/g, '') : raw.replace(',', '.'))
     const unit = (m[2] || '').toLowerCase()
     if (/millon|million/.test(unit)) value *= 1e6
-    else if (/milliard|billion|mil millones/.test(unit)) value *= 1e9
+    else if (/milliard|billion|mil millones|mil milh/.test(unit)) value *= 1e9
     else if (unit === 'mil' || unit === 'k') value *= 1e3
     if (!Number.isFinite(value)) continue
+    const isPercent = /%|ciento|percent/.test(unit)
     const after = tokenize(sentence.slice(m.index + m[0].length, m.index + m[0].length + 40)).slice(0, 2)
-    out.push({ value, unit: /%|ciento|percent/.test(unit) ? '%' : '', context: after.join(' ') })
+    out.push({
+      value,
+      unit: isPercent ? '%' : '',
+      klass: isPercent ? 'percent' : quantityClass(sentence, m.index, m.index + m[0].length),
+      context: after.join(' '),
+    })
   }
   return out
 }
@@ -103,12 +139,15 @@ export function analyzeCluster(members) {
       facts.push({ text: sentence, tokens: new Set(tokenize(sentence)), numbers: extractNumbers(sentence), member: mi })
     }
   })
+  const qkey = (n) => `${n.klass}|${n.value}`
   const clusters = []
   for (const f of facts) {
     let target = null
     let best = 0.34
+    const fq = new Set(f.numbers.filter((n) => n.klass).map(qkey))
     for (const c of clusters) {
-      const s = jaccard(f.tokens, c.tokens)
+      const shared = [...fq].some((k) => c.quantities.has(k))
+      const s = jaccard(f.tokens, c.tokens) + (shared ? 0.2 : 0)
       if (s > best) {
         best = s
         target = c
@@ -117,12 +156,50 @@ export function analyzeCluster(members) {
     if (target) {
       target.items.push(f)
       for (const t of f.tokens) target.tokens.add(t)
-    } else clusters.push({ tokens: new Set(f.tokens), items: [f] })
+      for (const k of fq) target.quantities.add(k)
+    } else clusters.push({ tokens: new Set(f.tokens), quantities: fq, items: [f] })
   }
 
-  // 2. Estado de cada hecho y contradicciones numéricas.
-  const knownFacts = []
+  // 2. Contradicciones: misma clase de magnitud, valores distintos entre grupos independientes.
+  //    Dentro de un mismo grupo (misma fuente o cable) una cifra distinta es actualización, no contradicción.
   const contradictions = []
+  const disputedKeys = new Set()
+  const disputedValues = new Map()
+  const latestByGroup = new Map()
+  for (const f of facts) {
+    const g = groupOf.get(f.member)
+    for (const n of f.numbers) {
+      if (!n.klass) continue
+      const key = `${n.klass}|${g}`
+      const at = members[f.member].published_at || ''
+      const prev = latestByGroup.get(key)
+      if (!prev || at >= prev.at) latestByGroup.set(key, { ...n, at, group: g, source: members[f.member].source_name })
+    }
+  }
+  const byClass = new Map()
+  for (const v of latestByGroup.values()) {
+    if (!byClass.has(v.klass)) byClass.set(v.klass, [])
+    byClass.get(v.klass).push(v)
+  }
+  for (const [klass, values] of byClass) {
+    if (values.length < 2 || klass === 'money' || klass === 'percent') continue
+    const nums = values.map((v) => v.value)
+    const min = Math.min(...nums)
+    const max = Math.max(...nums)
+    if (max === min) continue
+    const rel = (max - min) / Math.max(Math.abs(max), 1)
+    const lo = values.find((v) => v.value === min)
+    const hi = values.find((v) => v.value === max)
+    disputedKeys.add(klass)
+    disputedValues.set(klass, new Set(nums))
+    contradictions.push({
+      severity: rel > 0.25 ? 'major' : 'minor',
+      label: `${QUANTITY_LABEL[klass] || klass}: ${lo.source} ${formatN(min)}${lo.unit} / ${hi.source} ${formatN(max)}${hi.unit}`,
+    })
+  }
+
+  // 3. Estado de cada hecho.
+  const knownFacts = []
   for (const c of clusters) {
     const groups = new Set(c.items.map((f) => groupOf.get(f.member)))
     const rep = c.items.reduce((a, b) => (b.text.length < a.text.length ? b : a))
@@ -133,33 +210,7 @@ export function analyzeCluster(members) {
     else if (context) status = 'context'
     else if (groups.size >= 2) status = 'confirmed'
 
-    // Cifras con el mismo contexto que difieren entre grupos independientes.
-    const byContext = new Map()
-    for (const f of c.items) {
-      for (const n of f.numbers) {
-        const key = `${n.unit}|${n.context}`
-        if (!n.context) continue
-        if (!byContext.has(key)) byContext.set(key, [])
-        byContext.get(key).push({ ...n, group: groupOf.get(f.member), source: members[f.member].source_name })
-      }
-    }
-    let disputed = false
-    for (const [key, values] of byContext) {
-      const distinctGroups = new Set(values.map((v) => v.group))
-      if (distinctGroups.size < 2) continue
-      const nums = values.map((v) => v.value)
-      const min = Math.min(...nums)
-      const max = Math.max(...nums)
-      if (max === min) continue
-      const rel = (max - min) / Math.max(Math.abs(max), 1)
-      disputed = true
-      const lo = values.find((v) => v.value === min)
-      const hi = values.find((v) => v.value === max)
-      contradictions.push({
-        severity: rel > 0.25 ? 'major' : 'minor',
-        label: `${key.split('|')[1]}: ${lo.source} ${formatN(min)}${lo.unit} / ${hi.source} ${formatN(max)}${hi.unit}`,
-      })
-    }
+    const disputed = c.items.some((f) => f.numbers.some((n) => disputedKeys.has(n.klass) && disputedValues.get(n.klass)?.has(n.value)))
     const sources = dedupeSources(c.items.map((f) => members[f.member]))
     knownFacts.push({
       text: rep.text,
@@ -212,10 +263,12 @@ export function analyzeCluster(members) {
   }
 }
 
+const QUANTITY_LABEL = { deaths: 'víctimas mortales', injured: 'heridos', displaced: 'desplazados o evacuados', area: 'superficie', attendance: 'asistencia', magnitude: 'magnitud' }
+
 function formatN(n) {
   if (Math.abs(n) >= 1e9) return `${(n / 1e9).toFixed(1).replace(/\.0$/, '')} mil M`
   if (Math.abs(n) >= 1e6) return `${(n / 1e6).toFixed(1).replace(/\.0$/, '')} M`
-  return String(Math.round(n * 100) / 100)
+  return new Intl.NumberFormat('es').format(Math.round(n * 100) / 100)
 }
 
 function dedupeSources(members) {

@@ -19,5 +19,7 @@ export function cleanHeadline(raw, sourceNames = []) {
   }
   const stripped = title.replace(SUFFIX_RE, '')
   if (stripped !== title && stripped.split(' ').length >= 5) title = stripped
-  return title.replace(/^["'«“]+|["'»”]+$/g, '').trim()
+  title = title.replace(/^["'«“]+|["'»”]+$/g, '').trim()
+  // Tras quitar un prefijo ("Última hora: …") el titular debe empezar en mayúscula.
+  return title.charAt(0).toLocaleUpperCase() + title.slice(1)
 }

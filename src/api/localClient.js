@@ -18,33 +18,42 @@ export const ENTITY_NAMES = [
   'StoryEntity', 'EntityRelation', 'Media', 'ArticleEmbedding', 'Preference', 'SavedStory',
 ]
 
-const memory = new Map()
-
-function readStore(key) {
-  try {
-    const raw = window.localStorage.getItem(STORAGE_PREFIX + key)
-    if (raw) return JSON.parse(raw)
-  } catch {
-    /* almacenamiento no disponible: usamos memoria */
-  }
-  return memory.get(key) ?? null
-}
-
-function writeStore(key, value) {
-  memory.set(key, value)
-  try {
-    window.localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(value))
-  } catch {
-    /* sin persistencia: queda en memoria */
-  }
-}
-
-function removeStore(key) {
-  memory.delete(key)
-  try {
-    window.localStorage.removeItem(STORAGE_PREFIX + key)
-  } catch {
-    /* noop */
+/**
+ * Almacén clave-valor. `memoryOnly` crea un almacén aislado (pruebas, autotest de Brain)
+ * que nunca toca localStorage.
+ */
+function createStore(memoryOnly = false) {
+  const memory = new Map()
+  return {
+    read(key) {
+      if (!memoryOnly) {
+        try {
+          const raw = window.localStorage.getItem(STORAGE_PREFIX + key)
+          if (raw) return JSON.parse(raw)
+        } catch {
+          /* almacenamiento no disponible: usamos memoria */
+        }
+      }
+      return memory.get(key) ?? null
+    },
+    write(key, value) {
+      memory.set(key, value)
+      if (memoryOnly) return
+      try {
+        window.localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(value))
+      } catch {
+        /* sin persistencia: queda en memoria */
+      }
+    },
+    remove(key) {
+      memory.delete(key)
+      if (memoryOnly) return
+      try {
+        window.localStorage.removeItem(STORAGE_PREFIX + key)
+      } catch {
+        /* noop */
+      }
+    },
   }
 }
 
@@ -128,11 +137,9 @@ function pickFields(record, fields) {
 const SESSION_KEY = '__session'
 const USERS_KEY = '__users'
 
-function currentUser() {
-  return readStore(SESSION_KEY)
-}
-
-function createAuth() {
+function createAuth(store) {
+  const { read: readStore, write: writeStore, remove: removeStore } = store
+  const currentUser = () => readStore(SESSION_KEY)
   const users = () => readStore(USERS_KEY) || {}
 
   function startSession(user) {
@@ -217,7 +224,9 @@ function createAuth() {
 
 /* ---------------- entidades ---------------- */
 
-function createEntityHandler(name) {
+function createEntityHandler(name, store) {
+  const { read: readStore, write: writeStore } = store
+  const currentUser = () => readStore(SESSION_KEY)
   const load = () => readStore(`entity:${name}`) || []
   const save = (rows) => writeStore(`entity:${name}`, rows)
 
@@ -306,15 +315,20 @@ function createEntityHandler(name) {
   }
 }
 
-export function createLocalClient() {
-  const entities = Object.fromEntries(ENTITY_NAMES.map((n) => [n, createEntityHandler(n)]))
+export function createLocalClient({ memoryOnly = false } = {}) {
+  const store = createStore(memoryOnly)
+  if (memoryOnly) {
+    const now = new Date().toISOString()
+    store.write(SESSION_KEY, { id: 'memory-user', email: 'memory@renivya.local', full_name: 'Pruebas', role: 'admin', created_date: now, updated_date: now })
+  }
+  const entities = Object.fromEntries(ENTITY_NAMES.map((n) => [n, createEntityHandler(n, store)]))
   const unavailable = (what) => async () => {
     throw new LocalError(`${what} no está disponible en modo local`, 501, 'local_mode')
   }
   const client = {
     isLocal: true,
     entities,
-    auth: createAuth(),
+    auth: createAuth(store),
     functions: {
       invoke: async (name) => {
         throw new LocalError(`La función backend "${name}" requiere Base44 (modo local)`, 501, 'local_mode')

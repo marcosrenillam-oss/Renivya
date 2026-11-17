@@ -1,4 +1,5 @@
 import { base44 } from '@/api/base44Client'
+import { normalizeEntityName } from '../../base44/shared/news/entities.ts'
 
 /**
  * Capa de datos de RENIVYA sobre las entidades de Base44.
@@ -37,22 +38,8 @@ export const queryKeys = {
 /* Normalización                                                       */
 /* ------------------------------------------------------------------ */
 
-/**
- * normalized_name de Entity: minúsculas, sin puntuación, espacios colapsados.
- * Puntos y apóstrofos se eliminan sin espacio ("C.F." → "cf", "O'Neill" → "oneill");
- * el resto de signos separa palabras ("Saint-Germain" → "saint germain").
- * NOTA: debe coincidir exactamente con la normalización del motor (entities.ts).
- */
-export function normalizeEntityName(name) {
-  if (!name) return ''
-  return String(name)
-    .normalize('NFC')
-    .toLowerCase()
-    .replace(/[.'’`´]/g, '')
-    .replace(/[\p{P}\p{S}]+/gu, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-}
+/** normalized_name de Entity: misma función que usa el motor (fuente única). */
+export { normalizeEntityName }
 
 function uniqueBy(rows, key) {
   const seen = new Set()

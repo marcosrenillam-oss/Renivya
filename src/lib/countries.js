@@ -2,23 +2,11 @@ import { COUNTRY_COORDINATES } from '@/lib/countryCoordinates'
 import { DEFAULT_LOCALE } from '@/lib/languages'
 
 /**
- * Países (ISO-3166-1 alfa-2) con región editorial.
+ * Países (ISO-3166-1 alfa-2) con región editorial (geografía compartida con el motor).
  * Los nombres se resuelven con Intl.DisplayNames en el idioma de la interfaz.
  */
-export const REGIONS = ['europe', 'americas', 'asia', 'middle_east', 'africa', 'oceania']
-
-const REGION_MEMBERS = {
-  europe: 'ES PT FR DE IT GB IE NL BE LU CH AT DK SE NO FI IS PL CZ SK HU RO BG GR HR SI RS BA ME MK AL EE LV LT UA BY MD RU CY MT AD MC VA',
-  americas: 'US CA MX GT HN SV NI CR PA CU DO PR HT JM CO VE EC PE BO CL AR UY PY BR',
-  asia: 'CN JP KR KP TW HK IN PK BD LK NP AF KZ UZ MN TH VN MY SG ID PH MM KH',
-  middle_east: 'TR IL PS LB SY JO IQ IR SA AE QA KW BH OM YE',
-  africa: 'EG LY TN DZ MA SD SS ET SO KE UG TZ RW CD CG CM NG GH CI SN ML NE BF TD ZA ZW ZM MZ AO NA BW MG',
-  oceania: 'AU NZ PG FJ',
-}
-
-export const COUNTRY_REGION = Object.fromEntries(
-  Object.entries(REGION_MEMBERS).flatMap(([region, list]) => list.split(' ').map((code) => [code, region]))
-)
+export { REGIONS, COUNTRY_REGION } from '../../base44/shared/news/geo.ts'
+import { COUNTRY_REGION } from '../../base44/shared/news/geo.ts'
 
 export const COUNTRY_CODES = Object.keys(COUNTRY_COORDINATES)
 

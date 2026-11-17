@@ -1,7 +1,7 @@
 // Paso 7: extracción, normalización y persistencia de entidades + relaciones con evidencia explícita.
 // Reglas: una Entity por normalized_name (sin duplicar), StoryEntity idempotente por (story_id, entity_id),
 // EntityRelation solo cuando una frase lo dice expresamente. Nada de descripciones o IDs inventados.
-import { CITY_GAZETTEER } from './geo.ts'
+import { CITY_GAZETTEER, COUNTRY_CODES } from './geo.ts'
 import { detectCountries, foldAccents, splitSentences } from './normalizer.ts'
 
 /**
@@ -55,7 +55,9 @@ const COMPANY_MARKERS = /\b(S\.A\.|SA|S\.L\.|Inc|Inc\.|Corp|Corporation|Group|Gr
 const ORG_MARKERS = /\b(Fundación|Foundation|Fondation|Asociación|Association|Sindicato|Union|Consorcio|Consortium|Alianza|Alliance|ONG|NGO|Federación|Federation|Liga)\b/
 const EVENT_MARKERS = /\b(Copa|Cup|Coupe|Mundial|World Cup|Juegos Olímpicos|Olympics|Grand Prix|Gran Premio|Open|Tour de|Liga de Campeones|Champions League|Eurocopa|Euro \d{4}|Cumbre|Summit|COP\d+)\b/
 const PERSON_TITLES = /\b(presidente|presidenta|ministro|ministra|primer ministro|primera ministra|líder|lider|director|directora|portavoz|alcalde|alcaldesa|entrenador|jugador|jugadora|consejero delegado|secretario|secretaria|juez|jueza|fiscal|rey|reina|papa|sr\.|sra\.|president|minister|prime minister|leader|ceo|spokesperson|mayor|coach|player|judge|king|queen|mr\.|mrs\.|ms\.|dr\.)\s*$/i
-const LOCATION_CUE = /\b(en|in|à|em|desde|from|cerca de|near)\s*$/i
+const LOCATION_CUE = /(?:\b(?:en|in|à|em|desde|from|cerca de|near)|(?:sierra|región|region|região|embalse|barragem|barrage|provincia|province|valle|valley|vale|costa|coast|côte|ciudad|cidade|city|municipio|localidad|isla|island|île|río|river|lago|lake|monte|puerto)\s+(?:de\s+|del\s+|of\s+|da\s+|do\s+|de la\s+|du\s+)?(?:la\s+|el\s+|the\s+)?)\s*$/i
+const COMPANY_CUE = /\b(?:consorcio|consórcio|consortium|empresa|compañía|companhia|compagnie|start-?up|firma|firm|company|société|entreprise|grupo|group|operadora|fabricante|manufacturer|tecnológica)\s+(?:\w+\s+)?$/i
+const NOT_ORG_ACRONYMS = new Set(['US', 'UK', 'AI', 'IA', 'CEO', 'PIB', 'GDP', 'TV', 'PM', 'AM', 'OK', 'EEUU', 'USA', 'IPC', 'CPI', 'COVID', 'ONG', 'NGO'])
 
 const CAP_STOP = new Set(
   `El La Los Las Un Una Unos Unas Lo Al Del De En Por Para Con Sin Según Tras Este Esta Estos Estas Ese Esa Aquel Hoy Ayer Mañana Pero Y O Sin Como Cuando Donde Desde Hasta Ante
@@ -85,7 +87,7 @@ function capitalizedSpans(sentence) {
     charPos = idx + w.length
   }
   while (i < words.length) {
-    const clean = words[i].replace(/^[«"“'(¿¡]+|[»"”',.;:!?)]+$/g, '')
+    const clean = words[i].replace(/^[«"“'(¿¡]+|[»"”',.;:!?)]+$/g, '').replace(/['’]s$/, '')
     if (!CAP_WORD.test(clean)) {
       i++
       continue
@@ -94,7 +96,7 @@ function capitalizedSpans(sentence) {
     let j = i + 1
     while (j < words.length) {
       const w = words[j].replace(/^[«"“'(]+|[»"”',.;:!?)]+$/g, '')
-      const endsPunct = /[,.;:!?)»"”]$/.test(words[j - 1])
+      const endsPunct = /[,.;:!?)»"”]$/.test(words[j - 1]) || /['’]s$/.test(words[j - 1])
       if (endsPunct) break
       if (CAP_WORD.test(w)) {
         parts.push(w)
@@ -126,11 +128,12 @@ function classifySpan(span, sentence) {
   if (INSTITUTION_MARKERS.test(t)) return { type: 'institution', confidence: 75 }
   if (COMPANY_MARKERS.test(t)) return { type: 'company', confidence: 75 }
   if (ORG_MARKERS.test(t)) return { type: 'organization', confidence: 70 }
-  if (span.words === 1 && isAcronym(t)) return { type: 'organization', confidence: 50 }
+  if (COMPANY_CUE.test(before)) return { type: 'company', confidence: 65 }
+  if (span.words === 1 && isAcronym(t)) return NOT_ORG_ACRONYMS.has(t) ? null : { type: 'organization', confidence: 50 }
+  if (LOCATION_CUE.test(before) && span.words <= 3) return { type: 'location', confidence: 60 }
   if (span.words >= 2 && span.words <= 3 && t.split(' ').every((w) => /^[\p{Lu}][\p{Ll}'’-]+$/u.test(w))) {
     return { type: 'person', confidence: PERSON_TITLES.test(before) ? 80 : 60 }
   }
-  if (LOCATION_CUE.test(before)) return { type: 'location', confidence: 55 }
   return { type: 'other', confidence: 45 }
 }
 
@@ -141,6 +144,28 @@ function getCityMatchers() {
     re: new RegExp(`(?<![\\p{L}])(${[c.name, ...c.aliases].map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})(?![\\p{L}])`, 'gu'),
   }))
   return cityMatchers
+}
+
+let countryNameSet = null
+/** ¿El tramo es exactamente el nombre de un país (en cualquier idioma soportado)? */
+function isCountryName(text) {
+  if (!countryNameSet) {
+    countryNameSet = new Set()
+    for (const { code } of detectCountries('')) countryNameSet.add(code)
+    for (const l of ['es', 'en', 'fr', 'pt', 'de', 'it']) {
+      let dn = null
+      try {
+        dn = new Intl.DisplayNames([l], { type: 'region' })
+      } catch {
+        break
+      }
+      for (const code of COUNTRY_CODES) {
+        const n = dn.of(code)
+        if (n) countryNameSet.add(normalizeEntityName(n))
+      }
+    }
+  }
+  return countryNameSet.has(normalizeEntityName(text))
 }
 
 function countryEntityName(code) {
@@ -180,8 +205,9 @@ export function extractEntities({ title = '', text = '' }) {
       prev.inTitle ||= inTitle
       prev.confidence = Math.max(prev.confidence, e.confidence)
       for (const a of e.aliases || []) if (!prev.aliases.includes(a)) prev.aliases.push(a)
-      // tipo más específico gana sobre "other"/"location"
-      if ((prev.type === 'other' || prev.type === 'location') && e.type !== 'other') prev.type = e.type
+      // Un tipo más específico o con más confianza sustituye a uno genérico o heurístico.
+      const weak = ['other', 'location', 'person']
+      if (weak.includes(prev.type) && e.type !== 'other' && e.type !== prev.type && (prev.type !== 'person' || e.confidence > prev.confidence)) prev.type = e.type
     } else {
       found.set(key, { name: e.name, normalized_name: key, type: e.type, country_code: e.country_code ?? null, aliases: [...(e.aliases || [])], mentions, inTitle, confidence: e.confidence })
     }
@@ -199,11 +225,16 @@ export function extractEntities({ title = '', text = '' }) {
   // 2. Nombres propios por frase (equipos primero para resolver conflictos ciudad/club).
   const teamRanges = []
   const sentences = [title, ...splitSentences(text)]
+  const orgLabels = KNOWN_ORGS.flatMap((o) => [o.name, ...o.aliases])
   sentences.forEach((sentence, si) => {
     for (const span of capitalizedSpans(sentence)) {
       if (span.words === 1 && span.atSentenceStart && !isAcronym(span.text)) continue
       if (CAP_STOP.has(span.text)) continue
-      const { type, confidence } = classifySpan(span, sentence)
+      if (isCountryName(span.text)) continue // los países se añaden en el paso 4
+      if (orgLabels.some((l) => span.text.includes(l))) continue // organizaciones conocidas: paso 1
+      const cls = classifySpan(span, sentence)
+      if (!cls) continue
+      const { type, confidence } = cls
       if (type === 'sports_team') teamRanges.push(span.text)
       add({ name: span.text, type, confidence }, 1, si === 0)
     }

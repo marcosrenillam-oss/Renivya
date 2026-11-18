@@ -1,5 +1,5 @@
 /* RENIVYA — service worker.
- * - Navegación: red primero; sin red → shell cacheado (la app sigue abriendo).
+ * - Navegación: red primero y sin caché HTTP (siempre la última versión); sin red → shell cacheado.
  * - Recursos estáticos propios (/assets, /icons) y fuentes: caché primero.
  * - Nunca cachea las noticias (data/app.json, data/snapshot.json): siempre se piden a la red;
  *   sin conexión, la app sigue mostrando las que ya guardó en el dispositivo.
@@ -36,7 +36,8 @@ async function cacheFirst(request) {
 
 async function networkFirstNavigation(request) {
   try {
-    const response = await fetch(request)
+    // Siempre la versión publicada más reciente (sin la caché HTTP del navegador).
+    const response = await fetch(request.url, { cache: 'no-store', credentials: 'same-origin' })
     const cache = await caches.open(VERSION)
     cache.put(`${BASE}index.html`, response.clone())
     return response

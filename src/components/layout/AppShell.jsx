@@ -7,13 +7,16 @@ import MenuDrawer from '@/components/shell/MenuDrawer'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { AppProvider } from '@/lib/AppContext'
 import { useSnapshotSync } from '@/hooks/useSnapshotSync'
+import { useAutoUpdate } from '@/hooks/useAutoUpdate'
+import UpdatePill from '@/components/shell/UpdatePill'
 
 /** Pantalla limpia: barra superior mínima + menú lateral. Sin barra inferior ni barra de estado. */
 export default function AppShell() {
   const location = useLocation()
   const [menu, setMenu] = useState(false)
   const close = useCallback(() => setMenu(false), [])
-  useSnapshotSync()
+  const sync = useSnapshotSync()
+  const updatingApp = useAutoUpdate()
   useEffect(() => setMenu(false), [location.pathname])
 
   return (
@@ -35,6 +38,7 @@ export default function AppShell() {
             </motion.main>
           </AnimatePresence>
           <MenuDrawer open={menu} onClose={close} />
+          <UpdatePill state={updatingApp ? 'app' : sync} />
         </div>
       </TooltipProvider>
     </AppProvider>

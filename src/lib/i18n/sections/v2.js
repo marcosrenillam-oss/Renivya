@@ -1,6 +1,9 @@
 // Textos del rediseño (portada, menú, cuenta, mundo, perfil). Solo español e inglés.
 export default {
   es: {
+    'update.app': 'Actualizando la app…',
+    'update.news': 'Buscando noticias nuevas…',
+    'update.done': 'Noticias al día',
     'greet.morning': 'Buenos días',
     'greet.afternoon': 'Buenas tardes',
     'greet.evening': 'Buenas noches',
@@ -89,6 +92,9 @@ export default {
     'profile.updated': 'Noticias actualizadas {time}',
   },
   en: {
+    'update.app': 'Updating the app…',
+    'update.news': 'Checking for new stories…',
+    'update.done': 'News up to date',
     'greet.morning': 'Good morning',
     'greet.afternoon': 'Good afternoon',
     'greet.evening': 'Good evening',

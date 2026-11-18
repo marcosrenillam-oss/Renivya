@@ -5,8 +5,8 @@ import { REAL_SOURCES } from './sourceCatalog.js'
 export const SNAPSHOT_ENTITIES = ['Story', 'NewsItem', 'Source', 'StorySource', 'StoryUpdate', 'Entity', 'StoryEntity', 'EntityRelation', 'Media']
 const MAX_STORIES = 500
 // Sube cuando cambia la forma de las historias: un estado anterior de otra versión se descarta
-// (v2: idioma único por historia, ediciones por país, traducciones).
-export const STATE_VERSION = 2
+// (v2: idioma único por historia, ediciones por país, traducciones; v3: foto en cada noticia).
+export const STATE_VERSION = 3
 
 /**
  * entities: almacén en memoria (client.entities con replaceAll).
@@ -30,6 +30,7 @@ export async function buildSnapshot({ entities, previous = null, provider = null
     perSource = report.perSource
     log(`feeds: ${perSource.filter((s) => s.ok).length}/${report.sources} ok · artículos nuevos: ${report.created} · historias +${report.pipeline.storiesCreated} ~${report.pipeline.storiesUpdated}`)
     if (report.errors.length) log('errores:', report.errors.join(' | '))
+    if (report.images) log(`fotos de página (og:image): ${report.images.found}/${report.images.checked} encontradas`)
     if ((await count('Story', { is_demo: false })) > 0) mode = 'real'
   }
 
@@ -46,6 +47,8 @@ export async function buildSnapshot({ entities, previous = null, provider = null
   // 4. Recorte: historias más recientes; artículos necesarios para deduplicar y para que
   //    las historias vivas sigan agrupando noticias nuevas en la próxima ejecución.
   const stories = (await db.Story.filterAll({}, '-updated_date', 100000)).slice(0, MAX_STORIES)
+  const withPhoto = stories.filter((s) => s.image_url).length
+  log(`fotos: ${withPhoto}/${stories.length} historias con imagen`)
   const keep = new Set(stories.map((s) => s.id))
   const liveSince = new Date(now.getTime() - 72 * 3_600_000).toISOString()
   const live = new Set(stories.filter((s) => s.updated_date >= liveSince && s.status !== 'archived').map((s) => s.id))

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import LeadCard from '@/components/front/LeadCard'
 import NewsRow from '@/components/front/NewsRow'
+import Reveal from '@/components/premium/Reveal'
 import CategoryChips from '@/components/front/CategoryChips'
 import EmptyEdition from '@/components/front/EmptyEdition'
 import FeedError from '@/components/story/FeedError'
@@ -37,7 +38,7 @@ export default function TopStories() {
   return (
     <div className="space-y-6">
       <header className="safe-x pt-3">
-        <h1 className="font-display text-[34px] font-bold leading-tight">{t('top.title')}</h1>
+        <h1 className="font-display text-[38px] font-bold leading-[1.05]">{t('top.title')}</h1>
         <p className="mt-1 text-[15px] text-muted-foreground">{t('top.subtitle', { country })}</p>
       </header>
 
@@ -53,7 +54,7 @@ export default function TopStories() {
         <EmptyEdition title={t('home.empty', { country, language: getLanguageName(locale, locale).toLowerCase() })} hint={t('home.emptyHint')} />
       ) : (
         <>
-          <div className="sticky top-[calc(env(safe-area-inset-top)+3.5rem)] z-30 -my-1 bg-background/85 py-2 backdrop-blur-xl">
+          <div className="sticky top-[calc(env(safe-area-inset-top)+4.4rem)] z-30 -my-1 py-2">
             <CategoryChips categories={groups.map(([k]) => k)} value={category} onChange={setCategory} />
           </div>
           <AnimatePresence mode="wait">
@@ -62,9 +63,11 @@ export default function TopStories() {
                 selected.length ? (
                   <div>
                     <LeadCard story={selected[0]} rank={1} />
-                    <div className="mt-4 divide-y divide-border border-t">
+                    <div className="mt-3 space-y-3">
                       {selected.slice(1, 30).map((s) => (
-                        <NewsRow key={s.id} story={s} showCategory={false} />
+                        <Reveal key={s.id}>
+                          <NewsRow story={s} showCategory={false} />
+                        </Reveal>
                       ))}
                     </div>
                   </div>
@@ -72,25 +75,28 @@ export default function TopStories() {
                   <p className="py-10 text-center text-muted-foreground">{t('top.emptyCategory')}</p>
                 )
               ) : (
-                groups.map(([key, list]) => (
-                  <section key={key}>
-                    <div className="mb-4 flex items-baseline justify-between border-b-2 border-foreground pb-2">
-                      <h2 className="font-display text-[22px] font-bold">{getCategoryLabel(key, t)}</h2>
+                groups.map(([key, list], gi) => (
+                  <Reveal as="section" key={key}>
+                    <div className="mb-3 flex items-end justify-between">
+                      <div className="flex items-baseline gap-3">
+                        <span className="font-display text-[34px] font-black leading-none text-accent/80">{String(gi + 1).padStart(2, '0')}</span>
+                        <h2 className="font-display text-[24px] font-bold leading-none">{getCategoryLabel(key, t)}</h2>
+                      </div>
                       {list.length > 3 && (
-                        <button type="button" onClick={() => setCategory(key)} className="text-[13px] font-semibold text-accent">
+                        <button type="button" onClick={() => setCategory(key)} className="glass-chip rounded-full px-3 py-1 text-[12.5px] font-semibold text-accent">
                           +{list.length - 3}
                         </button>
                       )}
                     </div>
                     <LeadCard story={list[0]} />
                     {list.length > 1 && (
-                      <div className="mt-3 divide-y divide-border border-t">
+                      <div className="mt-3 space-y-3">
                         {list.slice(1, 3).map((s) => (
                           <NewsRow key={s.id} story={s} showCategory={false} />
                         ))}
                       </div>
                     )}
-                  </section>
+                  </Reveal>
                 ))
               )}
             </motion.div>

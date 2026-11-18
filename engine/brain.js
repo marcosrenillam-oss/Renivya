@@ -65,9 +65,32 @@ export async function runIngestionCycle(db, { provider, now = new Date(), embedd
     report.created += (await ingestItems(db, res.items)).created
     if (!res.error) await db.Source.update(source.id, { last_fetched_at: now.toISOString() })
   }
+  if (provider.fetchArticleImage) report.images = await enrichImages(db, provider)
   report.pipeline = await runPipeline(db, { isDemo: false, batchId, now, embeddingProvider, log })
   report.maintenance = await maintainStories(db, { now, isDemo: false })
   return report
+}
+
+/**
+ * Toda noticia debe tener foto: a las pendientes sin imagen en el feed se les busca la foto de
+ * portada de su página (og:image). Cada artículo se consulta una sola vez (image_checked).
+ */
+export async function enrichImages(db, provider, { limit = 600, concurrency = 12 } = {}) {
+  const pending = (await db.NewsItem.filterAll({ status: 'pending', is_demo: false }, '-published_at', 5000))
+    .filter((i) => !i.image_url && !i.image_checked)
+    .slice(0, limit)
+  let found = 0
+  const queue = [...pending]
+  const worker = async () => {
+    while (queue.length) {
+      const item = queue.shift()
+      const image = await provider.fetchArticleImage(item.url).catch(() => null)
+      if (image) found++
+      await db.NewsItem.update(item.id, { image_url: image, image_checked: true })
+    }
+  }
+  await Promise.all(Array.from({ length: concurrency }, worker))
+  return { checked: pending.length, found }
 }
 
 /** Archiva historias sin evidencia nueva en 7 días (con registro en el historial). */

@@ -42,7 +42,7 @@ const AppRoutes = () => {
         <Route path="/" element={<Home />} />
         <Route path="/top-stories" element={page(<TopStories />)} />
         <Route path="/world" element={page(<World />)} />
-        <Route path="/story/:id" element={page(<StoryDetail />, true)} />
+        <Route path="/story/:id" element={page(<StoryDetail />)} />
         <Route path="/search" element={page(<SearchPage />, true)} />
         <Route path="/saved" element={page(<SavedStories />, true)} />
         <Route path="/profile" element={page(<Profile />)} />

@@ -3,6 +3,8 @@ import Greeting from '@/components/front/Greeting'
 import BreakingTicker from '@/components/front/BreakingTicker'
 import FrontPageCarousel from '@/components/front/FrontPageCarousel'
 import NewsRow from '@/components/front/NewsRow'
+import FeatureCard from '@/components/front/FeatureCard'
+import Reveal from '@/components/premium/Reveal'
 import EmptyEdition from '@/components/front/EmptyEdition'
 import FeedError from '@/components/story/FeedError'
 import { useEditionNews } from '@/lib/news/useNews'
@@ -45,21 +47,23 @@ export default function Home() {
           <BreakingTicker stories={breaking} />
           <section>
             <div className="safe-x flex items-baseline justify-between">
-              <h2 className="font-display text-[22px] font-bold">{t('home.frontPages')}</h2>
+              <h2 className="font-display text-[24px] font-bold">{t('home.frontPages')}</h2>
               <span className="text-[12px] font-medium uppercase tracking-[0.14em] text-muted-foreground">{t('home.swipe')} →</span>
             </div>
             <FrontPageCarousel stories={front} edition={edition} />
           </section>
           {rest.length > 0 && (
             <section className="safe-x">
-              <h2 className="border-b-2 border-foreground pb-2 font-display text-[22px] font-bold">{t('home.more')}</h2>
-              <div className="divide-y divide-border">
-                {rest.slice(0, shown).map((s) => (
-                  <NewsRow key={s.id} story={s} />
+              <h2 className="mb-4 font-display text-[24px] font-bold">{t('home.more')}</h2>
+              <div className="space-y-3">
+                {rest.slice(0, shown).map((s, i) => (
+                  <Reveal key={s.id} delay={Math.min(i % 6, 3) * 0.04}>
+                    {i % 5 === 0 ? <FeatureCard story={s} /> : <NewsRow story={s} />}
+                  </Reveal>
                 ))}
               </div>
               {rest.length > shown && (
-                <button type="button" onClick={() => setShown((n) => n + PAGE)} className="mt-4 w-full rounded-2xl border py-3.5 text-[15px] font-semibold text-foreground active:bg-muted">
+                <button type="button" onClick={() => setShown((n) => n + PAGE)} className="glass-premium mt-5 w-full rounded-full py-3.5 text-[15px] font-semibold text-foreground transition active:scale-[0.98]">
                   {t('home.showMore')}
                 </button>
               )}

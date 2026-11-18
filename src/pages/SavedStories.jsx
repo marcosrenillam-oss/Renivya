@@ -2,13 +2,12 @@ import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Bookmark } from 'lucide-react'
 import SectionHeader from '@/components/common/SectionHeader'
-import StoryListItem from '@/components/story/StoryListItem'
+import NewsRow from '@/components/front/NewsRow'
 import FeedError from '@/components/story/FeedError'
 import Spinner from '@/components/common/Spinner'
 import { Button } from '@/components/ui/button'
 import { listSavedStories } from '@/lib/dataService'
 import { storyInLocale } from '../../engine/translation.js'
-import { formatRelativeTime } from '@/lib/format'
 import { useAuth } from '@/lib/AuthContext'
 import { useI18n } from '@/lib/i18n/I18nContext'
 
@@ -32,13 +31,9 @@ export default function SavedStories() {
           <Button variant="outline" asChild><Link to="/">{t('notFound.home')}</Link></Button>
         </div>
       ) : (
-        <div className="divide-y">
+        <div className="space-y-3">
           {stories.map((s) => (
-            <StoryListItem
-              key={s.id}
-              story={s}
-              extra={s.saved_at && <span className="type-caption text-muted-foreground">· {t('saved.savedOn', { time: formatRelativeTime(s.saved_at, locale) })}</span>}
-            />
+            <NewsRow key={s.id} story={s} />
           ))}
         </div>
       )}

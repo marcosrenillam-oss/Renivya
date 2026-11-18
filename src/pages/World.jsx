@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Globe2 } from 'lucide-react'
 import LeadCard from '@/components/front/LeadCard'
 import NewsRow from '@/components/front/NewsRow'
+import Reveal from '@/components/premium/Reveal'
 import CategoryChips from '@/components/front/CategoryChips'
 import FeedError from '@/components/story/FeedError'
 import { byFront, storyCountries, storyInEdition, useEdition, useNews } from '@/lib/news/useNews'
@@ -67,7 +68,7 @@ export default function World() {
   return (
     <div className="space-y-5">
       <header className="safe-x pt-3">
-        <h1 className="font-display text-[34px] font-bold leading-tight">{t('world.title')}</h1>
+        <h1 className="font-display text-[38px] font-bold leading-[1.05]">{t('world.title')}</h1>
         <p className="mt-1 text-[15px] text-muted-foreground">{t('world.subtitle', { country: getCountryName(edition, locale) })}</p>
       </header>
 
@@ -80,7 +81,10 @@ export default function World() {
           <div className="relative">
             <Suspense fallback={<div className="skeleton mx-auto aspect-square w-[92%] rounded-full" />}>
               {hasWebgl ? (
-                <WorldGlobe countries={report.countries} selected={selected} onSelect={select} className="mx-auto aspect-square w-full max-w-[560px]" />
+                <div className="relative mx-auto aspect-square w-full max-w-[560px]">
+                  <div aria-hidden="true" className="absolute inset-[8%] rounded-full bg-primary/25 blur-[60px] dark:bg-primary/30" />
+                  <WorldGlobe countries={report.countries} selected={selected} onSelect={select} className="relative h-full w-full" />
+                </div>
               ) : (
                 <div className="safe-x">
                   <WorldMap countries={report.countries} selected={selected} onSelect={select} className="h-[360px] w-full overflow-hidden rounded-2xl" />
@@ -99,7 +103,7 @@ export default function World() {
               type="button"
               data-code="all"
               onClick={() => select(null)}
-              className={cn('flex shrink-0 items-center gap-2 rounded-2xl border px-3.5 py-2.5 text-[14px] font-medium transition', !selected ? 'border-foreground bg-foreground text-background' : 'border-border bg-card')}
+              className={cn('flex shrink-0 items-center gap-2 rounded-2xl border px-3.5 py-2.5 text-[14px] font-medium transition', !selected ? 'border-foreground bg-foreground text-background' : 'glass-chip')}
             >
               <Globe2 className="h-[18px] w-[18px]" strokeWidth={1.7} />
               {t('world.everywhere')}
@@ -112,7 +116,7 @@ export default function World() {
                 onClick={() => select(c.code)}
                 className={cn(
                   'flex shrink-0 items-center gap-2 rounded-2xl border px-3.5 py-2.5 text-[14px] font-medium transition',
-                  selected === c.code ? 'border-foreground bg-foreground text-background' : 'border-border bg-card'
+                  selected === c.code ? 'border-foreground bg-foreground text-background' : 'glass-chip'
                 )}
               >
                 <span className="text-[20px] leading-none">{flagEmoji(c.code)}</span>
@@ -125,15 +129,17 @@ export default function World() {
 
           <AnimatePresence mode="wait">
             <motion.section key={`${selected}-${category}`} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.28 }} className="safe-x">
-              {selected && <h2 className="mb-4 border-b-2 border-foreground pb-2 font-display text-[22px] font-bold">{t('world.countryNews', { country: getCountryName(selected, locale) })}</h2>}
+              {selected && <h2 className="mb-4 font-display text-[24px] font-bold">{t('world.countryNews', { country: getCountryName(selected, locale) })}</h2>}
               {isLoading ? (
                 <div className="skeleton aspect-[16/10] w-full rounded-2xl" />
               ) : visible.length ? (
                 <>
                   <LeadCard story={visible[0]} />
-                  <div className="mt-4 divide-y divide-border border-t">
+                  <div className="mt-3 space-y-3">
                     {visible.slice(1, 40).map((s) => (
-                      <NewsRow key={s.id} story={s} />
+                      <Reveal key={s.id}>
+                        <NewsRow story={s} />
+                      </Reveal>
                     ))}
                   </div>
                 </>

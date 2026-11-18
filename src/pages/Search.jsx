@@ -6,7 +6,7 @@ import SectionHeader from '@/components/common/SectionHeader'
 import SearchDiscovery from '@/components/search/SearchDiscovery'
 import { searchStories } from '@/components/search/searchStories'
 import { storyInLocale } from '../../engine/translation.js'
-import StoryListItem from '@/components/story/StoryListItem'
+import NewsRow from '@/components/front/NewsRow'
 import FeedError from '@/components/story/FeedError'
 import Spinner from '@/components/common/Spinner'
 import { listStories, queryKeys, STORY_SORT } from '@/lib/dataService'
@@ -63,9 +63,9 @@ export default function SearchPage() {
       ) : results.length ? (
         <div>
           <p className="type-caption mb-2 text-muted-foreground">{t('search.results', { count: results.length })}</p>
-          <div className="divide-y">
+          <div className="space-y-3">
             {results.map((s) => (
-              <StoryListItem key={s.id} story={s} />
+              <NewsRow key={s.id} story={s} />
             ))}
           </div>
         </div>

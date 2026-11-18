@@ -18,14 +18,14 @@ function Group({ title, children }) {
   return (
     <section>
       <h2 className="mb-2 px-1 text-[12px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{title}</h2>
-      <div className="overflow-hidden rounded-2xl border bg-card">{children}</div>
+      <div className="glass-premium overflow-hidden rounded-[22px]">{children}</div>
     </section>
   )
 }
 
 function Segmented({ options, value, onChange }) {
   return (
-    <div className="flex rounded-xl bg-muted p-1">
+    <div className="flex rounded-2xl bg-foreground/[0.06] p-1">
       {options.map((o) => (
         <button
           key={o.value}
@@ -34,7 +34,7 @@ function Segmented({ options, value, onChange }) {
             haptic()
             onChange(o.value)
           }}
-          className={cn('flex-1 rounded-lg py-2 text-[14px] font-medium transition', value === o.value ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground')}
+          className={cn('flex-1 rounded-lg py-2 text-[14px] font-medium transition', value === o.value ? 'bg-[var(--glass-tint-strong)] text-foreground shadow-[0_6px_16px_-8px_rgba(0,0,0,0.35)]' : 'text-muted-foreground')}
         >
           {o.label}
         </button>
@@ -78,7 +78,7 @@ export default function Profile() {
   return (
     <div className="safe-x space-y-7 pt-3">
       <header className="flex items-center gap-4">
-        <span className="flex h-16 w-16 items-center justify-center rounded-full bg-primary font-display text-[28px] font-bold text-primary-foreground">{initial}</span>
+        <span className="relative flex h-[68px] w-[68px] items-center justify-center rounded-full font-display text-[30px] font-bold text-[#F3D88E] shadow-[0_14px_30px_-12px_rgba(14,26,51,0.7)]" style={{ background: 'radial-gradient(120% 120% at 30% 20%, #2a4a9b, #0E1A33 70%)' }}>{initial}<span className="absolute inset-0 rounded-full ring-1 ring-inset ring-white/20" /></span>
         <div className="min-w-0">
           <h1 className="truncate font-display text-[28px] font-bold leading-tight">{user?.full_name}</h1>
           <p className="truncate text-[14px] text-muted-foreground">{user?.email}</p>
@@ -104,9 +104,9 @@ export default function Profile() {
       </Group>
 
       <Group title={t('profile.country')}>
-        <div className="grid grid-cols-2 gap-px bg-border">
+        <div className="grid grid-cols-2 gap-px bg-[var(--glass-line)]">
           {EDITIONS.map((code) => (
-            <button key={code} type="button" onClick={() => changeCountry(code)} className={cn('flex items-center gap-2.5 bg-card px-4 py-3.5 text-left text-[15px]', country === code && 'font-semibold')}>
+            <button key={code} type="button" onClick={() => changeCountry(code)} className={cn('flex items-center gap-2.5 bg-[var(--glass-tint-strong)] px-4 py-3.5 text-left text-[15px] transition active:scale-[0.98]', country === code && 'font-semibold')}>
               <span className="text-[22px] leading-none">{flagEmoji(code)}</span>
               <span className="flex-1 truncate">{getCountryName(code, locale)}</span>
               {country === code && <Check className="h-4 w-4 text-accent" />}
@@ -146,7 +146,7 @@ export default function Profile() {
         </div>
       </Group>
 
-      <div className="overflow-hidden rounded-2xl border bg-card">
+      <div className="glass-premium overflow-hidden rounded-[22px]">
         <Link to="/saved" className="flex items-center gap-3 px-4 py-4 text-[15px] active:bg-muted">
           <Bookmark className="h-5 w-5 text-accent" strokeWidth={1.7} />
           <span className="flex-1">{t('nav.saved')}</span>
@@ -165,7 +165,7 @@ export default function Profile() {
           haptic('medium')
           logout()
         }}
-        className="flex w-full items-center justify-center gap-2 rounded-2xl border py-3.5 text-[15px] font-semibold text-destructive active:bg-muted"
+        className="glass-premium flex w-full items-center justify-center gap-2 rounded-full py-3.5 text-[15px] font-semibold text-destructive transition active:scale-[0.98]"
       >
         <LogOut className="h-4 w-4" /> {t('profile.logout')}
       </button>

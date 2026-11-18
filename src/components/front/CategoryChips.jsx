@@ -15,8 +15,8 @@ export default function CategoryChips({ categories, value, onChange, allLabel })
         onChange(id)
       }}
       className={cn(
-        'shrink-0 rounded-full border px-4 py-2 text-[14px] font-medium transition-colors',
-        value === id ? 'border-foreground bg-foreground text-background' : 'border-border bg-card text-foreground/80'
+        'shrink-0 rounded-full border px-4 py-2 text-[14px] font-medium transition-all duration-300 active:scale-95',
+        value === id ? 'border-foreground bg-foreground text-background shadow-[0_10px_24px_-12px_rgba(0,0,0,0.5)]' : 'glass-chip text-foreground/80'
       )}
     >
       {label}

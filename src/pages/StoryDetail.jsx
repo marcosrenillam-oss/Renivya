@@ -1,11 +1,12 @@
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import { motion, useScroll, useTransform } from 'framer-motion'
 import { ArrowLeft, Languages, Share2 } from 'lucide-react'
 import CategoryChip from '@/components/story/CategoryChip'
 import CountryFlags from '@/components/story/CountryFlags'
 import EditorialStory from '@/components/story/EditorialStory'
 import FeedError from '@/components/story/FeedError'
-import Headline from '@/components/story/Headline'
+import { getHeadline as getHeadlineText } from '@/lib/headline'
 import SaveButton from '@/components/story/SaveButton'
 import SourceRow from '@/components/story/SourceRow'
 import StoryBreakdown from '@/components/story/StoryBreakdown'
@@ -42,6 +43,10 @@ export default function StoryDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { t, locale } = useI18n()
+  const { scrollY } = useScroll()
+  const heroY = useTransform(scrollY, [0, 500], [0, 140])
+  const heroScale = useTransform(scrollY, [0, 500], [1.08, 1.22])
+  const heroFade = useTransform(scrollY, [0, 320], [1, 0.25])
 
   const storyQ = useQuery({ queryKey: queryKeys.story(id), queryFn: () => getStory(id), retry: false })
   const sourcesQ = useQuery({ queryKey: queryKeys.storySources(id), queryFn: () => listStorySources(id), enabled: storyQ.isSuccess })
@@ -98,22 +103,36 @@ export default function StoryDetail() {
   }
 
   return (
-    <article className="mx-auto max-w-6xl">
-      <button onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))} className="type-small mb-8 inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground">
+    <article className="relative mx-auto max-w-6xl">
+      {/* Portada de la historia: foto a pantalla completa con paralaje y titular sobre ella */}
+      <section className="relative -mt-[calc(env(safe-area-inset-top)+4rem)] h-[min(78vh,640px)] overflow-hidden rounded-b-[36px] shadow-[0_40px_80px_-40px_rgba(0,0,0,0.7)]">
+        <motion.div className="absolute inset-0" style={{ y: heroY, scale: heroScale }}>
+          <StoryImage story={story} media={story.image_url ? [] : mediaQ.data || []} eager className="h-full w-full" />
+        </motion.div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/40" />
+        <motion.div style={{ opacity: heroFade }} className="safe-x absolute inset-x-0 bottom-0 pb-7 text-white">
+          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}>
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+              <span className="rounded-full border border-white/25 bg-white/15 px-3 py-1 text-[10.5px] font-bold uppercase tracking-[0.14em] backdrop-blur-md">
+                <CategoryChip category={story.category} className="!text-white" />
+              </span>
+              <StoryStateBadge story={story} />
+            </div>
+            <h1 className="font-display text-[31px] font-bold leading-[1.08] tracking-[-0.015em] [text-shadow:0_4px_24px_rgba(0,0,0,0.45)]">{getHeadlineText(story)}</h1>
+            {(image?.credit || image?.sourceName) && <p className="mt-3 text-[11px] text-white/60">{t('story.imageCredit', { credit: image.credit || image.sourceName })}</p>}
+          </motion.div>
+        </motion.div>
+      </section>
+
+      <button onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))} className="glass-chip absolute left-3 top-[calc(env(safe-area-inset-top)+4.9rem)] z-20 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-medium text-foreground">
         <ArrowLeft className="h-4 w-4" aria-hidden="true" />
         {t('story.back')}
       </button>
 
-      <header className="mx-auto max-w-3xl">
-        <div className="mb-5 flex flex-wrap items-center gap-3">
-          <CategoryChip category={story.category} link size="md" />
-          <StoryStateBadge story={story} />
-          {story.version > 1 && <span className="type-caption text-muted-foreground">{t('story.version', { n: story.version })}</span>}
-        </div>
-        <Headline story={story} size="display" as="h1" />
-        <p className="mt-6 font-heading text-[1.3rem] leading-[1.55] text-text-secondary">{story.summary}</p>
-        <div className="mt-7 flex flex-wrap items-center justify-between gap-4 border-y py-4">
-          <div className="type-caption flex flex-wrap items-center gap-x-3 gap-y-1 text-muted-foreground">
+      <header className="safe-x mx-auto mt-6 max-w-3xl">
+        <p className="font-serif-text text-[1.25rem] leading-[1.55] text-foreground/85">{story.summary}</p>
+        <div className="glass-premium mt-6 flex flex-wrap items-center justify-between gap-3 rounded-[22px] px-4 py-3">
+          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[12px] text-muted-foreground">
             <time dateTime={story.published_at}>{formatDateTime(story.published_at, locale)}</time>
             <span aria-hidden="true">·</span>
             <span>{t('story.readingTime', { min: minutes })}</span>
@@ -128,7 +147,7 @@ export default function StoryDetail() {
           </div>
           <div className="flex items-center gap-2">
             <SaveButton storyId={story.id} withLabel />
-            <button onClick={onShare} className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground">
+            <button onClick={onShare} className="glass-chip inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-foreground/80">
               <Share2 className="h-4 w-4" aria-hidden="true" />
               {t('story.share')}
             </button>
@@ -149,16 +168,7 @@ export default function StoryDetail() {
         )}
       </header>
 
-      {image && (
-        <figure className="mx-auto mt-10 max-w-4xl">
-          <StoryImage story={story} media={mediaQ.data || []} eager className="aspect-[16/9] rounded-2xl" />
-          {(image.credit || image.sourceName) && (
-            <figcaption className="type-caption mt-2 text-muted-foreground">{t('story.imageCredit', { credit: image.credit || image.sourceName })}</figcaption>
-          )}
-        </figure>
-      )}
-
-      <div className="mt-12 grid gap-12 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-16">
+      <div className="safe-x mt-12 grid gap-12 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-16">
         <div className="mx-auto w-full max-w-3xl space-y-14">
           <EditorialStory story={story} />
 

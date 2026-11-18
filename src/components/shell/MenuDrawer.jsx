@@ -56,7 +56,7 @@ export default function MenuDrawer({ open, onClose }) {
           cn(
             'group flex items-center gap-4 rounded-2xl px-3 transition-colors',
             big ? 'py-3' : 'py-2.5',
-            isActive ? 'bg-white/[0.08] text-[#F3D88E]' : 'text-white/85 active:bg-white/[0.06]'
+            isActive ? 'bg-white/[0.1] text-[#F3D88E] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]' : 'text-white/85 active:bg-white/[0.07]'
           )
         }
       >
@@ -73,15 +73,15 @@ export default function MenuDrawer({ open, onClose }) {
           <motion.button
             type="button"
             aria-label={t('nav.close')}
-            className="absolute inset-0 bg-black/45 backdrop-blur-[2px]"
+            className="absolute inset-0 bg-[#050913]/40 backdrop-blur-md"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
           />
           <motion.nav
-            className="safe-top absolute inset-y-0 left-0 flex w-[86%] max-w-[380px] flex-col overflow-y-auto text-white shadow-2xl"
-            style={{ background: 'radial-gradient(140% 60% at 0% 0%, #1B2D57 0%, #0E1A33 50%, #070D1C 100%)' }}
+            className="safe-top absolute inset-y-2 left-2 flex w-[84%] max-w-[370px] flex-col overflow-hidden overflow-y-auto rounded-[28px] border border-white/10 text-white shadow-[0_40px_80px_-30px_rgba(0,0,0,0.8)]"
+            style={{ background: 'linear-gradient(160deg, rgba(27,45,87,0.82), rgba(9,15,31,0.86))', backdropFilter: 'blur(30px) saturate(180%)', WebkitBackdropFilter: 'blur(30px) saturate(180%)' }}
             initial={{ x: '-100%' }}
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
@@ -91,7 +91,10 @@ export default function MenuDrawer({ open, onClose }) {
             dragElastic={{ left: 0.4, right: 0 }}
             onDragEnd={(_, info) => info.offset.x < -80 && onClose()}
           >
-            <div className="flex items-center justify-between px-5 pt-4">
+            <div aria-hidden="true" className="pointer-events-none absolute -right-20 -top-16 opacity-[0.08]">
+              <Logo size={300} bare className="text-[#E2B550]" />
+            </div>
+            <div className="relative flex items-center justify-between px-5 pt-4">
               <Logo size={40} withWordmark className="[&>span]:text-white" />
               <button type="button" onClick={onClose} className="rounded-full p-2 text-white/60" aria-label={t('nav.close')}>
                 <X className="h-5 w-5" />

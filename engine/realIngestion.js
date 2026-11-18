@@ -1,5 +1,6 @@
 // RealNewsProvider: lee Source.is_active + feed_url (RSS/Atom) y produce NewsItems pendientes.
 import { parseFeed } from './rss.js'
+import { extractPageImage } from './images.js'
 
 export const REAL_PROVIDER = 'RealNewsProvider'
 const MIN_MINUTES_BETWEEN_FETCHES = 15
@@ -41,6 +42,20 @@ export function createRealNewsProvider({ fetchImpl = fetch, userAgent = 'RENIVYA
         }
       } catch (error) {
         return { items: [], error: String(error?.message || error) }
+      } finally {
+        clearTimeout(timer)
+      }
+    },
+    /** Foto de portada del artículo (og:image) para noticias cuyo feed no trae imagen. */
+    async fetchArticleImage(url) {
+      const controller = new AbortController()
+      const timer = setTimeout(() => controller.abort(), Math.min(timeoutMs, 8000))
+      try {
+        const res = await fetchImpl(url, { headers: { 'user-agent': `Mozilla/5.0 (compatible; ${userAgent})`, accept: 'text/html' }, signal: controller.signal, redirect: 'follow' })
+        if (!res.ok) return null
+        return extractPageImage(await res.text(), res.url || url)
+      } catch {
+        return null
       } finally {
         clearTimeout(timer)
       }

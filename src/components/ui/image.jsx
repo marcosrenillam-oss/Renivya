@@ -12,9 +12,18 @@ const Image = React.forwardRef(function Image(
   ref
 ) {
   const [status, setStatus] = React.useState(src ? 'loading' : 'error')
+  const imgRef = React.useRef(null)
+  const lastSrc = React.useRef(src)
 
+  // Solo se reinicia si cambia la foto; una foto ya en caché puede haber cargado antes del efecto.
   React.useEffect(() => {
-    setStatus(src ? 'loading' : 'error')
+    if (lastSrc.current !== src) {
+      lastSrc.current = src
+      setStatus(src ? 'loading' : 'error')
+      return
+    }
+    const el = imgRef.current
+    if (el?.complete && el.naturalWidth > 0) setStatus('loaded')
   }, [src])
 
   return (
@@ -24,6 +33,7 @@ const Image = React.forwardRef(function Image(
         fallback
       ) : (
         <img
+          ref={imgRef}
           src={src}
           alt={alt}
           loading={loading}

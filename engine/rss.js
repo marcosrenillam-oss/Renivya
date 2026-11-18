@@ -1,5 +1,6 @@
 // Parser RSS 2.0 / RDF / Atom sin dependencias (Deno no trae DOMParser). Determinista.
 import { decodeEntities, stripHtml } from './normalizer.js'
+import { cleanImageUrl } from './images.js'
 
 function tag(block, name) {
   const re = new RegExp(`<${name}(?:\\s[^>]*)?>([\\s\\S]*?)<\\/${name}>`, 'i')
@@ -23,16 +24,28 @@ function toIso(value) {
   return Number.isNaN(d.getTime()) ? null : d.toISOString()
 }
 
-/** Imagen del feed: enclosure de tipo imagen, media:content, media:thumbnail o <img> en el HTML. */
-function imageOf(block, html) {
-  const enclosure = block.match(/<enclosure\s[^>]*>/i)?.[0]
-  if (enclosure && /type=["']image\//i.test(enclosure)) return attr(enclosure, 'enclosure', 'url')
-  const media = attr(block, 'media:content', 'url')
-  if (media && !/\.(mp4|mp3|m3u8)(\?|$)/i.test(media)) return media
-  const thumb = attr(block, 'media:thumbnail', 'url')
-  if (thumb) return thumb
-  const img = String(html || '').match(/<img[^>]+src=["']([^"']+)["']/i)
-  return img ? decodeEntities(img[1]) : null
+/** Imagen del feed: enclosure de imagen, media:content/thumbnail (también dentro de media:group),
+ *  <image>, itunes:image o la primera <img> del HTML. Siempre absoluta y en https. */
+function imageOf(block, html, base) {
+  const candidates = []
+  for (const enc of block.match(/<enclosure\s[^>]*>/gi) || []) {
+    if (/type=["']image\//i.test(enc) || /\.(jpe?g|png|webp)(\?|["'])/i.test(enc)) candidates.push(attr(enc, 'enclosure', 'url'))
+  }
+  // media:content: la de mayor anchura si hay varias.
+  const media = (block.match(/<media:content\s[^>]*>/gi) || [])
+    .filter((m) => !/medium=["'](video|audio)["']/i.test(m) && !/type=["'](video|audio)\//i.test(m))
+    .map((m) => ({ url: attr(m, 'media:content', 'url'), w: Number(attr(m, 'media:content', 'width')) || 0 }))
+    .sort((x, y) => y.w - x.w)
+  candidates.push(...media.map((m) => m.url))
+  candidates.push(attr(block, 'media:thumbnail', 'url'), tag(block, 'image')?.match(/<url>([^<]+)<\/url>/i)?.[1] ?? (/^https?:/.test(tag(block, 'image') || '') ? tag(block, 'image') : null))
+  candidates.push(attr(block, 'itunes:image', 'href'))
+  const img = String(html || '').match(/<img[^>]+(?:data-src|src)=["']([^"']+)["']/i)
+  if (img) candidates.push(img[1])
+  for (const c of candidates) {
+    const url = cleanImageUrl(c, base)
+    if (url) return url
+  }
+  return null
 }
 
 /** Devuelve [{ title, url, description, content, author, published_at, image_url, image_credit }]. */
@@ -53,7 +66,7 @@ export function parseFeed(xml) {
         content: stripHtml(contentHtml).trim(),
         author: stripHtml(tag(b, 'dc:creator') || tag(b, 'author') || '').replace(/\s+/g, ' ').trim() || null,
         published_at: toIso(tag(b, 'pubDate') || tag(b, 'dc:date') || tag(b, 'published') || tag(b, 'updated')),
-        image_url: imageOf(b, `${descHtml}${contentHtml}`),
+        image_url: imageOf(b, `${descHtml}${contentHtml}`, link ? decodeEntities(link.trim()) : null),
         image_credit: credit ? stripHtml(credit).trim() : null,
       }
     })

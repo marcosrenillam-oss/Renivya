@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import TopBar from '@/components/shell/TopBar'
+import Aurora from '@/components/premium/Aurora'
 import MenuDrawer from '@/components/shell/MenuDrawer'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { AppProvider } from '@/lib/AppContext'
@@ -18,7 +19,8 @@ export default function AppShell() {
   return (
     <AppProvider>
       <TooltipProvider>
-        <div className="min-h-screen-dvh relative">
+        <div className="min-h-screen-dvh relative isolate">
+          <Aurora />
           <TopBar onMenu={() => setMenu(true)} />
           <AnimatePresence mode="wait" initial={false}>
             <motion.main

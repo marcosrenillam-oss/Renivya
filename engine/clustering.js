@@ -3,6 +3,7 @@ import { cosine, jaccard } from './semantic.js'
 import { hash64, hoursBetween, stableSort } from './stats.js'
 
 export const DEFAULT_THRESHOLD = 0.45
+const MEMBER_MARGIN = 0.03
 
 const fold = (w) => w.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 const ALIAS = { barca: 'barcelona', 'barça': 'barcelona', azulgrana: 'barcelona', azulgranas: 'barcelona', merengue: 'madrid', blancos: 'madrid', eeuu: 'estados', 'ee.uu': 'estados', usa: 'estados' }
@@ -64,8 +65,8 @@ export function clusterDocuments(docs, { threshold = DEFAULT_THRESHOLD } = {}) {
     clusters.forEach((cluster, ci) => {
       const avg = cluster.reduce((acc, j) => acc + S(d._i, j), 0) / cluster.length
       const max = Math.max(...cluster.map((j) => S(d._i, j)))
-      // enlace medio, con atajo para duplicados casi exactos
-      const score = max >= 0.92 ? max : avg
+      // enlace medio, o el artículo más parecido con un margen (y atajo para duplicados casi exactos)
+      const score = max >= 0.92 ? max : Math.max(avg, max - MEMBER_MARGIN)
       if (score > bestScore) {
         bestScore = score
         best = ci
@@ -103,10 +104,12 @@ export function assignToStories(docs, profiles, { threshold = DEFAULT_THRESHOLD 
         best = 1
         break
       }
-      // Nombres y cifras: se compara con el artículo de la historia que más se le parece
-      // (la unión de todos crecería con la historia y diluiría la coincidencia).
-      const keys = d.keys?.size && p.keySets?.length ? p.keySets.reduce((best, k) => (jaccard(d.keys, k) > jaccard(d.keys, best) ? k : best)) : undefined
-      const s = similarity(d, { embedding: p.centroid, entities: p.entities, keys, published_at: p.last_published_at })
+      // Con la media de la historia y con su artículo más parecido (un poco más exigente).
+      // Para la media se usan los nombres y cifras del artículo que más comparte con el nuevo.
+      const members = p.members || []
+      const keys = d.keys?.size && members.length ? members.reduce((a, m) => (jaccard(d.keys, m.keys || []) > jaccard(d.keys, a) ? m.keys : a), new Set()) : undefined
+      let s = similarity(d, { embedding: p.centroid, entities: p.entities, keys, published_at: p.last_published_at })
+      for (const m of members) s = Math.max(s, similarity(d, m) - MEMBER_MARGIN)
       if (s > best || (s === best && bestId && p.story_id < bestId)) {
         best = s
         bestId = p.story_id

@@ -102,9 +102,9 @@ export async function runPipeline(db, opts = {}) {
 
   // 3. Perfiles de Stories activas recientes.
   const since = new Date(now.getTime() - 72 * 3_600_000).toISOString()
-  const recent = await db.Story.filter({ is_demo: isDemo, status: { $in: ACTIVE }, updated_date: { $gte: since } }, '-updated_date', 200)
+  const recent = await db.Story.filter({ is_demo: isDemo, status: { $in: ACTIVE }, updated_date: { $gte: since } }, '-updated_date', 3000)
   const recentIds = recent.map((s) => s.id)
-  const memberItems = recentIds.length ? await db.NewsItem.filterAll({ story_id: { $in: recentIds }, status: 'created' }, 'published_at', 4000) : []
+  const memberItems = recentIds.length ? await db.NewsItem.filterAll({ story_id: { $in: recentIds }, status: 'created' }, 'published_at', 12000) : []
   const oldMembersByStory = new Map()
   const oldDocs = memberItems.map((it) => {
     const n = normalizeNewsItem({ ...it, content: it.cleaned_content, description: '' })
@@ -120,7 +120,8 @@ export async function runPipeline(db, opts = {}) {
       story_id: s.id,
       centroid: centroid(own.map((o) => o.v)),
       entities: new Set(own.flatMap((o) => [...o.d.entities])),
-      keySets: own.map((o) => keysOf(`${o.d.m.title} ${leadOf(o.d.m.text)}`)),
+      // Cada artículo de la historia, para comparar también uno a uno (no solo con la media).
+      members: own.map((o) => ({ embedding: o.v, entities: o.d.entities, keys: keysOf(`${o.d.m.title} ${leadOf(o.d.m.text)}`), published_at: o.d.m.published_at })),
       last_published_at: own.map((o) => o.d.m.published_at).sort().pop() || s.published_at,
       urls: new Set(own.map((o) => o.d.m.canonical_url)),
     }

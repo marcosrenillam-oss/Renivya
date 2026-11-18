@@ -32,11 +32,16 @@ export function searchStories(stories, query) {
     .map((x) => x.s)
 }
 
-/** Temas del momento: palabras clave y entidades más repetidas entre historias vivas. */
+/**
+ * Temas del momento: palabras clave y entidades más repetidas entre historias vivas.
+ * Solo las que aparecen tal cual en el texto que lee el usuario (su idioma): nunca se mezclan.
+ */
 export function trendingTerms(stories, n = 12) {
   const freq = new Map()
   for (const s of stories) {
-    for (const k of new Set([...(s.entities || []).slice(0, 5), ...(s.keywords || []).slice(0, 3)])) {
+    const text = foldAccents(`${s.title || ''} ${s.summary || ''} ${(s.body || []).join(' ')}`.toLowerCase())
+    const inText = (k) => text.includes(foldAccents(String(k).toLowerCase()))
+    for (const k of new Set([...(s.entities || []).slice(0, 5), ...(s.keywords || []).slice(0, 3)].filter(inText))) {
       const key = String(k)
       freq.set(key, (freq.get(key) || 0) + 1 + (s.renivya_score ?? 0) / 100)
     }

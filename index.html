@@ -13,6 +13,24 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="format-detection" content="telephone=no" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <script>
+      // App instalada (pantalla de inicio): sin zoom ni alejar, todo ajustado a la pantalla.
+      // En el navegador normal se puede seguir haciendo zoom.
+      (function () {
+        try {
+          var standalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+          if (!standalone) return;
+          document.documentElement.classList.add('standalone');
+          document.querySelector('meta[name=viewport]').setAttribute('content', 'width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover');
+          var stop = function (e) { e.preventDefault(); };
+          // Pellizcar para ampliar (Safari en iPhone). El doble toque lo bloquea touch-action en CSS.
+          document.addEventListener('gesturestart', stop, { passive: false });
+          document.addEventListener('gesturechange', stop, { passive: false });
+          document.addEventListener('gestureend', stop, { passive: false });
+          document.addEventListener('touchmove', function (e) { if (e.scale && e.scale !== 1) e.preventDefault(); }, { passive: false });
+        } catch (e) {}
+      })();
+    </script>
     <meta name="theme-color" content="#F7F6F2" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)" />
     <meta name="description" content="RENIVYA — Inteligencia informativa global" />

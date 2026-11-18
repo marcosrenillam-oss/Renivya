@@ -39,3 +39,14 @@ for (let a = 0; a < docs.length; a++)
 near.sort((x, y) => y[0] - x[0])
 console.log(`[agrupación] pares de periódicos distintos en historias distintas con similitud ≥ ${(DEFAULT_THRESHOLD - 0.12).toFixed(2)}: ${near.length}`)
 for (const [s, a, b] of near.slice(0, 30)) console.log(`  ${s.toFixed(3)} | ${a.source_name}: ${a.title}  <>  ${b.source_name}: ${b.title}`)
+
+// Detalle de los primeros pares: por qué no se juntaron (estado, fechas, tanda).
+const storyById = new Map((snap.entities?.Story || []).map((x) => [x.id, x]))
+const info = (i) => {
+  const st = storyById.get(i.story_id)
+  return `pub ${i.published_at} · proc ${i.processed_at} · tanda ${i.ingestion_batch || i.batch_id || '-'} · historia ${i.story_id?.slice(0, 6)} [${st?.status ?? 'NO EXISTE'} · ${per.get(i.story_id)} art · creada ${st?.created_date} · act ${st?.updated_date}]`
+}
+for (const [s, a, b] of near.slice(0, 4)) {
+  console.log(`  · ${s.toFixed(3)}\n      A ${info(a)}\n      B ${info(b)}`)
+}
+console.log('[agrupación] estados de historia:', JSON.stringify((snap.entities?.Story || []).reduce((acc, x) => ((acc[x.status] = (acc[x.status] || 0) + 1), acc), {})))

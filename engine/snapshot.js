@@ -4,7 +4,7 @@ import { REAL_SOURCES } from './sourceCatalog.js'
 import { cleanImageUrl, genericImageUrls } from './images.js'
 
 export const SNAPSHOT_ENTITIES = ['Story', 'NewsItem', 'Source', 'StorySource', 'StoryUpdate', 'Entity', 'StoryEntity', 'EntityRelation', 'Media']
-const MAX_STORIES = 700
+const MAX_STORIES = 1500
 // Sube cuando cambia la forma de las historias: un estado anterior de otra versión se descarta
 // (v2: idioma único por historia, ediciones por país, traducciones; v3: foto en cada noticia; v4: textos limpios y párrafos por fuente; v5: texto completo de los artículos; v6: agrupar por titular y entradilla; v7: nombres y cifras compartidos; v8: comparar con todas las historias recientes; v9: unir grupos del mismo suceso).
 export const STATE_VERSION = 9

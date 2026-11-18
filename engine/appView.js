@@ -2,6 +2,10 @@
 // El estado completo del motor (artículos, entidades, procedencia) queda en snapshot.json.
 import { EDITIONS } from './sourceCatalog.js'
 
+const APP_TOP = 320
+const APP_PER_COUNTRY = 25
+const APP_MAX = 550
+
 const STORY_DROP = new Set(['provenance', 'ingestion_batch', 'duplicate_group_id', 'world_mode', 'ai_generated'])
 
 function slimStory(story) {
@@ -14,12 +18,28 @@ const pick = (row, keys) => Object.fromEntries(keys.filter((k) => k in row).map(
 
 export function appView(snapshot) {
   const e = snapshot.entities || {}
-  // Al móvil van las historias vivas de los últimos 4 días (como mucho 350): ligero cada hora.
-  const since = new Date(new Date(snapshot.generated_at || Date.now()).getTime() - 4 * 86_400_000).toISOString()
-  const stories = (e.Story || [])
-    .filter((s) => s.status !== 'archived' && (s.updated_date || s.published_at || '') >= since)
-    .sort((a, b) => String(b.updated_date || '').localeCompare(String(a.updated_date || '')))
-    .slice(0, 350)
+  // Al móvil van las historias vivas de los últimos 4 días: las más importantes (importancia
+  // con el paso del tiempo) y, además, las principales de cada país, para que Mundo y cada
+  // edición tengan noticias aunque no estén entre las grandes del día.
+  const now = new Date(snapshot.generated_at || Date.now()).getTime()
+  const since = new Date(now - 4 * 86_400_000).toISOString()
+  const live = (e.Story || []).filter((s) => s.status !== 'archived' && (s.updated_date || s.published_at || '') >= since)
+  const rank = (s) => {
+    const hours = Math.max(0, (now - Date.parse(s.updated_date || s.published_at || 0)) / 3_600_000)
+    return (s.renivya_score ?? 0) / (1 + hours / 36) + (s.is_breaking ? 12 : 0) + Math.min(s.source_count ?? 1, 6)
+  }
+  const ranked = [...live].sort((a, b) => rank(b) - rank(a) || String(a.id).localeCompare(String(b.id)))
+  const chosen = new Set(ranked.slice(0, APP_TOP).map((s) => s.id))
+  const perCountry = new Map()
+  for (const s of ranked) {
+    for (const c of new Set([...(s.countries || []), ...(s.source_countries || [])])) {
+      const n = perCountry.get(c) || 0
+      if (n >= APP_PER_COUNTRY) continue
+      perCountry.set(c, n + 1)
+      chosen.add(s.id)
+    }
+  }
+  const stories = ranked.filter((s) => chosen.has(s.id)).slice(0, APP_MAX)
   const keep = new Set(stories.map((s) => s.id))
   const mine = (rows) => (rows || []).filter((r) => keep.has(r.story_id))
   return {

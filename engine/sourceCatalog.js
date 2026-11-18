@@ -48,7 +48,7 @@ const RAW = [
   ['La Tercera', 'https://www.latercera.com', 'https://www.latercera.com/arc/outboundfeeds/rss/?outputType=xml', 'CL', 'es', 'newspaper'],
   ['El Comercio', 'https://elcomercio.pe', 'https://elcomercio.pe/arc/outboundfeeds/rss/?outputType=xml', 'PE', 'es', 'newspaper'],
   // Canadá e Irlanda
-  ['CBC News', 'https://www.cbc.ca/news', 'https://www.cbc.ca/webfeed/rss/rss-topstories', 'CA', 'en', 'broadcast'],
+  ['CBC News', 'https://www.cbc.ca/news', 'https://rss.cbc.ca/lineup/topstories.xml', 'CA', 'en', 'broadcast'],
   ['RTÉ News', 'https://www.rte.ie/news', 'https://www.rte.ie/feeds/rss/?index=/news/', 'IE', 'en', 'broadcast'],
   // Italia
   ['ANSA English', 'https://www.ansa.it/english', 'https://www.ansa.it/english/news/english_nr_rss.xml', 'IT', 'en', 'agency'],

@@ -36,3 +36,9 @@ test('dos grupos abiertos para el mismo suceso se unen al final', async () => {
   assert.equal(groups.length, 2)
   assert.deepEqual(groups.find((g) => g.includes(0)).sort(), [0, 1, 2])
 })
+
+test('dos sucesos parecidos sin nombres ni cifras en común no se juntan', () => {
+  const a = doc('Police arrest four suspected armed robbers in Cross River', 'Officers detained four men suspected of armed robbery after a raid in Calabar on Tuesday.')
+  const b = doc('Two arrested in manhunt for child rapist who fled UK', 'Detectives arrested two people as part of the search for a convicted sex offender who left Britain.')
+  assert.ok(similarity(a, b) < DEFAULT_THRESHOLD)
+})

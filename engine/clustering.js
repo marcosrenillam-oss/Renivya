@@ -4,6 +4,7 @@ import { hash64, hoursBetween, stableSort } from './stats.js'
 
 export const DEFAULT_THRESHOLD = 0.45
 const MEMBER_MARGIN = 0.03
+const NO_SHARED_KEYS = 0.75
 
 const fold = (w) => w.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 const ALIAS = { barca: 'barcelona', 'barça': 'barcelona', azulgrana: 'barcelona', azulgranas: 'barcelona', merengue: 'madrid', blancos: 'madrid', eeuu: 'estados', 'ee.uu': 'estados', usa: 'estados' }
@@ -38,7 +39,12 @@ export function similarity(a, b) {
   const ent = jaccard(a.entities || [], b.entities || [])
   const time = timeProximity(a.published_at, b.published_at)
   // Con nombres y cifras disponibles se separan mucho mejor el mismo suceso y sucesos distintos.
-  if (a.keys?.size && b.keys?.size) return 0.55 * sem + 0.15 * ent + 0.2 * jaccard(a.keys, b.keys) + 0.1 * time
+  if (a.keys?.size && b.keys?.size) {
+    const keys = jaccard(a.keys, b.keys)
+    const score = 0.55 * sem + 0.15 * ent + 0.2 * keys + 0.1 * time
+    // Sin ningún nombre ni cifra en común casi nunca es el mismo suceso (p. ej. dos detenciones distintas).
+    return keys === 0 ? score * NO_SHARED_KEYS : score
+  }
   return 0.7 * sem + 0.2 * ent + 0.1 * time
 }
 

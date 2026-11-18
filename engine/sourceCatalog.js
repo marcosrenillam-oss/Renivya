@@ -16,12 +16,16 @@ const RAW = [
   ['Público', 'https://www.publico.pt', 'https://www.publico.pt/rss', 'PT', 'pt', 'newspaper'],
 ]
 
+// Feeds que fallan en GitHub Actions (comprobado en la primera ejecución): se dejan inactivos
+// hasta encontrar su URL correcta. La página Cerebro muestra el estado de cada fuente.
+const INACTIVE = new Set(['Público'])
+
 export const REAL_SOURCES = RAW.map(([name, url, feed_url, country, language, type]) => ({
   name, url, feed_url, country, language, type,
   reliability: null,
   reliability_score: null,
   bias_profile: 'reliability:provisional',
   category: null,
-  is_active: true,
+  is_active: !INACTIVE.has(name),
   is_demo: false,
 }))

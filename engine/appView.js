@@ -2,7 +2,7 @@
 // El estado completo del motor (artículos, entidades, procedencia) queda en snapshot.json.
 import { EDITIONS } from './sourceCatalog.js'
 
-const STORY_DROP = new Set(['provenance', 'ingestion_batch', 'duplicate_group_id', 'world_mode', 'ai_generated', 'entities'])
+const STORY_DROP = new Set(['provenance', 'ingestion_batch', 'duplicate_group_id', 'world_mode', 'ai_generated'])
 
 function slimStory(story) {
   const out = {}
@@ -32,7 +32,7 @@ export function appView(snapshot) {
     entities: {
       Story: stories.map(slimStory),
       StorySource: mine(e.StorySource).map((r) =>
-        pick(r, ['id', 'story_id', 'source_id', 'source_name', 'url', 'country', 'language', 'source_type', 'published_at', 'role', 'is_demo', 'created_date', 'updated_date'])
+        pick(r, ['id', 'story_id', 'source_id', 'source_name', 'title', 'url', 'country', 'language', 'source_type', 'published_at', 'role', 'is_demo', 'created_date', 'updated_date'])
       ),
       StoryUpdate: mine(e.StoryUpdate).map((r) =>
         pick(r, ['id', 'story_id', 'timestamp', 'action', 'change_type', 'fields_changed', 'previous_version', 'new_version', 'source', 'article_url', 'is_demo', 'created_date', 'updated_date'])

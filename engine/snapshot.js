@@ -6,8 +6,8 @@ import { cleanImageUrl, genericImageUrls } from './images.js'
 export const SNAPSHOT_ENTITIES = ['Story', 'NewsItem', 'Source', 'StorySource', 'StoryUpdate', 'Entity', 'StoryEntity', 'EntityRelation', 'Media']
 const MAX_STORIES = 500
 // Sube cuando cambia la forma de las historias: un estado anterior de otra versión se descarta
-// (v2: idioma único por historia, ediciones por país, traducciones; v3: foto en cada noticia; v4: textos limpios y párrafos por fuente).
-export const STATE_VERSION = 4
+// (v2: idioma único por historia, ediciones por país, traducciones; v3: foto en cada noticia; v4: textos limpios y párrafos por fuente; v5: texto completo de los artículos).
+export const STATE_VERSION = 5
 
 /**
  * entities: almacén en memoria (client.entities con replaceAll).
@@ -31,7 +31,7 @@ export async function buildSnapshot({ entities, previous = null, provider = null
     perSource = report.perSource
     log(`feeds: ${perSource.filter((s) => s.ok).length}/${report.sources} ok · artículos nuevos: ${report.created} · historias +${report.pipeline.storiesCreated} ~${report.pipeline.storiesUpdated}`)
     if (report.errors.length) log('errores:', report.errors.join(' | '))
-    if (report.images) log(`fotos de página (og:image): ${report.images.found}/${report.images.checked} encontradas`)
+    if (report.images) log(`páginas visitadas: ${report.images.checked} · fotos encontradas: ${report.images.found} · textos completos: ${report.images.texts}`)
     if ((await count('Story', { is_demo: false })) > 0) mode = 'real'
   }
 

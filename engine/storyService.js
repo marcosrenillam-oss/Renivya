@@ -38,6 +38,8 @@ function sourceRow(m, analysis, story, leadUrl, isDemo) {
     story_id: story.id,
     source_id: m.source_id ?? null,
     source_name: m.source_name,
+    // Titular con el que lo publica este periódico (para comparar enfoques).
+    title: m.title ?? null,
     url: m.url ?? null,
     country: m.country ?? null,
     language: m.language ?? null,

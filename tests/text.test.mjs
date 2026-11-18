@@ -24,3 +24,15 @@ test('feed en ISO-8859-1 se lee con su codificación', async () => {
   const items = parseFeed(await decodeBody(new Response(Uint8Array.from(xml, (c) => c.charCodeAt(0)))))
   assert.equal(items[0].title, 'España y León')
 })
+
+test('una sola tarjeta por noticia: titulares casi iguales del mismo día se juntan', async () => {
+  const { mergeNearDuplicates } = await import('../engine/dedupe.js')
+  const at = '2026-11-18T09:00:00Z'
+  const list = mergeNearDuplicates([
+    { id: 'a', title: 'El Gobierno aprueba la reforma de las pensiones en el Consejo de Ministros', renivya_score: 80, published_at: at },
+    { id: 'b', title: 'El Consejo de Ministros aprueba la reforma de las pensiones', renivya_score: 60, published_at: at },
+    { id: 'c', title: 'El Real Madrid gana al Barcelona en el clásico', renivya_score: 70, published_at: at },
+  ])
+  assert.deepEqual(list.map((s) => s.id), ['a', 'c'])
+  assert.deepEqual(list[0].duplicates, ['b'])
+})

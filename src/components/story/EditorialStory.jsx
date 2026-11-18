@@ -27,7 +27,7 @@ function pullQuote(story) {
 }
 
 /** Pieza editorial completa con trazabilidad por párrafo, hechos y contraste entre fuentes. */
-export default function EditorialStory({ story }) {
+export default function EditorialStory({ story, hideKeyPoints = false }) {
   const { t } = useI18n()
   const prov = story.provenance || {}
   const contrast = story.contrast || {}
@@ -35,7 +35,7 @@ export default function EditorialStory({ story }) {
 
   return (
     <div className="space-y-12">
-      {(story.key_points || []).length > 0 && (
+      {!hideKeyPoints && (story.key_points || []).length > 0 && (
         <StorySection id="key-points" title={t('story.keyPoints')}>
           <ul className="space-y-3 border-y border-foreground py-4 font-serif-text">
             {story.key_points.map((point, i) => (

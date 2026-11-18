@@ -10,7 +10,6 @@ import { getHeadline as getHeadlineText } from '@/lib/headline'
 import SaveButton from '@/components/story/SaveButton'
 import SourceRow from '@/components/story/SourceRow'
 import StoryBreakdown from '@/components/story/StoryBreakdown'
-import StoryCard from '@/components/story/StoryCard'
 import { StoryPhoto } from '@/components/front/NewsRow'
 import StorySection from '@/components/story/StorySection'
 import StoryStateBadge from '@/components/story/StoryStateBadge'
@@ -18,10 +17,13 @@ import StoryTimeline from '@/components/story/StoryTimeline'
 import { Button } from '@/components/ui/button'
 import { toast } from '@/components/ui/use-toast'
 import {
-  getStory, getStoriesByIds, listStoryMedia, listStorySources, listStoryUpdates, queryKeys,
+  getStory, listStoryMedia, listStorySources, listStoryUpdates, queryKeys,
 } from '@/lib/dataService'
 import { formatDateTime, readingMinutes } from '@/lib/format'
 import { getStoryImage } from '@/lib/storyImage'
+import { FollowButton, HeadlinesCompare, KnowBox, RelatedStories, UpdatedLine } from '@/components/story/StoryExtras'
+import { useFollowing } from '@/lib/follow'
+import { useEffect } from 'react'
 import { getLanguageName } from '@/lib/languages'
 import { contentLanguage, storyInLocale } from '../../engine/translation.js'
 import { useI18n } from '@/lib/i18n/I18nContext'
@@ -47,11 +49,13 @@ export default function StoryDetail() {
   const heroY = useTransform(scrollY, [0, 600], [0, -30])
 
   const storyQ = useQuery({ queryKey: queryKeys.story(id), queryFn: () => getStory(id), retry: false })
+  const { markSeen } = useFollowing()
+  useEffect(() => {
+    if (storyQ.data) markSeen(storyQ.data)
+  }, [storyQ.data, markSeen])
   const sourcesQ = useQuery({ queryKey: queryKeys.storySources(id), queryFn: () => listStorySources(id), enabled: storyQ.isSuccess })
   const updatesQ = useQuery({ queryKey: queryKeys.storyUpdates(id), queryFn: () => listStoryUpdates(id), enabled: storyQ.isSuccess })
   const mediaQ = useQuery({ queryKey: queryKeys.storyMedia(id), queryFn: () => listStoryMedia(id), enabled: storyQ.isSuccess })
-  const relatedIds = storyQ.data?.related_stories || []
-  const relatedQ = useQuery({ queryKey: ['story', id, 'related', relatedIds], queryFn: () => getStoriesByIds(relatedIds), enabled: relatedIds.length > 0 })
 
   if (storyQ.isLoading) return <DetailSkeleton />
   if (storyQ.isError) {
@@ -116,6 +120,7 @@ export default function StoryDetail() {
           {getHeadlineText(story)}
         </motion.h1>
         <p className="mt-3 font-serif-text text-[1.2rem] italic leading-[1.5] text-foreground/85">{story.summary}</p>
+        <UpdatedLine story={story} />
         {story.image_url && (
           <figure className="mt-5 overflow-hidden">
             <motion.div style={{ y: heroY }} className="overflow-hidden">
@@ -140,12 +145,15 @@ export default function StoryDetail() {
           </div>
           <div className="flex items-center gap-2">
             <SaveButton storyId={story.id} withLabel />
+            <FollowButton story={story} />
             <button onClick={onShare} className="inline-flex items-center gap-1.5 border border-foreground/40 px-3 py-1.5 text-xs font-medium text-foreground/80">
               <Share2 className="h-4 w-4" aria-hidden="true" />
               {t('story.share')}
             </button>
           </div>
         </div>
+
+        <KnowBox story={story} />
 
         {isTranslated && (
           <div className="type-small mt-4 flex flex-wrap items-center gap-3 text-muted-foreground">
@@ -163,7 +171,9 @@ export default function StoryDetail() {
 
       <div className="safe-x mt-12 grid gap-12 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-16">
         <div className="mx-auto w-full max-w-3xl space-y-14">
-          <EditorialStory story={story} />
+          <EditorialStory story={story} hideKeyPoints />
+
+          <HeadlinesCompare story={story} sources={sourcesQ.data || []} />
 
           {((story.timeline || []).length > 0 || (updatesQ.data || []).length > 0) && (
             <StorySection id="timeline" title={(story.timeline || []).length ? t('story.timeline') : t('story.history')}>
@@ -184,16 +194,7 @@ export default function StoryDetail() {
 
         <aside className="space-y-8 lg:sticky lg:top-24 lg:self-start">
           <StoryBreakdown story={story} />
-          {(relatedQ.data || []).length > 0 && (
-            <div>
-              <p className="eyebrow mb-1">{t('story.related')}</p>
-              <div className="divide-y">
-                {relatedQ.data.map((s) => storyInLocale(s, locale)).filter(Boolean).map((s) => (
-                  <StoryCard key={s.id} story={s} variant="compact" />
-                ))}
-              </div>
-            </div>
-          )}
+          <RelatedStories story={story} />
         </aside>
       </div>
     </article>

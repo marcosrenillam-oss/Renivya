@@ -3,7 +3,9 @@ import assert from 'node:assert/strict'
 import { cleanImageUrl, extractPageImage } from '../engine/images.js'
 import { parseFeed } from '../engine/rss.js'
 import { createLocalClient } from '../src/api/localClient.js'
-import { createDataAdapter, enrichImages } from '../engine/brain.js'
+import { createDataAdapter, enrichArticles } from '../engine/brain.js'
+import { extractArticleText } from '../engine/images.js'
+import { cleanText } from '../engine/normalizer.js'
 
 test('URL de foto: absoluta, https, sin entidades y sin logos', () => {
   assert.equal(cleanImageUrl('http://cdn.x.com/a.jpg?w=1&amp;h=2'), 'https://cdn.x.com/a.jpg?w=1&h=2')
@@ -36,10 +38,13 @@ test('noticias sin foto en el feed: se busca la de su página una sola vez', asy
     { url: 'https://n.com/2', title: 'Dos', status: 'pending', is_demo: false, image_url: 'https://n.com/2.jpg', published_at: '2026-11-18T09:00:00Z' },
   ])
   let calls = 0
-  const provider = { fetchArticleImage: async (url) => (calls++, `${url}.jpg`) }
-  assert.deepEqual(await enrichImages(db, provider), { checked: 1, found: 1 })
-  assert.deepEqual(await enrichImages(db, provider), { checked: 0, found: 0 })
-  assert.equal(calls, 1)
+  const provider = { fetchArticle: async (url) => (calls++, { image: `${url}.jpg`, text: 'Texto completo del artículo. '.repeat(40) }) }
+  const first = await enrichArticles(db, provider)
+  assert.equal(first.checked, 2) // la 2 tiene foto pero el texto del feed es corto
+  assert.equal(first.found, 1)
+  assert.equal(first.texts, 2)
+  assert.equal((await enrichArticles(db, provider)).checked, 0)
+  assert.equal(calls, 2)
   const [one] = await db.NewsItem.filter({ url: 'https://n.com/1' })
   assert.equal(one.image_url, 'https://n.com/1.jpg')
 })
@@ -55,4 +60,15 @@ test('fotos genéricas: la misma imagen en historias distintas se descarta', asy
   assert.deepEqual([...g], ['https://m.com/og-site.jpg'])
   assert.equal(cleanImageUrl('https://m.com/img/default-share.jpg'), null)
   assert.equal(cleanImageUrl('https://m.com/2026/11/incendio-valencia.jpg'), 'https://m.com/2026/11/incendio-valencia.jpg')
+})
+
+test('texto completo del artículo: articleBody de JSON-LD o párrafos de <article>', () => {
+  const body = 'El Gobierno aprobó hoy la reforma. '.repeat(12)
+  const ld = `<script type="application/ld+json">{"@graph":[{"@type":"NewsArticle","articleBody":${JSON.stringify(body)}}]}</script>`
+  assert.match(extractArticleText(ld, cleanText), /^El Gobierno aprobó hoy la reforma\./)
+  const html = `<article><p>${'Primer párrafo con datos de la noticia y contexto suficiente. '.repeat(3)}</p><p>Corto</p><p>${'Segundo párrafo con más detalles sobre lo ocurrido ayer. '.repeat(3)}</p></article>`
+  const text = extractArticleText(html, cleanText)
+  assert.match(text, /Primer párrafo/)
+  assert.doesNotMatch(text, /Corto/)
+  assert.equal(extractArticleText('<p>nada</p>', cleanText), '')
 })

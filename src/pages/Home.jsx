@@ -3,6 +3,7 @@ import Greeting from '@/components/front/Greeting'
 import BreakingTicker from '@/components/front/BreakingTicker'
 import FrontPageCarousel from '@/components/front/FrontPageCarousel'
 import FrontGrid from '@/components/front/FrontGrid'
+import { FollowedUpdates } from '@/components/story/StoryExtras'
 import EmptyEdition from '@/components/front/EmptyEdition'
 import FeedError from '@/components/story/FeedError'
 import { useEditionNews } from '@/lib/news/useNews'
@@ -43,6 +44,7 @@ export default function Home() {
       ) : (
         <>
           <BreakingTicker stories={breaking} />
+          <FollowedUpdates />
           <section>
             <div className="safe-x">
               <div className="rule-thick" />

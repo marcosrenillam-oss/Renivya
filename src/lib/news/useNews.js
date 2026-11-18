@@ -5,6 +5,7 @@ import { useI18n } from '@/lib/i18n/I18nContext'
 import { useAuth } from '@/lib/AuthContext'
 import { storyInLocale } from '../../../engine/translation.js'
 import { storyCountries, storyInEdition } from '../../../engine/editions.js'
+import { mergeNearDuplicates } from '../../../engine/dedupe.js'
 
 export { storyInEdition, storyCountries }
 
@@ -30,7 +31,7 @@ export function useNews() {
     queryFn: () => listStories({ sort: STORY_SORT.score, limit: 1000 }),
     staleTime: 60_000,
   })
-  const stories = useMemo(() => (q.data || []).map((s) => storyInLocale(s, locale)).filter(Boolean), [q.data, locale])
+  const stories = useMemo(() => mergeNearDuplicates((q.data || []).map((s) => storyInLocale(s, locale)).filter(Boolean)), [q.data, locale])
   return { ...q, stories, total: q.data?.length ?? 0 }
 }
 

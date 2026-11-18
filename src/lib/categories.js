@@ -1,6 +1,6 @@
 import {
   Globe2, Landmark, TrendingUp, Briefcase, Cpu, BrainCircuit, FlaskConical, Trophy, Goal,
-  Palette, Clapperboard, HeartPulse, Leaf, Plane, Users,
+  Palette, Clapperboard, HeartPulse, Leaf, Plane, Users, Swords, Tornado, Gavel, Rocket, CandlestickChart,
 } from 'lucide-react'
 
 /**
@@ -10,12 +10,16 @@ import {
  */
 export const CATEGORIES = [
   { id: 'world', icon: Globe2, tone: 'accent' },
+  { id: 'conflict', icon: Swords, tone: 'primary' },
+  { id: 'disasters', icon: Tornado, tone: 'chart-4' },
   { id: 'politics', icon: Landmark, tone: 'primary' },
   { id: 'economy', icon: TrendingUp, tone: 'chart-3' },
   { id: 'business', icon: Briefcase, tone: 'chart-3' },
+  { id: 'markets', icon: CandlestickChart, tone: 'chart-3' },
   { id: 'technology', icon: Cpu, tone: 'accent' },
   { id: 'artificial_intelligence', icon: BrainCircuit, tone: 'accent' },
   { id: 'science', icon: FlaskConical, tone: 'chart-4' },
+  { id: 'space', icon: Rocket, tone: 'chart-4' },
   { id: 'sports', icon: Trophy, tone: 'chart-4' },
   { id: 'football', icon: Goal, tone: 'chart-4' },
   { id: 'culture', icon: Palette, tone: 'chart-5' },
@@ -24,6 +28,7 @@ export const CATEGORIES = [
   { id: 'environment', icon: Leaf, tone: 'chart-4' },
   { id: 'travel', icon: Plane, tone: 'accent' },
   { id: 'society', icon: Users, tone: 'primary' },
+  { id: 'crime', icon: Gavel, tone: 'primary' },
 ]
 
 export const CATEGORY_IDS = CATEGORIES.map((c) => c.id)
@@ -35,6 +40,11 @@ export const CATEGORY_PARENT = {
   artificial_intelligence: 'technology',
   business: 'economy',
   entertainment: 'culture',
+  markets: 'economy',
+  space: 'science',
+  conflict: 'world',
+  disasters: 'world',
+  crime: 'society',
 }
 
 export function isCategory(id) {

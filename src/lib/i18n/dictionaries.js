@@ -128,6 +128,11 @@ const es = {
   'category.environment': 'Medio ambiente',
   'category.travel': 'Viajes',
   'category.society': 'Sociedad',
+  'category.conflict': 'Conflictos',
+  'category.disasters': 'Catástrofes',
+  'category.crime': 'Sucesos y tribunales',
+  'category.space': 'Espacio',
+  'category.markets': 'Mercados',
 
   'storyStatus.developing': 'En desarrollo',
   'storyStatus.active': 'Activa',
@@ -267,6 +272,11 @@ const en = {
   'category.environment': 'Environment',
   'category.travel': 'Travel',
   'category.society': 'Society',
+  'category.conflict': 'Conflicts',
+  'category.disasters': 'Disasters',
+  'category.crime': 'Crime & courts',
+  'category.space': 'Space',
+  'category.markets': 'Markets',
 
   'storyStatus.developing': 'Developing',
   'storyStatus.active': 'Active',

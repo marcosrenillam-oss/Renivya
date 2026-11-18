@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/AuthContext'
 import { storyInLocale } from '../../../engine/translation.js'
 import { storyCountries, storyInEdition } from '../../../engine/editions.js'
 import { mergeNearDuplicates } from '../../../engine/dedupe.js'
+import { hiddenSections, inHiddenSection } from '@/lib/preferences'
 
 export { storyInEdition, storyCountries }
 
@@ -26,12 +27,17 @@ export function byFront(a, b) {
  */
 export function useNews() {
   const { locale } = useI18n()
+  const hidden = hiddenSections.use()
   const q = useQuery({
     queryKey: queryKeys.stories({ scope: 'all' }),
     queryFn: () => listStories({ sort: STORY_SORT.score, limit: 1000 }),
     staleTime: 60_000,
   })
-  const stories = useMemo(() => mergeNearDuplicates((q.data || []).map((s) => storyInLocale(s, locale)).filter(Boolean)), [q.data, locale])
+  // Las secciones que el lector ha ocultado no aparecen (salvo en la búsqueda).
+  const stories = useMemo(
+    () => mergeNearDuplicates((q.data || []).map((s) => storyInLocale(s, locale)).filter((s) => s && !inHiddenSection(s, hidden))),
+    [q.data, locale, hidden]
+  )
   return { ...q, stories, total: q.data?.length ?? 0 }
 }
 

@@ -15,6 +15,8 @@ import { formatRelativeTime } from '@/lib/format'
 import { getSnapshotMeta } from '@/lib/snapshotSync'
 import { cn } from '@/lib/utils'
 import { EDITIONS } from '../../engine/sourceCatalog.js'
+import { CATEGORIES, CATEGORY_PARENT } from '@/lib/categories'
+import { useHiddenSections } from '@/lib/preferences'
 
 function Group({ title, children }) {
   return (
@@ -51,6 +53,7 @@ export default function Profile() {
   const { t, locale, setLocale } = useI18n()
   const { theme, setTheme } = useTheme()
   const [textSize, setTextSize] = useTextSize()
+  const { isHidden, toggle: toggleSection } = useHiddenSections()
   const qc = useQueryClient()
   const [name, setName] = useState(user?.full_name || '')
   const [savedName, setSavedName] = useState(false)
@@ -149,6 +152,33 @@ export default function Profile() {
             value={textSize}
             onChange={setTextSize}
           />
+        </div>
+      </Group>
+
+      <Group title={t('profile.sections')}>
+        <p className="px-3 pb-2.5 pt-2.5 font-serif-text text-[13.5px] italic text-muted-foreground">{t('profile.sectionsHint')}</p>
+        <div className="grid grid-cols-2 gap-px border-t border-foreground/25 bg-foreground/25">
+          {CATEGORIES.map(({ id, icon: Icon }) => {
+            const off = isHidden(id) || (CATEGORY_PARENT[id] && isHidden(CATEGORY_PARENT[id]))
+            const child = Boolean(CATEGORY_PARENT[id])
+            return (
+              <button
+                key={id}
+                type="button"
+                aria-pressed={!off}
+                disabled={child && isHidden(CATEGORY_PARENT[id])}
+                onClick={() => {
+                  haptic()
+                  toggleSection(id)
+                }}
+                className={cn('flex items-center gap-2 bg-background px-3 py-3 text-left text-[14.5px] transition active:scale-[0.98]', off && 'text-muted-foreground line-through decoration-foreground/40')}
+              >
+                <Icon className={cn('h-4 w-4 shrink-0', off ? 'opacity-40' : 'text-foreground/70')} strokeWidth={1.6} aria-hidden="true" />
+                <span className={cn('flex-1 truncate', child && 'italic')}>{t(`category.${id}`)}</span>
+                {!off && <Check className="h-4 w-4 text-accent" />}
+              </button>
+            )
+          })}
         </div>
       </Group>
 

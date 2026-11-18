@@ -1,6 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
-import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter as Router, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { Toaster } from '@/components/ui/toaster'
 import { queryClientInstance } from '@/lib/query-client'
 import PageNotFound from './lib/PageNotFound'
@@ -23,6 +23,12 @@ const SavedStories = lazy(() => import('@/pages/SavedStories'))
 const Profile = lazy(() => import('@/pages/Profile'))
 const Analytics = lazy(() => import('@/pages/Analytics'))
 
+/** Redirección que conserva la consulta (?c=...). */
+function KeepQuery({ to }) {
+  const { search } = useLocation()
+  return <Navigate to={{ pathname: to, search }} replace />
+}
+
 const page = (el, padded = false) => (
   <Suspense fallback={<Spinner className="mt-10" />}>{padded ? <div className="safe-x pt-3">{el}</div> : el}</Suspense>
 )
@@ -42,7 +48,7 @@ const AppRoutes = () => {
         <Route key={p} path={p} element={<Navigate to="/" replace />} />
       ))}
       <Route path="/settings" element={<Navigate to="/profile" replace />} />
-      <Route path="/categories" element={<Navigate to="/top-stories" replace />} />
+      <Route path="/categories" element={<KeepQuery to="/top-stories" />} />
       <Route element={<AppShell />}>
         <Route path="/" element={<Home />} />
         <Route path="/top-stories" element={page(<TopStories />)} />

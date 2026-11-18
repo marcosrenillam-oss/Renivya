@@ -48,6 +48,11 @@ const CATEGORY_CONSEQUENCE = {
     entertainment: 'Tiene repercusión en la industria del entretenimiento y su público.',
     travel: 'Puede afectar a viajeros, destinos y operadores turísticos.',
     society: 'Afecta a la vida cotidiana de la población implicada.',
+    conflict: 'Tiene consecuencias humanitarias, diplomáticas y de seguridad para la región.',
+    disasters: 'Afecta a la población de la zona y puede requerir ayuda de emergencia.',
+    crime: 'Afecta a la seguridad ciudadana y queda en manos de policía y tribunales.',
+    space: 'Amplía lo que sabemos del espacio y de las misiones que lo exploran.',
+    markets: 'Puede mover el valor de ahorros, inversiones y precios.',
   },
   en: {
     economy: 'Its effects may reach prices, jobs or markets.',
@@ -65,6 +70,11 @@ const CATEGORY_CONSEQUENCE = {
     entertainment: 'It matters to the entertainment industry and its audience.',
     travel: 'It may affect travellers, destinations and tour operators.',
     society: 'It affects the daily life of the people involved.',
+    conflict: 'It has humanitarian, diplomatic and security consequences for the region.',
+    disasters: 'It affects people in the area and may require emergency aid.',
+    crime: 'It concerns public safety and is now in the hands of police and courts.',
+    space: 'It expands what we know about space and the missions exploring it.',
+    markets: 'It may move the value of savings, investments and prices.',
   },
 }
 

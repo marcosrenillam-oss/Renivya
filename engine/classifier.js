@@ -3,12 +3,43 @@
 import { foldAccents } from './normalizer.js'
 
 export const CATEGORY_ORDER = [
-  'artificial_intelligence', 'football', 'politics', 'economy', 'business', 'technology', 'science',
+  'artificial_intelligence', 'football', 'conflict', 'disasters', 'crime', 'space', 'markets',
+  'politics', 'economy', 'business', 'technology', 'science',
   'health', 'environment', 'sports', 'culture', 'entertainment', 'travel', 'society', 'world',
 ]
 
 /** Léxico ponderado: [término (sin acentos, minúsculas), peso]. Frases con espacios permitidas. */
 const LEXICON = {
+  // Secciones finas: cuentan también para su sección madre (CATEGORY_PARENT en la app).
+  conflict: [
+    ['guerra', 4], ['war', 4], ['guerre', 4], ['ejercito', 3], ['army', 3], ['militar', 2], ['military', 2], ['tropas', 4], ['troops', 4],
+    ['bombardeo', 5], ['bombardeos', 5], ['airstrike', 5], ['airstrikes', 5], ['misil', 4], ['misiles', 4], ['missile', 4], ['missiles', 4],
+    ['drones', 3], ['ofensiva', 4], ['offensive', 3], ['frente', 2], ['tregua', 4], ['ceasefire', 5], ['alto el fuego', 5], ['invasion', 4],
+    ['milicias', 4], ['militia', 4], ['hamas', 4], ['hezbola', 4], ['hezbollah', 4], ['combates', 4], ['fighting', 3], ['soldados', 3], ['soldiers', 3],
+  ],
+  disasters: [
+    ['terremoto', 5], ['earthquake', 5], ['sismo', 5], ['seisme', 5], ['tsunami', 5], ['huracan', 5], ['hurricane', 5], ['tifon', 5], ['typhoon', 5],
+    ['ciclon', 5], ['cyclone', 5], ['inundaciones', 4], ['floods', 4], ['flooding', 4], ['dana', 4], ['erupcion', 5], ['eruption', 5], ['volcan', 4],
+    ['volcano', 4], ['avalancha', 4], ['avalanche', 4], ['deslizamiento', 4], ['landslide', 4], ['incendio forestal', 4], ['wildfire', 4],
+    ['magnitud', 3], ['magnitude', 3], ['damnificados', 4], ['evacuados', 3], ['evacuated', 3], ['catastrofe', 4], ['disaster', 4],
+  ],
+  crime: [
+    ['detenido', 4], ['detenidos', 4], ['arrested', 4], ['arrest', 3], ['asesinato', 5], ['murder', 5], ['homicidio', 5], ['homicide', 5],
+    ['crimen', 4], ['crime', 3], ['robo', 3], ['robbery', 4], ['fraude', 3], ['fraud', 3], ['juicio', 4], ['trial', 3], ['condenado', 4],
+    ['condena', 3], ['sentenced', 4], ['convicted', 4], ['fiscal', 2], ['fiscalia', 3], ['prosecutor', 3], ['policia', 2], ['police', 2],
+    ['sucesos', 4], ['tribunal supremo', 3], ['juez', 3], ['judge', 3], ['acusado', 3], ['accused', 3], ['narcotrafico', 4], ['drug trafficking', 4],
+    ['apunalado', 4], ['stabbed', 4], ['tiroteo', 4], ['shooting', 4], ['secuestro', 4], ['kidnapping', 4],
+  ],
+  space: [
+    ['espacio', 2], ['espacial', 4], ['space', 2], ['nasa', 5], ['esa', 2], ['spacex', 5], ['cohete', 5], ['rocket', 5], ['astronauta', 5],
+    ['astronaut', 5], ['satelite', 4], ['satellite', 4], ['orbita', 4], ['orbit', 4], ['luna', 2], ['moon', 2], ['marte', 4], ['mars', 3],
+    ['telescopio', 4], ['telescope', 4], ['voyager', 5], ['asteroide', 5], ['asteroid', 5], ['galaxia', 4], ['galaxy', 4], ['artemis', 5],
+  ],
+  markets: [
+    ['bolsa', 4], ['wall street', 5], ['ibex', 5], ['nasdaq', 5], ['dow jones', 5], ['s&p', 4], ['acciones', 3], ['shares', 3], ['stocks', 4],
+    ['inversores', 3], ['investors', 3], ['cotizacion', 4], ['bitcoin', 5], ['criptomonedas', 5], ['crypto', 4], ['divisas', 4], ['dolar', 2],
+    ['bonos', 4], ['bonds', 3], ['salida a bolsa', 5], ['ipo', 4], ['petroleo', 3], ['oil prices', 4], ['brent', 5], ['oro', 2],
+  ],
   artificial_intelligence: [
     ['inteligencia artificial', 5], ['artificial intelligence', 5], ['intelligence artificielle', 5], ['ia generativa', 5], ['generative ai', 5],
     ['chatbot', 3], ['modelo de lenguaje', 4], ['language model', 4], ['llm', 4], ['machine learning', 4], ['aprendizaje automatico', 4],
@@ -17,7 +48,7 @@ const LEXICON = {
   football: [
     ['futbol', 4], ['football', 3], ['soccer', 4], ['futebol', 4], ['laliga', 5], ['la liga', 4], ['premier league', 5], ['champions', 4],
     ['champions league', 5], ['uefa', 4], ['fifa', 4], ['mundial de clubes', 5], ['gol', 2], ['goles', 2], ['goal', 1], ['delantero', 3],
-    ['striker', 3], ['entrenador', 2], ['penalti', 3], ['copa', 2], ['final de la copa', 4], ['copa del rey', 5], ['cf', 3], ['fc', 3], ['club de futbol', 4], ['liga', 2], ['futbolista', 4], ['penalty', 2], ['derbi', 3], ['derby', 2], ['estadio', 1], ['fichaje', 4], ['transfer', 1],
+    ['striker', 3], ['entrenador', 2], ['penalti', 3], ['copa', 2], ['final de la copa', 4], ['copa del rey', 5], ['cf', 3], ['fc', 3], ['club de futbol', 4], ['liga', 2], ['futbolista', 4], ['real madrid', 4], ['atletico de madrid', 5], ['barca', 4], ['liga de campeones', 5], ['seleccion', 2], ['penalty', 2], ['derbi', 3], ['derby', 2], ['estadio', 1], ['fichaje', 4], ['transfer', 1],
   ],
   politics: [
     ['elecciones', 4], ['election', 4], ['elections', 4], ['electoral', 3], ['eleicoes', 4], ['parlamento', 3], ['parliament', 3], ['congreso', 3],

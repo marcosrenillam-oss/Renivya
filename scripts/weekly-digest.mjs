@@ -47,11 +47,11 @@ const T = {
 }[LOCALE]
 
 const CATEGORY = {
-  es: { world: 'Internacional', politics: 'Política', economy: 'Economía', business: 'Economía', technology: 'Tecnología', artificial_intelligence: 'Tecnología', science: 'Ciencia', sports: 'Deportes', football: 'Deportes', culture: 'Cultura', entertainment: 'Cultura', health: 'Salud', environment: 'Medio ambiente', travel: 'Viajes', society: 'Sociedad' },
-  en: { world: 'World', politics: 'Politics', economy: 'Economy', business: 'Economy', technology: 'Technology', artificial_intelligence: 'Technology', science: 'Science', sports: 'Sports', football: 'Sports', culture: 'Culture', entertainment: 'Culture', health: 'Health', environment: 'Environment', travel: 'Travel', society: 'Society' },
+  es: { conflict: 'Conflictos', disasters: 'Catástrofes', crime: 'Sucesos', space: 'Espacio', markets: 'Mercados', world: 'Internacional', politics: 'Política', economy: 'Economía', business: 'Economía', technology: 'Tecnología', artificial_intelligence: 'Tecnología', science: 'Ciencia', sports: 'Deportes', football: 'Deportes', culture: 'Cultura', entertainment: 'Cultura', health: 'Salud', environment: 'Medio ambiente', travel: 'Viajes', society: 'Sociedad' },
+  en: { conflict: 'Conflicts', disasters: 'Disasters', crime: 'Crime', space: 'Space', markets: 'Markets', world: 'World', politics: 'Politics', economy: 'Economy', business: 'Economy', technology: 'Technology', artificial_intelligence: 'Technology', science: 'Science', sports: 'Sports', football: 'Sports', culture: 'Culture', entertainment: 'Culture', health: 'Health', environment: 'Environment', travel: 'Travel', society: 'Society' },
 }[LOCALE]
 const SECTION_ORDER = ['world', 'politics', 'economy', 'society', 'technology', 'science', 'health', 'environment', 'culture', 'sports', 'travel']
-const sectionOf = (c) => ({ business: 'economy', artificial_intelligence: 'technology', football: 'sports', entertainment: 'culture' })[c] || c || 'society'
+const sectionOf = (c) => ({ business: 'economy', markets: 'economy', artificial_intelligence: 'technology', football: 'sports', entertainment: 'culture', space: 'science', conflict: 'world', disasters: 'world', crime: 'society' })[c] || c || 'society'
 
 const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 const fmtDate = (d, opts) => new Intl.DateTimeFormat(LOCALE === 'es' ? 'es-ES' : 'en-GB', opts).format(d)

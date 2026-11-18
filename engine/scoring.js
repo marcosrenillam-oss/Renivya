@@ -21,11 +21,13 @@ export const SCORE_WEIGHTS = {
 const CATEGORY_IMPACT = {
   world: 62, politics: 60, economy: 60, health: 58, environment: 55, business: 48, artificial_intelligence: 52,
   technology: 46, science: 44, society: 46, sports: 34, football: 36, culture: 32, entertainment: 28, travel: 30,
+  conflict: 64, disasters: 62, crime: 44, space: 42, markets: 52,
 }
 /** Interés de audiencia general por categoría (no personalizado: eso lo hace el Digest). */
 const CATEGORY_AUDIENCE = {
   world: 60, politics: 58, economy: 56, football: 62, sports: 52, health: 60, technology: 52, artificial_intelligence: 56,
   society: 54, entertainment: 50, environment: 48, business: 44, science: 42, culture: 40, travel: 42,
+  conflict: 60, disasters: 60, crime: 56, space: 50, markets: 46,
 }
 
 const HIGH_IMPACT_TERMS = [

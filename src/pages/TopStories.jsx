@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import LeadCard from '@/components/front/LeadCard'
 import NewsRow from '@/components/front/NewsRow'
@@ -11,6 +12,7 @@ import { useI18n } from '@/lib/i18n/I18nContext'
 import { CATEGORIES, CATEGORY_PARENT, getCategoryLabel } from '@/lib/categories'
 import { getCountryName } from '@/lib/countries'
 import { getLanguageName } from '@/lib/languages'
+import { cn } from '@/lib/utils'
 
 const section = (category) => CATEGORY_PARENT[category] || category || 'society'
 const byScore = (a, b) => (b.renivya_score ?? 0) - (a.renivya_score ?? 0) || String(a.id).localeCompare(String(b.id))
@@ -19,7 +21,15 @@ const byScore = (a, b) => (b.renivya_score ?? 0) - (a.renivya_score ?? 0) || Str
 export default function TopStories() {
   const { t, locale } = useI18n()
   const { stories, edition, isLoading, isError, refetch } = useEditionNews()
-  const [category, setCategory] = useState(null)
+  // ?c= puede ser una sección (economía) o una sección fina (mercados): se abre en la madre.
+  const [params] = useSearchParams()
+  const initial = params.get('c')
+  const [category, setCategoryState] = useState(initial ? section(initial) : null)
+  const [sub, setSub] = useState(initial && CATEGORY_PARENT[initial] ? initial : null)
+  const setCategory = (c) => {
+    setCategoryState(c)
+    setSub(null)
+  }
 
   const groups = useMemo(() => {
     const map = new Map()
@@ -33,7 +43,11 @@ export default function TopStories() {
   }, [stories])
 
   const country = getCountryName(edition, locale)
-  const selected = category ? groups.find(([k]) => k === category)?.[1] || [] : null
+  const inSection = category ? groups.find(([k]) => k === category)?.[1] || [] : null
+  // Secciones finas presentes dentro de la elegida (p. ej. Internacional → Conflictos, Catástrofes).
+  const subs = useMemo(() => (inSection ? [...new Set(inSection.map((s) => s.category).filter((c) => CATEGORY_PARENT[c] === category))] : []), [inSection, category])
+  const bySub = inSection && sub ? inSection.filter((s) => s.category === sub) : null
+  const selected = bySub?.length ? bySub : inSection
 
   return (
     <div className="space-y-6">
@@ -57,16 +71,32 @@ export default function TopStories() {
         <>
           <div className="sticky top-[calc(env(safe-area-inset-top)+3.5rem)] z-30 bg-background">
             <CategoryChips categories={groups.map(([k]) => k)} value={category} onChange={setCategory} />
+            {subs.length > 0 && (
+              <div className="safe-x">
+                <div className="no-scrollbar flex gap-4 overflow-x-auto border-b border-foreground/40">
+                  {[null, ...subs].map((c) => (
+                    <button
+                      key={c ?? 'all'}
+                      type="button"
+                      onClick={() => setSub(c)}
+                      className={cn('shrink-0 py-1.5 font-serif-text text-[14px] italic transition-colors', (bySub?.length ? sub : null) === c ? 'text-foreground underline decoration-2 underline-offset-4' : 'text-muted-foreground')}
+                    >
+                      {c ? getCategoryLabel(c, t) : t('top.allIn', { section: getCategoryLabel(category, t) })}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
           <AnimatePresence mode="wait">
-            <motion.div key={category ?? 'all'} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} className="safe-x space-y-8">
+            <motion.div key={`${category ?? 'all'}-${sub ?? ''}`} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} className="safe-x space-y-8">
               {selected ? (
                 selected.length ? (
                   <div className="border-t-[3px] border-foreground">
                     <LeadCard story={selected[0]} rank={1} />
                     <div className="divide-y divide-foreground border-t border-foreground">
                       {selected.slice(1, 30).map((s) => (
-                        <NewsRow key={s.id} story={s} showCategory={false} />
+                        <NewsRow key={s.id} story={s} showCategory={!sub && s.category !== category} />
                       ))}
                     </div>
                   </div>

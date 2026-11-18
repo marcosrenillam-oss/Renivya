@@ -15,9 +15,6 @@ permissions:
   contents: read
   pages: write
   id-token: write
-concurrency:
-  group: pages
-  cancel-in-progress: false
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -53,6 +50,9 @@ jobs:
           path: dist
   deploy:
     needs: build
+    concurrency:
+      group: pages
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -60,3 +60,25 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  # Las ejecuciones programadas de GitHub se retrasan o se saltan a menudo. Para que las noticias
+  # se actualicen de verdad cada ~15 minutos, cada ejecución lanza la siguiente al terminar.
+  # Solo continúa la cadena la ejecución más reciente (nunca se multiplican).
+  next:
+    needs: deploy
+    if: always() && github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - name: Próxima actualización en unos 15 minutos
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sleep 780
+          newest=$(gh run list -R "$GITHUB_REPOSITORY" -w deploy.yml -L 30 --json databaseId,status --jq '[.[] | select(.status != "completed") | .databaseId] | max')
+          if [ "$newest" = "$GITHUB_RUN_ID" ]; then
+            gh workflow run deploy.yml -R "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME"
+          else
+            echo "Hay una ejecución más reciente: ella continúa la cadena."
+          fi

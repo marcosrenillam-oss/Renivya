@@ -32,7 +32,7 @@
       })();
     </script>
     <meta name="theme-color" content="#F7F6F2" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#191613" media="(prefers-color-scheme: dark)" />
     <meta name="description" content="RENIVYA — Inteligencia informativa global" />
     <title>RENIVYA — Inteligencia informativa global</title>
     <script>
@@ -42,6 +42,8 @@
           var t = localStorage.getItem('renivya:theme') || 'system';
           var dark = t === 'dark' || (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
           if (dark) document.documentElement.classList.add('dark');
+          var size = localStorage.getItem('renivya:text-size');
+          if (size) document.documentElement.classList.add('text-size-' + size);
         } catch (e) {}
       })();
     </script>

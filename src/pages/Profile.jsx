@@ -7,6 +7,7 @@ import PushSettings from '@/components/settings/PushSettings'
 import { useAuth } from '@/lib/AuthContext'
 import { useI18n } from '@/lib/i18n/I18nContext'
 import { useTheme } from '@/lib/ThemeContext'
+import { useTextSize } from '@/lib/textSize'
 import { getCountryName } from '@/lib/countries'
 import { flagEmoji } from '@/lib/flags'
 import { haptic } from '@/lib/haptics'
@@ -49,6 +50,7 @@ export default function Profile() {
   const { user, updateMe, logout } = useAuth()
   const { t, locale, setLocale } = useI18n()
   const { theme, setTheme } = useTheme()
+  const [textSize, setTextSize] = useTextSize()
   const qc = useQueryClient()
   const [name, setName] = useState(user?.full_name || '')
   const [savedName, setSavedName] = useState(false)
@@ -132,6 +134,20 @@ export default function Profile() {
             ]}
             value={theme}
             onChange={setTheme}
+          />
+        </div>
+      </Group>
+
+      <Group title={t('profile.textSize')}>
+        <div className="p-2">
+          <Segmented
+            options={[
+              { value: 'small', label: t('profile.textSmall') },
+              { value: 'normal', label: t('profile.textNormal') },
+              { value: 'large', label: t('profile.textLarge') },
+            ]}
+            value={textSize}
+            onChange={setTextSize}
           />
         </div>
       </Group>

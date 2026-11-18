@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
-import { AnimatePresence, motion } from 'framer-motion'
+import { motion } from 'framer-motion'
+import { isViewTransitionActive } from '@/lib/storyTransition'
 import TopBar from '@/components/shell/TopBar'
 import Aurora from '@/components/premium/Aurora'
 import MenuDrawer from '@/components/shell/MenuDrawer'
@@ -25,18 +26,15 @@ export default function AppShell() {
         <div className="min-h-screen-dvh relative isolate">
           <Aurora />
           <TopBar onMenu={() => setMenu(true)} />
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.main
+          <motion.main
               key={location.pathname}
-              initial={{ opacity: 0, y: 10 }}
+              initial={isViewTransitionActive() ? false : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
               transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
               className="mx-auto max-w-3xl pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-2"
             >
               <Outlet />
             </motion.main>
-          </AnimatePresence>
           <MenuDrawer open={menu} onClose={close} />
           <UpdatePill state={updatingApp ? 'app' : sync} />
         </div>

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;0,900;1,500&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Inter:wght@400;500;600;700&family=UnifrakturMaguntia&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,300..700;1,8..60,300..700&family=Inter:wght@400;500;600;700&family=UnifrakturMaguntia&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -31,9 +31,9 @@
     --chart-4: 28 92% 50%;
     --chart-5: 45 95% 50%;
     --radius: 1rem;
-    --font-heading: "Playfair Display", Georgia, "Times New Roman", serif;
+    --font-heading: "Old Standard TT", "Times New Roman", Georgia, serif;
     --font-body: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
-    --font-display: "Playfair Display", Georgia, "Times New Roman", serif;
+    --font-display: "Old Standard TT", "Times New Roman", Georgia, serif;
     --font-serif: "Source Serif 4", Georgia, serif;
     --font-masthead: "UnifrakturMaguntia", "Old English Text MT", Georgia, serif;
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -87,25 +87,25 @@
 
   /* MODO OSCURO — carbón suave */
   .dark {
-    --background: 0 0% 7%;
-    --foreground: 40 15% 92%;
-    --card: 0 0% 9%;
-    --card-foreground: 40 15% 92%;
-    --popover: 0 0% 9%;
-    --popover-foreground: 40 15% 92%;
-    --primary: 40 15% 92%;
-    --primary-foreground: 0 0% 7%;
-    --secondary: 0 0% 13%;
-    --secondary-foreground: 40 15% 92%;
-    --muted: 0 0% 13%;
-    --muted-foreground: 0 0% 62%;
-    --accent: 0 0% 72%;
+    --background: 30 12% 9%;
+    --foreground: 38 30% 88%;
+    --card: 30 11% 11%;
+    --card-foreground: 38 30% 88%;
+    --popover: 30 11% 11%;
+    --popover-foreground: 38 30% 88%;
+    --primary: 38 30% 88%;
+    --primary-foreground: 30 12% 9%;
+    --secondary: 30 9% 15%;
+    --secondary-foreground: 38 30% 88%;
+    --muted: 30 9% 15%;
+    --muted-foreground: 34 10% 62%;
+    --accent: 34 12% 70%;
     --accent-foreground: 0 0% 7%;
     --destructive: 354 80% 58%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 22%;
-    --input: 0 0% 26%;
-    --ring: 40 15% 92%;
+    --border: 32 9% 24%;
+    --input: 32 9% 28%;
+    --ring: 38 30% 88%;
     --chart-1: 40 15% 90%;
     --chart-2: 0 0% 60%;
     --chart-3: 354 80% 58%;
@@ -143,9 +143,9 @@
     --viz-4: #7476e0;
     --viz-5: #c9629a;
 
-    --surface: 0 0% 11%;
-    --surface-elevated: 0 0% 15%;
-    --text-secondary: 0 0% 70%;
+    --surface: 30 10% 12%;
+    --surface-elevated: 30 9% 16%;
+    --text-secondary: 34 12% 72%;
     --success: 152 48% 50%;
     --warning: 36 80% 56%;
     --danger: 4 66% 60%;
@@ -342,7 +342,14 @@
   .rule-bottom { border-bottom: 1px solid hsl(var(--foreground)); }
   .rule-thick { border-top: 3px solid hsl(var(--foreground)); }
   .rule-double { border-top: 3px double hsl(var(--foreground)); }
-  .kicker { font-size: 10.5px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: hsl(var(--muted-foreground)); }
+  /* Sección: versalitas reales de la letra de texto. */
+  .kicker { font-family: var(--font-serif); font-size: 13px; font-weight: 600; letter-spacing: 0.08em; font-variant-caps: all-small-caps; font-feature-settings: "smcp", "c2sc"; color: hsl(var(--muted-foreground)); }
+  .font-display { font-feature-settings: "kern", "liga", "dlig"; }
+  /* De noche, el texto algo más grueso y con más aire para leer sin cansar. */
+  .dark .font-serif-text, .dark .font-serif { font-weight: 420; letter-spacing: 0.005em; }
+  .dark .font-display { font-weight: 700; }
+  /* Remate de imprenta al final de cada noticia. */
+  .end-mark::after { content: '\00a0■'; font-size: 0.7em; vertical-align: 0.08em; }
   .paper-float { animation: paper-float 6.5s ease-in-out infinite; transform-style: preserve-3d; }
   .paper-sheen {
     position: absolute;
@@ -379,3 +386,11 @@
 @media (prefers-reduced-motion: reduce) {
   .paper-float, .paper-sheen, .ken-burns, .marquee, .text-shimmer, .aurora-blob { animation: none !important; }
 }
+
+/* Tamaño de letra elegido en Perfil: escala el contenido (no la barra superior). */
+html.text-size-small main { zoom: 0.9; }
+html.text-size-large main { zoom: 1.12; }
+
+/* Transición al abrir una noticia: la foto crece de la tarjeta a la portada del artículo. */
+::view-transition-group(story-photo) { animation-duration: 0.5s; animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1); }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: 0.35s; }

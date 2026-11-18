@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { animate, motion, useMotionValue, useMotionValueEvent, useTransform } from 'framer-motion'
 import NewspaperPage from '@/components/front/NewspaperPage'
 import { haptic } from '@/lib/haptics'
+import { openStory } from '@/lib/storyTransition'
 import { cn } from '@/lib/utils'
 
 const AUTOPLAY_MS = 5200
@@ -109,7 +110,9 @@ export default function FrontPageCarousel({ stories, edition }) {
     const offset = wrapOffset(i, pos.get(), n)
     if (Math.abs(offset) < 0.3) {
       haptic('medium')
-      navigate(`/story/${stories[i].id}`)
+      const img = wrapRef.current?.querySelectorAll('article.newsprint')[i]?.querySelector('img')
+      if (document.startViewTransition && img) openStory(null, navigate, stories[i].id, img)
+      else navigate(`/story/${stories[i].id}`)
     } else goTo(Math.round(pos.get() + offset))
   }
 

@@ -1,17 +1,18 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { openStory } from '@/lib/storyTransition'
 import { useI18n } from '@/lib/i18n/I18nContext'
 import { getCategoryLabel } from '@/lib/categories'
 import { getStoryImage } from '@/lib/storyImage'
-import { haptic } from '@/lib/haptics'
 import { sourcesLabel } from '@/components/front/storyText'
 import { StoryPhoto } from '@/components/front/NewsRow'
 
 /** Noticia destacada a la manera de un periódico: foto grande con pie, titular y entradilla. */
 export default function FeatureCard({ story, rank, showSummary = true }) {
   const { t } = useI18n()
+  const navigate = useNavigate()
   const img = getStoryImage(story)
   return (
-    <Link to={`/story/${story.id}`} onClick={() => haptic()} className="block py-4 active:opacity-70">
+    <Link to={`/story/${story.id}`} onClick={(e) => openStory(e, navigate, story.id)} className="block py-4 active:opacity-70">
       {img && (
         <figure className="mb-3 overflow-hidden">
           <StoryPhoto story={story} eager={rank === 1} className="aspect-[3/2] w-full object-cover [filter:grayscale(0.1)_contrast(1.05)]" />

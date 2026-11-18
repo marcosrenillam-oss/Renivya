@@ -1,14 +1,14 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { openStory } from '@/lib/storyTransition'
 import { useI18n } from '@/lib/i18n/I18nContext'
 import { getCategoryLabel } from '@/lib/categories'
 import { formatRelativeTime } from '@/lib/format'
 import { getStoryImage } from '@/lib/storyImage'
-import { haptic } from '@/lib/haptics'
 import { sourceNames } from '@/components/front/storyText'
 
 /** Foto real de la noticia (o nada): nunca una imagen inventada. */
-export function StoryPhoto({ story, className, eager = false }) {
+export function StoryPhoto({ story, className, eager = false, transition = false }) {
   const [ok, setOk] = useState(true)
   const img = getStoryImage(story)
   if (!img || !ok) return null
@@ -21,6 +21,7 @@ export function StoryPhoto({ story, className, eager = false }) {
       referrerPolicy="no-referrer"
       onError={() => setOk(false)}
       className={className}
+      {...(transition ? { 'data-vt': 'story-photo', style: { viewTransitionName: 'story-photo' } } : {})}
     />
   )
 }
@@ -31,9 +32,10 @@ export function StoryPhoto({ story, className, eager = false }) {
  */
 export default function NewsRow({ story, showCategory = true, summary = true }) {
   const { t } = useI18n()
+  const navigate = useNavigate()
   const first = sourceNames(story)[0]
   return (
-    <Link to={`/story/${story.id}`} onClick={() => haptic()} className="flex gap-4 py-4 active:opacity-60">
+    <Link to={`/story/${story.id}`} onClick={(e) => openStory(e, navigate, story.id)} className="flex gap-4 py-4 active:opacity-60">
       <div className="min-w-0 flex-1">
         {showCategory && (
           <p className={story.is_breaking ? 'kicker !text-destructive' : 'kicker'}>{story.is_breaking ? t('home.breaking') : getCategoryLabel(story.category, t)}</p>

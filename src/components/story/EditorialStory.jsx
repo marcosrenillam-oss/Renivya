@@ -19,6 +19,13 @@ function SourcesCaption({ sources }) {
   )
 }
 
+/** Cita destacada: la primera frase entre comillas del texto (sin inventar nada). */
+function pullQuote(story) {
+  const text = (story.body || []).slice(1).join(' ') || (story.body || [])[0] || ''
+  const m = text.match(/[«“"]([^«»“”"]{30,180})[»”"]/)
+  return m ? `«${m[1].trim()}»` : null
+}
+
 /** Pieza editorial completa con trazabilidad por párrafo, hechos y contraste entre fuentes. */
 export default function EditorialStory({ story }) {
   const { t } = useI18n()
@@ -33,8 +40,8 @@ export default function EditorialStory({ story }) {
           <ul className="space-y-3 border-y border-foreground py-4 font-serif-text">
             {story.key_points.map((point, i) => (
               <li key={i} className="flex gap-3">
-                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" aria-hidden="true" />
-                <span className="type-body">{point}</span>
+                <span className="mt-[0.55em] h-1.5 w-1.5 shrink-0 bg-foreground" aria-hidden="true" />
+                <span className="text-[1.04rem] leading-relaxed">{point}</span>
               </li>
             ))}
           </ul>
@@ -42,11 +49,24 @@ export default function EditorialStory({ story }) {
       )}
 
       {(story.body || []).length > 0 && (
-        <div className="space-y-6">
+        <div className="space-y-5">
           {story.body.map((paragraph, i) => (
             <div key={i}>
-              <p className="font-heading text-[1.17rem] leading-[1.7] text-foreground/90">{paragraph}</p>
+              <p
+                className={cn(
+                  'font-serif-text text-[1.12rem] leading-[1.68] text-foreground/90 [hyphens:auto]',
+                  i === 0 && 'first-letter:float-left first-letter:mr-2 first-letter:mt-1 first-letter:font-display first-letter:text-[3.6rem] first-letter:font-bold first-letter:leading-[0.8]',
+                  i === story.body.length - 1 && 'end-mark'
+                )}
+              >
+                {paragraph}
+              </p>
               <SourcesCaption sources={prov.body?.[i]} />
+              {i === 0 && pullQuote(story) && (
+                <blockquote className="my-6 border-y-[3px] border-double border-foreground py-4 text-center font-display text-[1.45rem] italic leading-snug">
+                  {pullQuote(story)}
+                </blockquote>
+              )}
             </div>
           ))}
         </div>

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-dom'
 import { Toaster } from '@/components/ui/toaster'
@@ -29,6 +29,11 @@ const page = (el, padded = false) => (
 
 const AppRoutes = () => {
   const { user, isLoadingAuth } = useAuth()
+  // La página de noticia se precarga para que abrirla (y su transición de foto) sea instantáneo.
+  useEffect(() => {
+    const id = setTimeout(() => import('@/pages/StoryDetail'), 1200)
+    return () => clearTimeout(id)
+  }, [])
   if (isLoadingAuth) return null
   if (!user) return <Welcome />
   return (

@@ -2,9 +2,7 @@ import { useMemo, useState } from 'react'
 import Greeting from '@/components/front/Greeting'
 import BreakingTicker from '@/components/front/BreakingTicker'
 import FrontPageCarousel from '@/components/front/FrontPageCarousel'
-import NewsRow from '@/components/front/NewsRow'
-import FeatureCard from '@/components/front/FeatureCard'
-import { getStoryImage } from '@/lib/storyImage'
+import FrontGrid from '@/components/front/FrontGrid'
 import EmptyEdition from '@/components/front/EmptyEdition'
 import FeedError from '@/components/story/FeedError'
 import { useEditionNews } from '@/lib/news/useNews'
@@ -59,9 +57,7 @@ export default function Home() {
             <section className="safe-x">
               <div className="rule-thick" />
               <h2 className="py-1.5 text-[13px] font-bold uppercase tracking-[0.2em]">{t('home.more')}</h2>
-              <div className="divide-y divide-foreground border-t border-foreground">
-                {rest.slice(0, shown).map((s, i) => (i % 6 === 0 && getStoryImage(s) ? <FeatureCard key={s.id} story={s} /> : <NewsRow key={s.id} story={s} />))}
-              </div>
+              <FrontGrid stories={rest.slice(0, shown)} />
               {rest.length > shown && (
                 <button type="button" onClick={() => setShown((n) => n + PAGE)} className="mt-2 w-full border-y-2 border-foreground py-3 text-[12px] font-bold uppercase tracking-[0.18em] text-foreground active:bg-muted">
                   {t('home.showMore')}

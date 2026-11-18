@@ -119,7 +119,7 @@ export default function StoryDetail() {
         {story.image_url && (
           <figure className="mt-5 overflow-hidden">
             <motion.div style={{ y: heroY }} className="overflow-hidden">
-              <StoryPhoto story={story} eager className="aspect-[3/2] w-full object-cover [filter:grayscale(0.1)_contrast(1.05)]" />
+              <StoryPhoto story={story} eager transition className="aspect-[3/2] w-full object-cover [filter:grayscale(0.1)_contrast(1.05)]" />
             </motion.div>
             {(image?.credit || image?.sourceName) && <figcaption className="mt-1.5 border-b border-foreground/30 pb-1.5 text-[11px] italic text-muted-foreground">{t('story.imageCredit', { credit: image.credit || image.sourceName })}</figcaption>}
           </figure>

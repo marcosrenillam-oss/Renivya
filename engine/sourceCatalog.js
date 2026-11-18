@@ -32,7 +32,7 @@ const RAW = [
   ['France 24', 'https://www.france24.com/fr', 'https://www.france24.com/fr/rss', 'FR', 'fr', 'broadcast'],
   ['France 24 Español', 'https://www.france24.com/es', 'https://www.france24.com/es/rss', 'FR', 'es', 'broadcast'],
   // México
-  ['El Universal', 'https://www.eluniversal.com.mx', 'https://www.eluniversal.com.mx/rss.xml', 'MX', 'es', 'newspaper'],
+  ['El Universal', 'https://www.eluniversal.com.mx', 'https://www.eluniversal.com.mx/arc/outboundfeeds/rss/?outputType=xml', 'MX', 'es', 'newspaper'],
   ['Excélsior', 'https://www.excelsior.com.mx', 'https://www.excelsior.com.mx/rss.xml', 'MX', 'es', 'newspaper'],
   ['El Financiero', 'https://www.elfinanciero.com.mx', 'https://www.elfinanciero.com.mx/arc/outboundfeeds/rss/?outputType=xml', 'MX', 'es', 'newspaper'],
   // Argentina
@@ -43,12 +43,35 @@ const RAW = [
   ['Tagesschau', 'https://www.tagesschau.de', 'https://www.tagesschau.de/xml/rss2/', 'DE', 'de', 'broadcast'],
   ['Der Spiegel', 'https://www.spiegel.de', 'https://www.spiegel.de/schlagzeilen/index.rss', 'DE', 'de', 'newspaper'],
   ['DW Español', 'https://www.dw.com/es', 'https://rss.dw.com/rdf/rss-sp-all', 'DE', 'es', 'broadcast'],
+  // Colombia, Chile y Perú
+  ['El Espectador', 'https://www.elespectador.com', 'https://www.elespectador.com/arc/outboundfeeds/rss/?outputType=xml', 'CO', 'es', 'newspaper'],
+  ['La Tercera', 'https://www.latercera.com', 'https://www.latercera.com/arc/outboundfeeds/rss/?outputType=xml', 'CL', 'es', 'newspaper'],
+  ['El Comercio', 'https://elcomercio.pe', 'https://elcomercio.pe/arc/outboundfeeds/rss/?outputType=xml', 'PE', 'es', 'newspaper'],
+  // Canadá e Irlanda
+  ['CBC News', 'https://www.cbc.ca/news', 'https://www.cbc.ca/webfeed/rss/rss-topstories', 'CA', 'en', 'broadcast'],
+  ['RTÉ News', 'https://www.rte.ie/news', 'https://www.rte.ie/feeds/rss/?index=/news/', 'IE', 'en', 'broadcast'],
+  // Italia
+  ['ANSA English', 'https://www.ansa.it/english', 'https://www.ansa.it/english/news/english_nr_rss.xml', 'IT', 'en', 'agency'],
+  // Ucrania e Israel
+  ['The Kyiv Independent', 'https://kyivindependent.com', 'https://kyivindependent.com/news-archive/rss/', 'UA', 'en', 'newspaper'],
+  ['The Times of Israel', 'https://www.timesofisrael.com', 'https://www.timesofisrael.com/feed/', 'IL', 'en', 'newspaper'],
+  // Asia
+  ['The Hindu', 'https://www.thehindu.com', 'https://www.thehindu.com/news/feeder/default.rss', 'IN', 'en', 'newspaper'],
+  ['The Times of India', 'https://timesofindia.indiatimes.com', 'https://timesofindia.indiatimes.com/rssfeedstopstories.cms', 'IN', 'en', 'newspaper'],
+  ['The Japan Times', 'https://www.japantimes.co.jp', 'https://www.japantimes.co.jp/feed/', 'JP', 'en', 'newspaper'],
+  ['Yonhap', 'https://en.yna.co.kr', 'https://en.yna.co.kr/RSS/news.xml', 'KR', 'en', 'agency'],
+  ['South China Morning Post', 'https://www.scmp.com', 'https://www.scmp.com/rss/91/feed', 'HK', 'en', 'newspaper'],
+  // África
+  ['News24', 'https://www.news24.com', 'https://feeds.news24.com/articles/news24/TopStories/rss', 'ZA', 'en', 'newspaper'],
+  ['Punch', 'https://punchng.com', 'https://punchng.com/feed/', 'NG', 'en', 'newspaper'],
+  // Oceanía
+  ['ABC Australia', 'https://www.abc.net.au/news', 'https://www.abc.net.au/news/feed/51120/rss.xml', 'AU', 'en', 'broadcast'],
   // Internacional
   ['Al Jazeera', 'https://www.aljazeera.com', 'https://www.aljazeera.com/xml/rss/all.xml', 'QA', 'en', 'broadcast'],
 ]
 
 // Feeds comprobados como rotos en GitHub Actions: inactivos hasta encontrar su URL correcta.
-const INACTIVE = new Set(['El Universal', 'Excélsior'])
+const INACTIVE = new Set(['Excélsior'])
 
 export const REAL_SOURCES = RAW.map(([name, url, feed_url, country, language, type]) => ({
   name, url, feed_url, country, language, type,

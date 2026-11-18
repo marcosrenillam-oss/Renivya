@@ -44,6 +44,9 @@ jobs:
           TRANSLATE_MAX: ${{ vars.TRANSLATE_MAX }}
           # Avisos de última hora: código que genera la app en Perfil → Avisos.
           RENIVYA_AVISOS: ${{ secrets.RENIVYA_AVISOS }}
+      - name: Informe de agrupación
+        run: node scripts/cluster-report.mjs public/data/snapshot.json
+        continue-on-error: true
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
         with:

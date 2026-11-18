@@ -24,6 +24,7 @@ export async function buildSnapshot({ entities, previous = null, provider = null
 
   // 2. Ingesta real.
   let perSource = []
+  let health = null
   let mode = 'demo'
   if (provider) {
     await ensureSources(db, sources)
@@ -33,6 +34,14 @@ export async function buildSnapshot({ entities, previous = null, provider = null
     if (report.errors.length) log('errores:', report.errors.join(' | '))
     if (report.images) log(`páginas visitadas: ${report.images.checked} · fotos encontradas: ${report.images.found} · textos completos: ${report.images.texts}`)
     if ((await count('Story', { is_demo: false })) > 0) mode = 'real'
+    health = {
+      new_articles: report.created,
+      stories_created: report.pipeline.storiesCreated,
+      stories_updated: report.pipeline.storiesUpdated,
+      pages_checked: report.images?.checked ?? 0,
+      photos_found: report.images?.found ?? 0,
+      full_texts: report.images?.texts ?? 0,
+    }
   }
 
   // 3. Sin noticias reales: demostración. Con ellas: mantenimiento y purga de > 30 días.
@@ -52,6 +61,7 @@ export async function buildSnapshot({ entities, previous = null, provider = null
   //    las historias vivas sigan agrupando noticias nuevas en la próxima ejecución.
   const stories = (await db.Story.filterAll({}, '-updated_date', 100000)).slice(0, MAX_STORIES)
   const withPhoto = stories.filter((s) => s.image_url).length
+  if (health) Object.assign(health, { stories_with_photo: withPhoto, stories_total: stories.length })
   log(`fotos: ${withPhoto}/${stories.length} historias con imagen`)
   const keep = new Set(stories.map((s) => s.id))
   const liveSince = new Date(now.getTime() - 72 * 3_600_000).toISOString()
@@ -81,7 +91,8 @@ export async function buildSnapshot({ entities, previous = null, provider = null
     generated_at: new Date(now).toISOString(),
     mode,
     counts: Object.fromEntries(Object.entries(out).map(([k, v]) => [k, v.length])),
-    sources: perSource.map(({ name, ok, items: n, error }) => ({ name, ok, items: n, error: error ?? null })),
+    sources: perSource.map(({ name, ok, items: n, error, skipped }) => ({ name, ok, items: n, error: error ?? null, skipped: skipped ?? null })),
+    health,
     entities: out,
   }
 }

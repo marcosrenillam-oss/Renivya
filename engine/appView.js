@@ -48,6 +48,7 @@ export function appView(snapshot) {
     mode: snapshot.mode,
     editions: EDITIONS,
     sources: snapshot.sources || [],
+    health: snapshot.health || null,
     counts: { Story: stories.length },
     entities: {
       Story: stories.map(slimStory),

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Bookmark, Check, ChevronRight, LogOut, Mail } from 'lucide-react'
+import { Activity, Bookmark, Check, ChevronRight, LogOut, Mail } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import InstallPrompt from '@/components/common/InstallPrompt'
 import PushSettings from '@/components/settings/PushSettings'
@@ -203,6 +203,14 @@ export default function Profile() {
         <Link to="/saved" className="flex items-center gap-3 px-4 py-4 text-[15px] active:bg-muted">
           <Bookmark className="h-5 w-5 text-accent" strokeWidth={1.7} />
           <span className="flex-1">{t('nav.saved')}</span>
+          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+        </Link>
+      </div>
+
+      <div className="overflow-hidden border-b border-foreground">
+        <Link to="/status" className="flex items-center gap-3 px-4 py-4 text-[15px] active:bg-muted">
+          <Activity className="h-5 w-5 text-accent" strokeWidth={1.7} />
+          <span className="flex-1">{t('status.link')}</span>
           <ChevronRight className="h-4 w-4 text-muted-foreground" />
         </Link>
       </div>

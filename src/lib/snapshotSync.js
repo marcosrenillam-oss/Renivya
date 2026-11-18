@@ -31,7 +31,9 @@ function setSnapshotMeta(meta) {
  */
 export async function syncSnapshot({ force = false } = {}) {
   const url = `${import.meta.env.BASE_URL}data/app.json`
-  const res = await fetch(url, { cache: 'no-store' })
+  // 'no-cache': el navegador pregunta al servidor si hay versión nueva (ETag); si no la hay,
+  // no se vuelve a descargar el archivo entero.
+  const res = await fetch(url, { cache: 'no-cache' })
   if (!res.ok) throw new Error(`snapshot ${res.status}`)
   const snap = await res.json()
   const current = getSnapshotMeta()
@@ -39,7 +41,7 @@ export async function syncSnapshot({ force = false } = {}) {
   for (const name of NEWS_ENTITIES) {
     await client.entities[name].replaceAll(snap.entities?.[name] || [])
   }
-  const meta = { generated_at: snap.generated_at, mode: snap.mode, sources: snap.sources || [], counts: snap.counts || {}, applied_at: new Date().toISOString() }
+  const meta = { generated_at: snap.generated_at, mode: snap.mode, sources: snap.sources || [], counts: snap.counts || {}, health: snap.health || null, editions: snap.editions || [], applied_at: new Date().toISOString() }
   setSnapshotMeta(meta)
   return { updated: true, meta }
 }

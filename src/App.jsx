@@ -22,6 +22,7 @@ const SearchPage = lazy(() => import('@/pages/Search'))
 const SavedStories = lazy(() => import('@/pages/SavedStories'))
 const Profile = lazy(() => import('@/pages/Profile'))
 const Analytics = lazy(() => import('@/pages/Analytics'))
+const Status = lazy(() => import('@/pages/Status'))
 
 /** Redirección que conserva la consulta (?c=...). */
 function KeepQuery({ to }) {
@@ -58,6 +59,7 @@ const AppRoutes = () => {
         <Route path="/saved" element={page(<SavedStories />, true)} />
         <Route path="/profile" element={page(<Profile />)} />
         <Route path="/analytics" element={page(<Analytics />, true)} />
+        <Route path="/status" element={page(<Status />, true)} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>

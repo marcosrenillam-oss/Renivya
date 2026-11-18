@@ -8,6 +8,8 @@ const base = process.env.BASE_PATH ?? '/'
 export default defineConfig({
   base,
   plugins: [react()],
+  // Fecha de esta versión de la app (se muestra en el panel de estado).
+  define: { __BUILD_TIME__: JSON.stringify(new Date().toISOString()) },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

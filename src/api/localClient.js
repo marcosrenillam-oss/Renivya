@@ -17,41 +17,112 @@ export const ENTITY_NAMES = [
   'StoryEntity', 'EntityRelation', 'Media', 'ArticleEmbedding', 'Preference', 'SavedStory',
 ]
 
+/** Entidades grandes (las noticias): van a IndexedDB, que admite cientos de MB. */
+const BIG_KEYS = new Set(['Story', 'NewsItem', 'Source', 'StorySource', 'StoryUpdate', 'Entity', 'StoryEntity', 'EntityRelation', 'Media', 'ArticleEmbedding'].map((n) => `entity:${n}`))
+
+function idb() {
+  if (typeof indexedDB === 'undefined') return null
+  const open = () =>
+    new Promise((resolve, reject) => {
+      const req = indexedDB.open('renivya', 1)
+      req.onupgradeneeded = () => req.result.createObjectStore('kv')
+      req.onsuccess = () => resolve(req.result)
+      req.onerror = () => reject(req.error)
+    })
+  let dbp = null
+  const db = () => (dbp ||= open())
+  const tx = async (mode, fn) => {
+    const d = await db()
+    return new Promise((resolve, reject) => {
+      const t = d.transaction('kv', mode)
+      const out = fn(t.objectStore('kv'))
+      t.oncomplete = () => resolve(out?.result)
+      t.onerror = () => reject(t.error)
+      t.onabort = () => reject(t.error)
+    })
+  }
+  return {
+    get: (key) => tx('readonly', (st) => st.get(key)),
+    set: (key, value) => tx('readwrite', (st) => st.put(value, key)),
+    del: (key) => tx('readwrite', (st) => st.delete(key)),
+  }
+}
+
 /**
- * Almacén clave-valor. `memoryOnly` crea un almacén aislado (pruebas, autotest de Brain)
- * que nunca toca localStorage.
+ * Almacén clave-valor con caché en memoria (cada dato se lee del disco una sola vez).
+ * Lo pequeño (sesión, preferencias, guardadas) va a localStorage; las noticias, a IndexedDB.
+ * `memoryOnly` crea un almacén aislado (pruebas, autotest de Brain) que nunca toca el disco.
  */
 function createStore(memoryOnly = false) {
   const memory = new Map()
-  return {
-    read(key) {
-      if (!memoryOnly) {
-        try {
-          const raw = window.localStorage.getItem(STORAGE_PREFIX + key)
-          if (raw) return JSON.parse(raw)
-        } catch {
-          /* almacenamiento no disponible: usamos memoria */
-        }
+  const db = memoryOnly ? null : idb()
+  const local = {
+    get(key) {
+      try {
+        const raw = window.localStorage.getItem(STORAGE_PREFIX + key)
+        return raw ? JSON.parse(raw) : null
+      } catch {
+        return null
       }
-      return memory.get(key) ?? null
     },
-    write(key, value) {
-      memory.set(key, value)
-      if (memoryOnly) return
+    set(key, value) {
       try {
         window.localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(value))
       } catch {
-        /* sin persistencia: queda en memoria */
+        /* sin espacio o sin permiso: queda en memoria */
       }
     },
-    remove(key) {
-      memory.delete(key)
-      if (memoryOnly) return
+    del(key) {
       try {
         window.localStorage.removeItem(STORAGE_PREFIX + key)
       } catch {
         /* noop */
       }
+    },
+  }
+  // Al arrancar, las noticias se cargan una vez de IndexedDB (y se mudan las que hubiera en localStorage).
+  const ready = db
+    ? Promise.all(
+        [...BIG_KEYS].map(async (key) => {
+          try {
+            let value = await db.get(key)
+            const legacy = local.get(key)
+            if (legacy != null) {
+              if (value == null) {
+                value = legacy
+                await db.set(key, legacy)
+              }
+              local.del(key)
+            }
+            if (value != null) memory.set(key, value)
+          } catch {
+            const legacy = local.get(key)
+            if (legacy != null) memory.set(key, legacy)
+          }
+        })
+      ).catch(() => {})
+    : Promise.resolve()
+
+  return {
+    ready,
+    read(key) {
+      if (memory.has(key)) return memory.get(key)
+      if (memoryOnly || (db && BIG_KEYS.has(key))) return null
+      const value = local.get(key)
+      memory.set(key, value)
+      return value
+    },
+    write(key, value) {
+      memory.set(key, value)
+      if (memoryOnly) return
+      if (db && BIG_KEYS.has(key)) db.set(key, value).catch(() => local.set(key, value))
+      else local.set(key, value)
+    },
+    remove(key) {
+      memory.delete(key)
+      if (memoryOnly) return
+      if (db && BIG_KEYS.has(key)) db.del(key).catch(() => {})
+      local.del(key)
     },
   }
 }
@@ -125,7 +196,8 @@ function sortRecords(records, sort) {
 }
 
 function pickFields(record, fields) {
-  if (!fields || !fields.length) return record
+  // Copia: los datos en caché no se pueden modificar desde fuera.
+  if (!fields || !fields.length) return { ...record }
   const out = { id: record.id }
   fields.forEach((f) => { out[f] = record[f] })
   return out
@@ -285,7 +357,7 @@ function createEntityHandler(name, store) {
     }
   }
 
-  return {
+  const api = {
     async list(sort, limit, skip = 0, fields) {
       const rows = sortRecords(visible(load()), sort)
       return rows.slice(skip, limit ? skip + limit : undefined).map((r) => pickFields(r, fields))
@@ -300,7 +372,7 @@ function createEntityHandler(name, store) {
     async get(id) {
       const row = visible(load()).find((r) => r.id === id)
       if (!row) throw new LocalError(`${name} ${id} no encontrado`, 404, 'not_found')
-      return row
+      return { ...row }
     },
     async create(data) {
       if (OWNER_SCOPED.has(name) && !currentUser()) throw new LocalError('No autenticado', 401, 'auth_required')
@@ -347,6 +419,10 @@ function createEntityHandler(name, store) {
       return { count: rows.length }
     },
   }
+  // Toda operación espera a que las noticias guardadas se hayan cargado del disco.
+  return Object.fromEntries(
+    Object.entries(api).map(([k, fn]) => [k, k === 'subscribe' ? fn : async (...args) => (await store.ready, fn(...args))])
+  )
 }
 
 export function createLocalClient({ memoryOnly = false } = {}) {

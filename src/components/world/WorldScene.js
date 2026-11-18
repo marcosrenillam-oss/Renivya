@@ -31,6 +31,21 @@ function dotTexture() {
   return tex
 }
 
+/** Meridianos cada 30° y paralelos cada 30° (más el ecuador), como segmentos de línea. */
+function graticuleGeometry(r) {
+  const pts = []
+  const push = (a, b) => pts.push(a.x, a.y, a.z, b.x, b.y, b.z)
+  for (let lng = -180; lng < 180; lng += 30) {
+    for (let lat = -80; lat < 80; lat += 4) push(latLngToVector3(lat, lng, r), latLngToVector3(lat + 4, lng, r))
+  }
+  for (let lat = -60; lat <= 60; lat += 30) {
+    for (let lng = -180; lng < 180; lng += 4) push(latLngToVector3(lat, lng, r), latLngToVector3(lat, lng + 4, r))
+  }
+  const geom = new THREE.BufferGeometry()
+  geom.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3))
+  return geom
+}
+
 /**
  * Escena imperativa del globo (three.js). React solo la monta, le pasa datos y escucha eventos.
  */
@@ -80,6 +95,10 @@ export class GlobeScene {
     )
     this.scene.add(this.atmosphere)
 
+    // Retícula de meridianos y paralelos, como en los mapas de los periódicos antiguos.
+    this.graticule = new THREE.LineSegments(graticuleGeometry(1.002), new THREE.LineBasicMaterial({ transparent: true, opacity: 0.14, depthWrite: false }))
+    this.globe.add(this.graticule)
+
     this.markerGroup = new THREE.Group()
     this.globe.add(this.markerGroup)
     this.dotTex = dotTexture()
@@ -114,6 +133,8 @@ export class GlobeScene {
     this.atmosphere.material.uniforms.glowColor.value = cssColor('--muted-foreground')
     this.atmosphere.material.uniforms.strength.value = dark ? 0.5 : 0.3
     this.markerColor = cssColor('--primary')
+    this.graticule.material.color = cssColor('--foreground')
+    this.graticule.material.opacity = dark ? 0.1 : 0.14
     // Degradado de importancia: amarillo (poca) → naranja (media) → rojo (máxima).
     this.heat = [new THREE.Color('#f5c518'), new THREE.Color('#f07a10'), new THREE.Color('#c8102e')]
     this.markers.forEach((m) => {
@@ -161,9 +182,20 @@ export class GlobeScene {
       dot.userData.code = c.code
       group.add(halo, dot)
       this.markerGroup.add(group)
-      this.markers.set(c.code, { group, dot, halo, breaking: c.breaking > 0, weight: c.intensity ?? 0, size })
+      this.markers.set(c.code, { group, dot, halo, breaking: c.breaking > 0, weight: c.intensity ?? 0, size, baseOpacity: dot.material.opacity })
     }
     this.setSelected(this.selected)
+    this.setDimmed(this.dimmed)
+  }
+
+  /** Atenúa los países que no están en `codes` (región elegida). null = todos visibles. */
+  setDimmed(codes) {
+    this.dimmed = codes
+    this.markers.forEach((m, k) => {
+      const off = codes && !codes.has(k)
+      m.dot.material.opacity = off ? m.baseOpacity * 0.18 : m.baseOpacity
+      m.halo.visible = !off
+    })
   }
 
   setSelected(code) {

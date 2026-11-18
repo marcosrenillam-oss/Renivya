@@ -8,7 +8,7 @@ import { GlobeScene } from '@/components/world/WorldScene'
 import { cn } from '@/lib/utils'
 
 /** Globo 3D con etiquetas HTML de los países más activos en la cara visible. */
-export default function WorldGlobe({ countries = [], selected, onSelect, className }) {
+export default function WorldGlobe({ countries = [], selected, onSelect, focus = null, dimmed = null, className }) {
   const { t, locale } = useI18n()
   const { resolvedTheme } = useTheme()
   const wrapRef = useRef(null)
@@ -25,7 +25,7 @@ export default function WorldGlobe({ countries = [], selected, onSelect, classNa
       reducedMotion: reduced,
       onPick: (code) => onSelectRef.current?.(code),
       onFrame: () => {
-        if (++frameCount % 6 === 0) setCallouts(layoutCallouts(scene.project()))
+        if (++frameCount % 6 === 0) setCallouts(layoutCallouts(scene.project().filter((p) => !scene.dimmed || scene.dimmed.has(p.code))))
       },
     })
     sceneRef.current = scene
@@ -51,6 +51,15 @@ export default function WorldGlobe({ countries = [], selected, onSelect, classNa
     sceneRef.current?.setSelected(selected)
     if (selected) sceneRef.current?.focus(selected)
   }, [selected])
+
+  // Región elegida: el globo gira hacia ella y apaga el resto.
+  useEffect(() => {
+    if (focus && !selected) sceneRef.current?.focus(focus)
+  }, [focus]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    sceneRef.current?.setDimmed(dimmed)
+  }, [dimmed, countries])
 
   return (
     <div ref={wrapRef} className={cn('relative touch-none select-none', className)}>

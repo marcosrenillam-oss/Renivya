@@ -1,8 +1,8 @@
-import { base44 } from '@/api/base44Client'
+import { client } from '@/api/client'
 
 /** Agregados para la página de Analítica (aquí SÍ se muestran métricas técnicas). */
 export async function loadAnalytics({ days = 14 } = {}) {
-  const E = base44.entities
+  const E = client.entities
   const since = new Date(Date.now() - days * 86_400_000).toISOString()
   const [stories, updates, sources] = await Promise.all([
     E.Story.filter({ status: { $ne: 'archived' } }, '-renivya_score', 500),

@@ -1,14 +1,13 @@
 /**
- * Adaptador LOCAL con la misma superficie que el SDK de Base44 (@base44/sdk).
- * Se usa solo cuando no hay VITE_BASE44_APP_ID. Persiste en localStorage
- * (con caída a memoria si el almacenamiento no está disponible).
+ * Almacén LOCAL de RENIVYA con API de entidades (list/filter/get/create/update/delete…).
+ * Persiste en localStorage (con caída a memoria si el almacenamiento no está disponible).
  *
  * Emula:
- *  - base44.entities.<Entidad>.list/filter/get/create/bulkCreate/update/delete/deleteMany/count
+ *  - client.entities.<Entidad>.list/filter/get/create/bulkCreate/update/delete/deleteMany/count
  *  - Operadores de consulta: igualdad, $in, $nin, $ne, $gt, $gte, $lt, $lte, $exists, $regex, $or, $and
  *  - RLS por propietario (created_by_id) en Preference y SavedStory
- *  - base44.auth (sesión local, sin servidor)
- *  - base44.functions.invoke → error explícito "local_mode"
+ *  - client.auth (sesión local, sin servidor)
+ *  - client.functions.invoke → error explícito "local_mode"
  */
 
 const STORAGE_PREFIX = 'renivya:local:'
@@ -163,9 +162,6 @@ function createAuth(store) {
       const user = currentUser()
       if (!user) throw new LocalError('No autenticado', 401, 'auth_required')
       const next = { ...user, ...data, id: user.id, email: user.email, updated_date: new Date().toISOString() }
-      const all = users()
-      all[user.email] = { ...all[user.email], user: next }
-      writeStore(USERS_KEY, all)
       writeStore(SESSION_KEY, next)
       return next
     },
@@ -206,7 +202,7 @@ function createAuth(store) {
     /** Solo en modo local: sesión de invitado para explorar sin servidor. */
     async loginAsLocalGuest() {
       const now = new Date().toISOString()
-      return startSession({ id: 'local-guest', email: 'local@renivya.local', full_name: 'Lector local', role: 'admin', created_date: now, updated_date: now })
+      return startSession({ id: 'local-reader', email: null, full_name: 'Lector', role: 'admin', created_date: now, updated_date: now })
     },
     loginWithProvider() {
       throw new LocalError('Proveedor externo no disponible en modo local', 501, 'local_mode')
@@ -312,6 +308,11 @@ function createEntityHandler(name, store) {
     subscribe() {
       return () => {}
     },
+    /** Sustituye todas las filas (sincronización de snapshot). Conserva ids y fechas. */
+    async replaceAll(rows) {
+      save(rows.map((r) => ({ ...r })))
+      return { count: rows.length }
+    },
   }
 }
 
@@ -331,7 +332,7 @@ export function createLocalClient({ memoryOnly = false } = {}) {
     auth: createAuth(store),
     functions: {
       invoke: async (name) => {
-        throw new LocalError(`La función backend "${name}" requiere Base44 (modo local)`, 501, 'local_mode')
+        throw new LocalError(`La función backend "${name}" no existe: RENIVYA funciona sin servidor`, 501, 'local_mode')
       },
     },
     integrations: {

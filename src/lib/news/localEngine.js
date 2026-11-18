@@ -1,14 +1,13 @@
-import { base44 } from '@/api/base44Client'
-import { createDataAdapter, seedDemo, cleanOldStories, maintainStories } from '../../../base44/shared/news/brain.ts'
+import { client } from '@/api/client'
+import { createDataAdapter, seedDemo, cleanOldStories, maintainStories } from '../../../engine/brain.js'
 
 /**
- * Ejecuta el motor en el navegador sobre las entidades del usuario actual.
- * - Modo local: siempre disponible.
- * - Con Base44: requiere rol admin (RLS de escritura) y solo se usa para datos DEMO.
- *   La ingesta real corre en las funciones backend (FetchNewsFeeds / ProcessNewsItems).
+ * Ejecuta el motor en el navegador sobre el almacén de este dispositivo.
+ * Aquí solo se generan datos DEMO: las noticias reales llegan por snapshot
+ * (scripts/build-snapshot.mjs en GitHub Actions).
  */
 function db() {
-  return createDataAdapter(base44.entities)
+  return createDataAdapter(client.entities)
 }
 
 /** Ronda 1: primeras noticias. Ronda 2: evolución (fuentes nuevas, correcciones, última hora). */

@@ -1,4 +1,4 @@
-import { base44 } from '@/api/base44Client'
+import { client } from '@/api/client'
 
 /**
  * Grafo de entidades: co-apariciones en Stories (peso = historias compartidas)
@@ -6,7 +6,7 @@ import { base44 } from '@/api/base44Client'
  * Lanza en caso de error: la UI distingue "error" de "vacío".
  */
 export async function loadEntityGraph({ maxNodes = 60, minStories = 1, types = null } = {}) {
-  const E = base44.entities
+  const E = client.entities
   const links = await E.StoryEntity.list('-created_date', 3000)
   const storiesByEntity = new Map()
   for (const l of links) {

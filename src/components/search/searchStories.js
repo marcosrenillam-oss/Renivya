@@ -1,8 +1,8 @@
-import { foldAccents } from '../../../base44/shared/news/normalizer.ts'
-import { normalizeEntityName } from '../../../base44/shared/news/entities.ts'
+import { foldAccents } from '../../../engine/normalizer.js'
+import { normalizeEntityName } from '../../../engine/entities.js'
 
 /**
- * Búsqueda local sobre las historias recientes (Base44 no ofrece texto completo).
+ * Búsqueda local sobre las historias recientes (sin servidor de búsqueda).
  * Puntúa coincidencias en titular > entidades > palabras clave > entradilla > cuerpo.
  * Todas las palabras de la consulta deben aparecer (AND).
  */

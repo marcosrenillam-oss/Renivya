@@ -6,13 +6,13 @@
   "description": "RENIVYA — Inteligencia informativa global",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node scripts/postbuild.mjs",
     "preview": "vite preview",
     "test": "node --test tests/*.test.mjs",
-    "test:functions": "deno test --allow-read --allow-env --import-map=tests/deno/import_map.json --no-check tests/deno/functions.test.ts"
+    "snapshot": "node scripts/build-snapshot.mjs",
+    "snapshot:demo": "node scripts/build-snapshot.mjs --demo"
   },
   "dependencies": {
-    "@base44/sdk": "^0.8.63",
     "@hello-pangea/dnd": "^17.0.0",
     "@radix-ui/react-avatar": "^1.1.1",
     "@radix-ui/react-dropdown-menu": "^2.1.2",

@@ -3,11 +3,11 @@
  * Corre sobre un cliente local EN MEMORIA: no toca los datos del usuario.
  */
 import { createLocalClient } from '@/api/localClient'
-import { createDataAdapter, seedDemo } from '../../../base44/shared/news/brain.ts'
-import { classifyCategory } from '../../../base44/shared/news/classifier.ts'
-import { computeConfidence, computeScore, SCORE_WEIGHTS } from '../../../base44/shared/news/scoring.ts'
-import { canonicalUrl, detectCountries, detectLanguage } from '../../../base44/shared/news/normalizer.ts'
-import { normalizeEntityName } from '../../../base44/shared/news/entities.ts'
+import { createDataAdapter, seedDemo } from '../../../engine/brain.js'
+import { classifyCategory } from '../../../engine/classifier.js'
+import { computeConfidence, computeScore, SCORE_WEIGHTS } from '../../../engine/scoring.js'
+import { canonicalUrl, detectCountries, detectLanguage } from '../../../engine/normalizer.js'
+import { normalizeEntityName } from '../../../engine/entities.js'
 
 function check(name, fn) {
   const started = performance.now()

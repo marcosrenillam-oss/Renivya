@@ -11,7 +11,7 @@ let landPromise = null
 
 /** Malla de puntos de tierra (Natural Earth 1:110m, dominio público), cacheada. */
 export function loadLandDots() {
-  landPromise ??= fetch('/geo/land-dots.json')
+  landPromise ??= fetch(`${import.meta.env.BASE_URL}geo/land-dots.json`)
     .then((r) => {
       if (!r.ok) throw new Error(`land-dots ${r.status}`)
       return r.json()

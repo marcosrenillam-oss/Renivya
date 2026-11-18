@@ -2,14 +2,14 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { createLocalClient } from '../src/api/localClient.js'
-import { createDataAdapter, seedDemo } from '../base44/shared/news/brain.ts'
-import { classifyCategory } from '../base44/shared/news/classifier.ts'
-import { computeScore, computeConfidence, SCORE_WEIGHTS } from '../base44/shared/news/scoring.ts'
-import { canonicalUrl, detectLanguage, detectCountries } from '../base44/shared/news/normalizer.ts'
-import { normalizeEntityName, extractEntities, extractRelations } from '../base44/shared/news/entities.ts'
-import { localEmbedding } from '../base44/shared/news/embeddingProvider.ts'
-import { cosine } from '../base44/shared/news/semantic.ts'
-import { parseFeed } from '../base44/shared/news/rss.ts'
+import { createDataAdapter, seedDemo } from '../engine/brain.js'
+import { classifyCategory } from '../engine/classifier.js'
+import { computeScore, computeConfidence, SCORE_WEIGHTS } from '../engine/scoring.js'
+import { canonicalUrl, detectLanguage, detectCountries } from '../engine/normalizer.js'
+import { normalizeEntityName, extractEntities, extractRelations } from '../engine/entities.js'
+import { localEmbedding } from '../engine/embeddingProvider.js'
+import { cosine } from '../engine/semantic.js'
+import { parseFeed } from '../engine/rss.js'
 
 const NOW = new Date('2026-11-17T12:00:00Z')
 
@@ -126,8 +126,8 @@ test('pipeline de demo: agrupa, versiona, contradicciones y sin atribución inve
 })
 
 test('ingesta real: RSS → NewsItems (sin duplicar) → Stories con fiabilidad provisional', async () => {
-  const { runIngestionCycle, ensureSources } = await import('../base44/shared/news/brain.ts')
-  const { createRealNewsProvider } = await import('../base44/shared/news/realIngestion.ts')
+  const { runIngestionCycle, ensureSources } = await import('../engine/brain.js')
+  const { createRealNewsProvider } = await import('../engine/realIngestion.js')
   const db = createDataAdapter(createLocalClient({ memoryOnly: true }).entities)
   await ensureSources(db, [{ name: 'Feed Prueba', feed_url: 'https://feed.test/rss', country: 'ES', language: 'es', type: 'newspaper', reliability: null, is_active: true, is_demo: false }])
   const rss = `<rss><channel>
@@ -150,4 +150,41 @@ test('ingesta real: RSS → NewsItems (sin duplicar) → Stories con fiabilidad 
   // Segundo ciclo inmediato: la fuente está limitada por last_fetched_at.
   const again = await runIngestionCycle(db, { provider, now: NOW })
   assert.equal(again.created, 0)
+})
+
+test('snapshot horario: el estado pasa de una ejecución a la siguiente y la historia evoluciona', async () => {
+  const { buildSnapshot } = await import('../engine/snapshot.js')
+  const { createRealNewsProvider } = await import('../engine/realIngestion.js')
+  const sources = [
+    { name: 'Diario A', feed_url: 'https://a.test/rss', country: 'ES', language: 'es', type: 'newspaper', reliability: null, is_active: true, is_demo: false },
+    { name: 'Agencia B', feed_url: 'https://b.test/rss', country: 'ES', language: 'es', type: 'agency', reliability: null, is_active: true, is_demo: false },
+  ]
+  const item = (url, title, text, date) => `<item><title>${title}</title><link>${url}</link><description>${text}</description><pubDate>${new Date(date).toUTCString()}</pubDate></item>`
+  const feeds = {
+    'https://a.test/rss': [item('https://a.test/1', 'Un terremoto de magnitud 6,1 sacude el sur de Chile', 'Un terremoto de magnitud 6,1 ha sacudido el sur de Chile según el servicio sismológico nacional. Varias localidades costeras fueron evacuadas de forma preventiva y no hay víctimas.', '2026-11-17T09:00:00Z')],
+    'https://b.test/rss': [],
+  }
+  const provider = createRealNewsProvider({ fetchImpl: async (url) => new Response(`<rss><channel>${feeds[url].join('')}</channel></rss>`) })
+  const t1 = new Date('2026-11-17T10:00:00Z')
+  const s1 = await buildSnapshot({ entities: createLocalClient({ memoryOnly: true }).entities, provider, sources, now: t1 })
+  assert.equal(s1.mode, 'real')
+  assert.equal(s1.counts.Story, 1)
+  assert.ok(s1.entities.Story.every((s) => !s.is_demo))
+
+  // Una hora después, otra fuente publica sobre el mismo suceso.
+  feeds['https://b.test/rss'] = [item('https://b.test/9', 'Terremoto de magnitud 6,1 en el sur de Chile: evacuaciones preventivas', 'El terremoto de magnitud 6,1 que sacudió el sur de Chile obligó a evacuar localidades costeras. El servicio sismológico nacional no informa de víctimas.', '2026-11-17T10:30:00Z')]
+  const t2 = new Date('2026-11-17T11:00:00Z')
+  const s2 = await buildSnapshot({ entities: createLocalClient({ memoryOnly: true }).entities, previous: JSON.parse(JSON.stringify(s1)), provider, sources, now: t2 })
+  assert.equal(s2.counts.Story, 1, 'se agrupa con la historia existente, no crea otra')
+  const story = s2.entities.Story[0]
+  assert.equal(story.id, s1.entities.Story[0].id, 'misma historia (mismo id)')
+  assert.equal(story.source_count, 2)
+  assert.ok(story.version >= 2, 'sube de versión')
+  assert.ok(s2.entities.StoryUpdate.length >= 2)
+
+  // Si ningún feed responde y no hay estado previo: demostración, nunca vacío.
+  const down = createRealNewsProvider({ fetchImpl: async () => { throw new Error('offline') } })
+  const s3 = await buildSnapshot({ entities: createLocalClient({ memoryOnly: true }).entities, provider: down, sources, now: t2 })
+  assert.equal(s3.mode, 'demo')
+  assert.ok(s3.counts.Story > 0)
 })

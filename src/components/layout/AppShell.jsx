@@ -6,6 +6,7 @@ import { BottomNav, RailNav, SidebarNav } from '@/components/layout/NavMenu'
 import StageAtmosphere from '@/components/common/StageAtmosphere'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { AppProvider } from '@/lib/AppContext'
+import { useSnapshotSync } from '@/hooks/useSnapshotSync'
 
 /**
  * Esqueleto de la app autenticada.
@@ -15,6 +16,7 @@ import { AppProvider } from '@/lib/AppContext'
  */
 export default function AppShell() {
   const location = useLocation()
+  useSnapshotSync()
   return (
     <AppProvider>
       <TooltipProvider>

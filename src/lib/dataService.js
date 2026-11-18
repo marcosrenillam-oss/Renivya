@@ -1,9 +1,9 @@
-import { base44 } from '@/api/base44Client'
-import { normalizeEntityName } from '../../base44/shared/news/entities.ts'
+import { client } from '@/api/client'
+import { normalizeEntityName } from '../../engine/entities.js'
 
 /**
- * Capa de datos de RENIVYA sobre las entidades de Base44.
- * La interfaz NUNCA llama a base44.entities directamente: pasa por aquí.
+ * Capa de datos de RENIVYA sobre el almacén de entidades del dispositivo.
+ * La interfaz NUNCA llama a client.entities directamente: pasa por aquí.
  *
  * Convenciones:
  *  - Las funciones lanzan en caso de error (la UI distingue error de vacío).
@@ -11,7 +11,7 @@ import { normalizeEntityName } from '../../base44/shared/news/entities.ts'
  *  - Deduplicación por claves exactas (story_id, entity_id, url…), nunca difusa.
  */
 
-const E = base44.entities
+const E = client.entities
 
 export const STORY_SORT = {
   recent: '-published_at',
@@ -64,7 +64,7 @@ function demoFilter(demo) {
 /**
  * Lista de Stories.
  * @param {object} p
- * @param {object} [p.filter]        consulta adicional (operadores de Base44)
+ * @param {object} [p.filter]        consulta adicional ($in, $ne, $gte…)
  * @param {string} [p.sort]          campo de orden ('-published_at' por defecto)
  * @param {number} [p.limit]
  * @param {number} [p.skip]

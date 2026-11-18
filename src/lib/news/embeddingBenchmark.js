@@ -2,8 +2,8 @@
  * Banco de pruebas de embeddings: pares del mismo suceso en idiomas distintos deben
  * quedar más cerca que sucesos diferentes (identidad semántica multilingüe).
  */
-import { localEmbedding } from '../../../base44/shared/news/embeddingProvider.ts'
-import { cosine } from '../../../base44/shared/news/semantic.ts'
+import { localEmbedding } from '../../../engine/embeddingProvider.js'
+import { cosine } from '../../../engine/semantic.js'
 
 const PAIRS = [
   ['Inundaciones en Kenia dejan 12 muertos y miles de desplazados', 'Floods in Kenya kill 12 and displace thousands'],

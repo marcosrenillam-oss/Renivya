@@ -2,7 +2,6 @@ import { useQuery } from '@tanstack/react-query'
 import { getSystemStatus, queryKeys } from '@/lib/dataService'
 import { formatRelativeTime, hoursSince } from '@/lib/format'
 import { useI18n } from '@/lib/i18n/I18nContext'
-import { useAuth } from '@/lib/AuthContext'
 import { cn } from '@/lib/utils'
 
 /**
@@ -11,7 +10,6 @@ import { cn } from '@/lib/utils'
  */
 export default function StatusBar({ className, variant = 'inline' }) {
   const { t, locale } = useI18n()
-  const { isLocalMode } = useAuth()
   const { data, isError } = useQuery({
     queryKey: queryKeys.systemStatus(),
     queryFn: getSystemStatus,
@@ -37,7 +35,6 @@ export default function StatusBar({ className, variant = 'inline' }) {
 
   const badges = []
   if (data?.hasDemo && !data?.hasReal) badges.push(t('status.demo'))
-  if (isLocalMode) badges.push(t('status.local'))
 
   return (
     <div

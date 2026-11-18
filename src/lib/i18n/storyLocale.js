@@ -1,12 +1,9 @@
-import { base44 } from '@/api/base44Client'
-
 /**
  * Lectura de una Story en un idioma.
  *
  * Regla: la traducción se LEE de Story.translations[locale]. Solo si falta se
- * invoca el LLM (función backend TranslateStoryContent), y NUNCA desde el feed:
- * `getStoryInLocale` es puro y no dispara llamadas; `requestStoryTranslation`
- * solo debe usarse en vistas de detalle por acción explícita.
+ * invocaría un traductor, y NUNCA desde el feed: `getStoryInLocale` es puro y no
+ * dispara llamadas. Sin servidor, si falta la traducción se muestra el original.
  */
 
 const TRANSLATABLE_FIELDS = ['summary', 'body', 'key_points', 'why_it_matters', 'context', 'timeline', 'keywords', 'contrast']
@@ -45,10 +42,4 @@ export function getStoryInLocale(story, locale) {
     if (present) merged[field] = value
   })
   return { story: merged, locale, isTranslated: true, needsTranslation: false }
-}
-
-/** Solo para el DETALLE. Pide la traducción al backend (consume créditos). */
-export async function requestStoryTranslation(storyId, locale) {
-  if (!storyId || !locale) throw new Error('storyId y locale son obligatorios')
-  return base44.functions.invoke('TranslateStoryContent', { story_id: storyId, locale })
 }

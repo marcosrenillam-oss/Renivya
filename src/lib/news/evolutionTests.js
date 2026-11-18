@@ -1,5 +1,5 @@
 /** Escenarios de evolución (Story viva): creación, fuente adicional, corrección, duplicado. */
-import { detectEvolution, deriveStatus, deriveTrend } from '../../../base44/shared/news/evolution.ts'
+import { detectEvolution, deriveStatus, deriveTrend } from '../../../engine/evolution.js'
 
 export function runEvolutionTests() {
   const prev = { title: 'A', summary: 'B', version: 1, independent_sources: 1, contradiction_flags: [], known_facts: [], confidence_status: 'low' }

@@ -1,94 +1,75 @@
 # RENIVYA — Inteligencia informativa global
 
-Plataforma de inteligencia informativa: agrupa noticias de muchas fuentes en una sola
-**Story**, contrasta versiones y calcula de forma **determinista** un índice de
-relevancia (RENIVYA SCORE) y una confianza explicable, separados entre sí.
+Agrupa noticias de muchas fuentes en una sola **historia**, contrasta versiones y
+calcula de forma **determinista** su relevancia y su solidez (dos medidas distintas).
 
-Web y app web instalable (PWA): en iPhone, Safari → Compartir → *Añadir a pantalla de inicio*.
+**App:** https://marcosrenillam-oss.github.io/Renivya/
+En el iPhone: ábrela en Safari → Compartir → **Añadir a pantalla de inicio**.
 
-## Arranque
+## Cómo funciona (sin servidor)
+
+```
+GitHub Actions (cada hora)                       Móvil / navegador
+───────────────────────────                      ─────────────────────────────
+feeds RSS ─► motor (engine/) ─► data/snapshot.json ─► la app lo descarga al abrir
+                ▲                                     y lo guarda en el dispositivo
+                └── snapshot anterior (las historias evolucionan entre ejecuciones)
+```
+
+- **Noticias:** `scripts/build-snapshot.mjs` descarga los feeds de `engine/sourceCatalog.js`,
+  agrupa, contrasta, puntúa y redacta con el motor, y publica el resultado junto a la web.
+  Si ningún feed responde, publica datos de demostración (`is_demo: true`) para que la app
+  nunca salga vacía.
+- **Preferencias y guardadas:** solo en el dispositivo (sin cuentas ni contraseñas).
+- **Sin conexión:** la app entera queda guardada al instalarla; muestra las últimas noticias
+  descargadas.
+
+## Desarrollo
 
 ```bash
 npm install
-cp .env.example .env   # opcional
 npm run dev            # http://localhost:5173
-npm run build          # producción (service worker activo solo en build)
+npm test               # pruebas del motor (Node)
+npm run snapshot       # generar noticias reales (RSS) en public/data/snapshot.json
+npm run snapshot:demo  # generar noticias de demostración
+npm run build          # compilación de producción
 ```
 
-- Con `VITE_BASE44_APP_ID` → SDK real de Base44 (`@/api/base44Client`).
-- Sin él → **modo local**: adaptador con la misma API que el SDK, persistido en
-  `localStorage`, RLS por propietario emulada en `Preference` y `SavedStory`.
-  En el acceso aparece «Continuar en modo local» y la portada ofrece cargar
-  **datos de demostración** (`is_demo: true`, fuentes ficticias en dominio `.invalid`).
+## Publicación
 
-## Arquitectura
+`.github/workflows/deploy.yml` prueba, genera las noticias, compila y publica en
+GitHub Pages en cada push a `main`, cada hora y a mano (pestaña *Actions*).
+
+Configuración única del repositorio:
+1. *Settings › General › Default branch* → `main`.
+2. *Settings › Pages › Build and deployment › Source* → **GitHub Actions**.
+
+## Estructura
 
 ```
-Interfaz      src/pages, src/components
-Lógica        src/lib/news/*             (reexporta el núcleo + servicios de interfaz)
-Datos         src/lib/dataService.js     (sobre base44.entities)
-Núcleo        base44/shared/news/*.ts    (una sola implementación para Deno y Vite)
-Backend       base44/functions/*/entry.ts, base44/workflows/*.jsonc
-Entidades     base44/entities/*.jsonc    (12)
+engine/          motor determinista (normalización, firma semántica, clustering,
+                 clasificador, contraste, relevancia, solidez, editorial, entidades,
+                 media, evolución, snapshot)
+scripts/         build-snapshot.mjs (noticias) · postbuild.mjs (404.html + precarga offline)
+src/api/         almacén local con API de entidades
+src/lib/         datos, i18n, sincronización de noticias, PWA
+src/components/  interfaz (portada, historia, mundo 3D, red, analítica…)
+src/pages/       pantallas
+docs/entities/   modelo de datos (12 entidades)
 ```
 
-El motor (normalización, firma semántica, embeddings, clustering, clasificador,
-análisis de contraste, scoring, editorial, entidades, media, evolución) vive en
-`base44/shared/news` como JavaScript estándar con extensión `.ts` (`// @ts-nocheck`):
-lo ejecutan igual las funciones de Base44 (Deno) y la interfaz (Vite), así que SCORE,
-confianza y categoría no pueden divergir entre backend y frontend.
+## Principios
 
-### Principios aplicados
+- Todo dato lleva `is_demo`. Autor, crédito o licencia desconocidos → `null`.
+- Relevancia y solidez deterministas (nunca IA); la solidez pesa solo un 5 % en la relevancia.
+- Clasificador de categorías determinista y multilingüe.
+- Portada y cronología sin métricas técnicas (viven en el detalle y en Analítica).
+- Historia viva: cada cambio relevante queda en el historial y sube la versión.
+- Deduplicación por claves exactas (URL canónica, hash de contenido, nombre normalizado).
 
-- Todo dato insertado lleva `is_demo`. Autor, crédito o licencia desconocidos → `null`.
-- SCORE (importancia) y CONFIDENCE (solidez) son deterministas; nunca LLM.
-  `confidence_context` pesa un 5 % del SCORE.
-- Clasificador de categorías determinista y multilingüe; el LLM solo podría
-  sugerir categoría cuando no hay señal (`method: 'fallback'`).
-- Traducción: se lee `Story.translations[locale]`; `TranslateStoryContent` solo
-  se invoca desde el detalle y solo si falta. Nunca en el feed.
-- Portada y cronología sin métricas técnicas; las cifras viven en el detalle
-  («Cómo lo medimos») y en Analítica.
-- Story viva: `StoryUpdate` + `version` en cada cambio relevante (fuente nueva,
-  corrección, discrepancia, resolución, última hora).
-- Entidad reutilizable (`normalized_name`), `StoryEntity` idempotente y
-  `EntityRelation` solo con evidencia explícita en una frase.
-- Deduplicación por claves exactas: URL canónica, `content_hash`, `normalized_name`.
+## Pendiente
 
-## Funciones backend (`base44/functions`)
-
-| Función | Qué hace | Permiso |
-|---|---|---|
-| `FetchNewsFeeds` | RSS activos → NewsItem → pipeline → mantenimiento (`{ installSources: true }` instala el catálogo) | admin o tarea programada |
-| `ProcessNewsItems` | Procesa NewsItem pendientes | admin o tarea programada |
-| `TranslateStoryContent` | Traduce una Story si falta `translations[locale]` | usuario |
-| `CleanOldStories` | Purga > 30 días (respeta historias guardadas) | admin o tarea programada |
-| `EmbedArticles` | Precalcula embeddings con caché por `content_hash` | admin o tarea programada |
-| `getWorldReport` | Informe por país y región | usuario |
-| `TestEmbeddingMultilingual`, `TestSemanticIdentity` | Diagnósticos | admin |
-
-Variables de entorno de las funciones: `CRON_SECRET` (cabecera `x-cron-secret` de las
-tareas programadas) y, opcionalmente, `OPENAI_API_KEY` para embeddings remotos (si no
-hay, se usa el proveedor local determinista).
-
-Workflows (`base44/workflows`): **Ingesta de noticias** cada 30 min y **Limpieza de
-noticias** diaria.
-
-## Pruebas
-
-```bash
-npm test               # motor en Node (9 pruebas)
-npm run test:functions # funciones backend en Deno con SDK simulado (requiere deno)
-```
-
-La página **Cerebro** (`/brain`) ejecuta además un autodiagnóstico en el navegador
-sobre un almacén en memoria.
-
-## Pendiente de verificar al desplegar en Base44
-
-- Sintaxis de RLS `user_condition: { role: "admin" }` en las 10 entidades de noticias.
-- Estructura exacta de carpetas de funciones (`<Nombre>/entry.ts` + `function.jsonc`)
-  y formato de `base44/workflows/*.jsonc`.
-- URLs del catálogo de feeds RSS (`sourceCatalog.ts`): no se han podido comprobar
-  desde el entorno de desarrollo. Su fiabilidad está a `null` (`reliability:provisional`).
-- Traducciones de interfaz: `es` y `en` completas; `fr` y `pt` parciales (caen a español).
+- Comprobar con la primera ejecución en GitHub qué feeds RSS responden (página *Cerebro*
+  muestra el estado de cada fuente) y ajustar el catálogo.
+- Traducción automática de historias (necesitaría un servicio externo).
+- Traducciones de interfaz: `es` y `en` completas; `fr` y `pt` parciales.

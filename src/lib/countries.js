@@ -5,8 +5,8 @@ import { DEFAULT_LOCALE } from '@/lib/languages'
  * Países (ISO-3166-1 alfa-2) con región editorial (geografía compartida con el motor).
  * Los nombres se resuelven con Intl.DisplayNames en el idioma de la interfaz.
  */
-export { REGIONS, COUNTRY_REGION } from '../../base44/shared/news/geo.ts'
-import { COUNTRY_REGION } from '../../base44/shared/news/geo.ts'
+export { REGIONS, COUNTRY_REGION } from '../../engine/geo.js'
+import { COUNTRY_REGION } from '../../engine/geo.js'
 
 export const COUNTRY_CODES = Object.keys(COUNTRY_COORDINATES)
 

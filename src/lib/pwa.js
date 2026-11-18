@@ -23,7 +23,8 @@ export function isIos() {
 export function registerServiceWorker() {
   if (!import.meta.env.PROD || typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {
+    const base = import.meta.env.BASE_URL
+    navigator.serviceWorker.register(`${base}sw.js`, { scope: base }).catch(() => {
       /* sin service worker: la app funciona igual, solo sin modo offline */
     })
   })

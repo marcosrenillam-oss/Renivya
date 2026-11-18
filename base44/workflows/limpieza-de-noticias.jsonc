@@ -1,7 +1,0 @@
-{
-  // Workflow programado "Limpieza de noticias": purga diaria de contenido de más de 30 días
-  // (las historias que algún usuario ha guardado se conservan).
-  "name": "Limpieza de noticias",
-  "schedule": { "cron": "17 4 * * *", "timezone": "Europe/Madrid" },
-  "steps": [{ "function": "CleanOldStories", "payload": { "days": 30 } }]
-}

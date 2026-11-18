@@ -1,6 +1,6 @@
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Languages, Loader2, Share2 } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { ArrowLeft, Languages, Share2 } from 'lucide-react'
 import CategoryChip from '@/components/story/CategoryChip'
 import CountryFlags from '@/components/story/CountryFlags'
 import EditorialStory from '@/components/story/EditorialStory'
@@ -22,9 +22,8 @@ import {
 import { formatDateTime, readingMinutes } from '@/lib/format'
 import { getStoryImage } from '@/lib/storyImage'
 import { getLanguageName } from '@/lib/languages'
-import { getOriginalLocale, getStoryInLocale, requestStoryTranslation } from '@/lib/i18n/storyLocale'
+import { getOriginalLocale, getStoryInLocale } from '@/lib/i18n/storyLocale'
 import { useI18n } from '@/lib/i18n/I18nContext'
-import { useAuth } from '@/lib/AuthContext'
 
 function DetailSkeleton() {
   return (
@@ -43,8 +42,6 @@ export default function StoryDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { t, locale } = useI18n()
-  const { isLocalMode } = useAuth()
-  const qc = useQueryClient()
 
   const storyQ = useQuery({ queryKey: queryKeys.story(id), queryFn: () => getStory(id), retry: false })
   const sourcesQ = useQuery({ queryKey: queryKeys.storySources(id), queryFn: () => listStorySources(id), enabled: storyQ.isSuccess })
@@ -53,13 +50,6 @@ export default function StoryDetail() {
   const mediaQ = useQuery({ queryKey: queryKeys.storyMedia(id), queryFn: () => listStoryMedia(id), enabled: storyQ.isSuccess })
   const relatedIds = storyQ.data?.related_stories || []
   const relatedQ = useQuery({ queryKey: ['story', id, 'related', relatedIds], queryFn: () => getStoriesByIds(relatedIds), enabled: relatedIds.length > 0 })
-
-  // Traducción SOLO bajo petición explícita en el detalle (consume créditos).
-  const translate = useMutation({
-    mutationFn: () => requestStoryTranslation(id, locale),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.story(id) }),
-    onError: () => toast({ title: t('story.translateUnavailable'), variant: 'destructive' }),
-  })
 
   if (storyQ.isLoading) return <DetailSkeleton />
   if (storyQ.isError) {
@@ -139,16 +129,8 @@ export default function StoryDetail() {
             <Languages className="h-4 w-4" aria-hidden="true" />
             {isTranslated ? (
               <span>{t('story.translated', { lang: getLanguageName(original, locale) })}</span>
-            ) : isLocalMode ? (
-              <span>{t('story.originalIn', { lang: getLanguageName(original, locale) })} · {t('story.translateUnavailable')}</span>
             ) : (
-              <>
-                <span>{t('story.originalIn', { lang: getLanguageName(original, locale) })}</span>
-                <Button variant="outline" size="sm" onClick={() => translate.mutate()} disabled={translate.isPending}>
-                  {translate.isPending && <Loader2 className="animate-spin" />}
-                  {translate.isPending ? t('story.translating') : t('story.translate', { lang: getLanguageName(locale, locale) })}
-                </Button>
-              </>
+              <span>{t('story.originalIn', { lang: getLanguageName(original, locale) })}</span>
             )}
           </div>
         )}

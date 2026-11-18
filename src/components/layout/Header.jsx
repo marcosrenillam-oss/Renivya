@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { LogOut, Moon, Search, Settings, Sun, UserRound } from 'lucide-react'
+import { Moon, Search, Settings, Sun, UserRound } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
@@ -26,7 +26,7 @@ function initials(user) {
 
 export default function Header() {
   const { t, locale } = useI18n()
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   const { resolvedTheme, toggleTheme } = useTheme()
   const { pathname } = useLocation()
   const navigate = useNavigate()
@@ -83,7 +83,6 @@ export default function Header() {
           <DropdownMenuContent align="end" className="w-60">
             <DropdownMenuLabel className="normal-case tracking-normal">
               <span className="block truncate text-sm font-semibold text-foreground">{user?.full_name || t('header.account')}</span>
-              <span className="block truncate text-xs font-normal text-muted-foreground">{user?.email}</span>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
@@ -94,11 +93,6 @@ export default function Header() {
             </DropdownMenuItem>
             <DropdownMenuItem className="sm:hidden" onSelect={(e) => e.preventDefault()}>
               <LanguageSelector compact className="-ml-2 h-6 px-2" />
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onSelect={logout}>
-              <LogOut />
-              {t('header.signOut')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

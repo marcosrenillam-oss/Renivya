@@ -1,7 +1,7 @@
 import { categoryFamily } from '@/lib/categories'
 
 /**
- * Traduce los filtros de la interfaz a una consulta de Base44.
+ * Traduce los filtros de la interfaz a una consulta del almacén de entidades.
  * params: { category, country, status: 'all'|'live'|'resolved', demo }
  */
 export function buildFeedFilter({ category, country, status = 'all' } = {}) {

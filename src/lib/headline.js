@@ -1,8 +1,8 @@
 /**
  * Limpieza determinista de titulares. Única implementación compartida con el motor
- * (base44/shared/news/headline.ts), para que frontend y backend den el mismo resultado.
+ * (engine/headline.js), para que frontend y backend den el mismo resultado.
  */
-import { cleanHeadline } from '../../base44/shared/news/headline.ts'
+import { cleanHeadline } from '../../engine/headline.js'
 
 export { cleanHeadline }
 

@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { CheckCircle2, Loader2, Play, ShieldAlert, XCircle } from 'lucide-react'
+import { CheckCircle2, Loader2, Play, XCircle } from 'lucide-react'
 import SectionHeader from '@/components/common/SectionHeader'
 import { Button } from '@/components/ui/button'
 import { toast } from '@/components/ui/use-toast'
-import { base44 } from '@/api/base44Client'
-import { useAuth } from '@/lib/AuthContext'
+import { client } from '@/api/client'
+import { getSnapshotMeta, syncSnapshot } from '@/lib/snapshotSync'
+import { formatDateTime } from '@/lib/format'
 import { useI18n } from '@/lib/i18n/I18nContext'
 import { cn } from '@/lib/utils'
 
@@ -14,10 +15,10 @@ const INVENTORY = ['Story', 'NewsItem', 'Source', 'StorySource', 'StoryUpdate', 
 async function loadInventory() {
   const out = {}
   for (const name of INVENTORY) {
-    const h = base44.entities[name]
+    const h = client.entities[name]
     out[name] = typeof h.count === 'function' ? await h.count({}) : (await h.list(undefined, 5000)).length
   }
-  const pending = typeof base44.entities.NewsItem.count === 'function' ? await base44.entities.NewsItem.count({ status: 'pending' }) : (await base44.entities.NewsItem.filter({ status: 'pending' }, undefined, 5000)).length
+  const pending = typeof client.entities.NewsItem.count === 'function' ? await client.entities.NewsItem.count({ status: 'pending' }) : (await client.entities.NewsItem.filter({ status: 'pending' }, undefined, 5000)).length
   return { counts: out, pending }
 }
 
@@ -53,23 +54,13 @@ function ResultList({ rows }) {
 }
 
 export default function Brain() {
-  const { t } = useI18n()
-  const { user, isLocalMode } = useAuth()
+  const { t, locale } = useI18n()
   const qc = useQueryClient()
-  const isAdmin = user?.role === 'admin'
   const [busy, setBusy] = useState(null)
   const [output, setOutput] = useState(null)
   const [tests, setTests] = useState(null)
-  const inventory = useQuery({ queryKey: ['brain-inventory'], queryFn: loadInventory, enabled: isAdmin || isLocalMode })
-
-  if (!isAdmin && !isLocalMode) {
-    return (
-      <div className="glass-card mx-auto mt-10 max-w-md p-10 text-center">
-        <ShieldAlert className="mx-auto mb-3 h-6 w-6 text-warning" aria-hidden="true" />
-        <p className="type-h3">{t('brain.adminOnly')}</p>
-      </div>
-    )
-  }
+  const [meta, setMeta] = useState(getSnapshotMeta)
+  const inventory = useQuery({ queryKey: ['brain-inventory'], queryFn: loadInventory })
 
   async function run(key, fn) {
     setBusy(key)
@@ -87,7 +78,6 @@ export default function Brain() {
   }
 
   const engine = () => import('@/lib/news/localEngine')
-  const invoke = (name, payload) => base44.functions.invoke(name, payload).then((r) => r?.data ?? r)
   const btn = (key, label, fn, variant = 'outline', disabled = false) => (
     <Button key={key} variant={variant} size="sm" disabled={Boolean(busy) || disabled} onClick={() => run(key, fn)}>
       {busy === key ? <Loader2 className="animate-spin" /> : <Play />}
@@ -131,16 +121,38 @@ export default function Brain() {
         <div className="flex flex-wrap gap-2">
           {btn('r1', t('brain.round1'), async () => (await engine()).runDemoRound(1), 'default')}
           {btn('r2', t('brain.round2'), async () => (await engine()).runDemoRound(2))}
-          {isLocalMode && btn('maint', t('brain.clean'), async () => (await engine()).runCleanup(30))}
+          {btn('maint', t('brain.clean'), async () => (await engine()).runCleanup(30))}
         </div>
       </Card>
 
-      <Card title={t('brain.real')} hint={isLocalMode ? t('brain.serverOnly') : t('brain.realHint')}>
+      <Card title={t('brain.real')} hint={t('brain.realHint')}>
+        {meta ? (
+          <dl className="type-small grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5">
+            <dt className="text-muted-foreground">{t('brain.snapshotDate')}</dt>
+            <dd>{formatDateTime(meta.generated_at, locale)}</dd>
+            <dt className="text-muted-foreground">{t('brain.snapshotMode')}</dt>
+            <dd>{meta.mode === 'real' ? t('brain.modeReal') : t('brain.modeDemo')}</dd>
+          </dl>
+        ) : (
+          <p className="type-small text-muted-foreground">{t('brain.noSnapshot')}</p>
+        )}
+        {meta?.sources?.length > 0 && (
+          <ul className="divide-y rounded-xl border">
+            {meta.sources.map((s) => (
+              <li key={s.name} className="flex items-center gap-3 px-4 py-2 text-sm">
+                {s.ok ? <CheckCircle2 className="h-4 w-4 text-success" aria-label="OK" /> : <XCircle className="h-4 w-4 text-destructive" aria-label="Fallo" />}
+                <span className="flex-1">{s.name}</span>
+                <span className="type-caption text-muted-foreground">{s.ok ? `${s.items}` : s.error}</span>
+              </li>
+            ))}
+          </ul>
+        )}
         <div className="flex flex-wrap gap-2">
-          {btn('install', t('brain.installSources'), () => invoke('FetchNewsFeeds', { installSources: true }), 'outline', isLocalMode)}
-          {btn('fetch', t('brain.fetch'), () => invoke('FetchNewsFeeds', {}), 'default', isLocalMode)}
-          {btn('process', t('brain.process'), () => invoke('ProcessNewsItems', {}), 'outline', isLocalMode)}
-          {btn('clean', t('brain.clean'), () => invoke('CleanOldStories', { days: 30 }), 'outline', isLocalMode)}
+          {btn('sync', t('brain.syncNow'), async () => {
+            const r = await syncSnapshot({ force: true })
+            setMeta(r.meta)
+            return r.meta
+          }, 'default')}
         </div>
       </Card>
 

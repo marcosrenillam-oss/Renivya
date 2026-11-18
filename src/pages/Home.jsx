@@ -5,6 +5,7 @@ import FrontPageCarousel from '@/components/front/FrontPageCarousel'
 import FrontGrid from '@/components/front/FrontGrid'
 import { FollowedUpdates } from '@/components/story/StoryExtras'
 import TopicsStrip from '@/components/front/TopicsStrip'
+import MissedBox from '@/components/reading/MissedBox'
 import EmptyEdition from '@/components/front/EmptyEdition'
 import FeedError from '@/components/story/FeedError'
 import { useEditionNews } from '@/lib/news/useNews'
@@ -45,6 +46,7 @@ export default function Home() {
       ) : (
         <>
           <BreakingTicker stories={breaking} />
+          <MissedBox stories={stories} />
           <FollowedUpdates />
           <TopicsStrip />
           <section>

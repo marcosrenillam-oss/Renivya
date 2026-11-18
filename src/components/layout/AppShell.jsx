@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { isViewTransitionActive } from '@/lib/storyTransition'
@@ -10,6 +10,7 @@ import { AppProvider } from '@/lib/AppContext'
 import { useSnapshotSync } from '@/hooks/useSnapshotSync'
 import { useAutoUpdate } from '@/hooks/useAutoUpdate'
 import UpdatePill from '@/components/shell/UpdatePill'
+import { useEdgeSwipeBack } from '@/hooks/useEdgeSwipeBack'
 
 /** Pantalla limpia: barra superior mínima + menú lateral. Sin barra inferior ni barra de estado. */
 export default function AppShell() {
@@ -19,6 +20,8 @@ export default function AppShell() {
   const sync = useSnapshotSync()
   const updatingApp = useAutoUpdate()
   useEffect(() => setMenu(false), [location.pathname])
+  const pageRef = useRef(null)
+  useEdgeSwipeBack(pageRef, location.pathname !== '/' && !menu)
 
   return (
     <AppProvider>
@@ -26,6 +29,7 @@ export default function AppShell() {
         <div className="min-h-screen-dvh relative isolate">
           <Aurora />
           <TopBar onMenu={() => setMenu(true)} />
+          <div ref={pageRef}>
           <motion.main
               key={location.pathname}
               initial={isViewTransitionActive() ? false : { opacity: 0, y: 10 }}
@@ -35,6 +39,7 @@ export default function AppShell() {
             >
               <Outlet />
             </motion.main>
+          </div>
           <MenuDrawer open={menu} onClose={close} />
           <UpdatePill state={updatingApp ? 'app' : sync} />
         </div>

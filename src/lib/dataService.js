@@ -79,7 +79,14 @@ export async function listStories({ filter = {}, sort = STORY_SORT.recent, limit
 
 export async function getStory(id) {
   if (!id) throw new Error('getStory: id obligatorio')
-  return E.Story.get(id)
+  try {
+    return await E.Story.get(id)
+  } catch (error) {
+    // Ya no está en la edición publicada: si la guardaste, se lee la copia del dispositivo.
+    const copy = await savedCopy(id).catch(() => null)
+    if (copy?.story) return { ...copy.story, offline: true }
+    throw error
+  }
 }
 
 export async function getStoriesByIds(ids = []) {
@@ -109,7 +116,8 @@ export async function countStories(filter = {}) {
 /* ------------------------------------------------------------------ */
 
 export async function listStorySources(storyId) {
-  const rows = await E.StorySource.filter({ story_id: storyId }, '-published_at', 200)
+  let rows = await E.StorySource.filter({ story_id: storyId }, '-published_at', 200)
+  if (!rows.length) rows = (await savedCopy(storyId).catch(() => null))?.sources || []
   // Una fila por URL de artículo (clave exacta); si no hay URL, por fuente.
   return uniqueBy(rows, (r) => r.url || `name:${r.source_name}`)
 }
@@ -238,6 +246,29 @@ export async function savePreference(patch) {
 /* Guardadas (SavedStory, RLS por created_by_id)                       */
 /* ------------------------------------------------------------------ */
 
+
+/* Copia para leer sin conexión: la noticia entera, sus fuentes y su foto en el dispositivo. */
+const SAVED_PHOTOS = 'renivya-saved'
+
+async function offlineCopy(storyId) {
+  try {
+    const story = await E.Story.get(storyId)
+    const sources = await E.StorySource.filter({ story_id: storyId }, '-published_at', 50)
+    if (story?.image_url && typeof caches !== 'undefined') {
+      // La foto se guarda en la caché del dispositivo (la sirve el service worker sin conexión).
+      caches.open(SAVED_PHOTOS).then((c) => c.match(story.image_url).then((hit) => hit || fetch(story.image_url, { mode: 'no-cors' }).then((r) => c.put(story.image_url, r)))).catch(() => {})
+    }
+    return { story, sources }
+  } catch {
+    return null
+  }
+}
+
+async function savedCopy(storyId) {
+  const rows = await E.SavedStory.filter({ story_id: storyId }, undefined, 5)
+  return rows.find((r) => r.copy)?.copy || null
+}
+
 const savedLocks = new Map()
 
 function withSavedLock(storyId, fn) {
@@ -269,9 +300,19 @@ export async function listSavedStoryLinks() {
 
 export async function listSavedStories() {
   const links = await listSavedStoryLinks()
-  const stories = await getStoriesByIds(links.map((l) => l.story_id))
-  const savedAt = new Map(links.map((l) => [l.story_id, l.created_date]))
-  return stories.map((s) => ({ ...s, saved_at: savedAt.get(s.id) ?? null }))
+  const live = new Map((await getStoriesByIds(links.map((l) => l.story_id))).map((s) => [s.id, s]))
+  const out = []
+  for (const l of links) {
+    // La versión al día si sigue publicada; si no, la copia guardada (nunca se pierde).
+    const story = live.get(l.story_id) || l.copy?.story
+    if (!story) continue
+    out.push({ ...story, saved_at: l.created_date ?? null, offline: !live.has(l.story_id) })
+    // Guardadas antes de existir las copias: se completan ahora (o se refrescan si cambió la versión).
+    if (live.has(l.story_id) && (!l.copy || (l.copy.story?.version ?? 0) < (story.version ?? 0))) {
+      offlineCopy(l.story_id).then((copy) => copy && E.SavedStory.update(l.id, { copy })).catch(() => {})
+    }
+  }
+  return out
 }
 
 export async function isStorySaved(storyId) {
@@ -287,7 +328,7 @@ export function saveStory(storyId) {
       await collapseDuplicates(existing)
       return true
     }
-    await E.SavedStory.create({ story_id: storyId })
+    await E.SavedStory.create({ story_id: storyId, copy: await offlineCopy(storyId) })
     return true
   })
 }
@@ -309,7 +350,7 @@ export function toggleSavedStory(storyId) {
       await Promise.all(existing.map((r) => E.SavedStory.delete(r.id)))
       return false
     }
-    await E.SavedStory.create({ story_id: storyId })
+    await E.SavedStory.create({ story_id: storyId, copy: await offlineCopy(storyId) })
     return true
   })
 }

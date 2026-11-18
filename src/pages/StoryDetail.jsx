@@ -8,6 +8,8 @@ import EditorialStory from '@/components/story/EditorialStory'
 import FeedError from '@/components/story/FeedError'
 import { getHeadline as getHeadlineText } from '@/lib/headline'
 import SaveButton from '@/components/story/SaveButton'
+import ListenButton from '@/components/reading/ListenButton'
+import ClippingButton from '@/components/reading/ClippingButton'
 import SourceRow from '@/components/story/SourceRow'
 import StoryBreakdown from '@/components/story/StoryBreakdown'
 import { StoryPhoto } from '@/components/front/NewsRow'
@@ -121,6 +123,7 @@ export default function StoryDetail() {
         </motion.h1>
         <p className="mt-3 font-serif-text text-[1.2rem] italic leading-[1.5] text-foreground/85">{story.summary}</p>
         <UpdatedLine story={story} />
+        {storyQ.data?.offline && <p className="mt-2 border-l-2 border-foreground pl-2.5 font-serif-text text-[13.5px] italic text-muted-foreground">{t('read.offlineCopy')}</p>}
         {story.image_url && (
           <figure className="mt-5 overflow-hidden">
             <motion.div style={{ y: heroY }} className="overflow-hidden">
@@ -143,9 +146,11 @@ export default function StoryDetail() {
               </>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <SaveButton storyId={story.id} withLabel />
             <FollowButton story={story} />
+            <ListenButton story={story} />
+            <ClippingButton story={story} />
             <button onClick={onShare} className="inline-flex items-center gap-1.5 border border-foreground/40 px-3 py-1.5 text-xs font-medium text-foreground/80">
               <Share2 className="h-4 w-4" aria-hidden="true" />
               {t('story.share')}

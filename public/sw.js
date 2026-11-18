@@ -1,6 +1,7 @@
 /* RENIVYA — service worker.
  * - Navegación: red primero y sin caché HTTP (siempre la última versión); sin red → shell cacheado.
  * - Recursos estáticos propios (/assets, /icons) y fuentes: caché primero.
+ * - Fotos de las noticias guardadas: desde la caché del dispositivo (para leer sin conexión).
  * - Nunca cachea las noticias (data/app.json, data/snapshot.json): siempre se piden a la red;
  *   sin conexión, la app sigue mostrando las que ya guardó en el dispositivo.
  */
@@ -11,6 +12,8 @@ const PRECACHE = []
 const BASE = new URL(self.registration.scope).pathname
 const SHELL = ['./', './index.html', './manifest.webmanifest', './favicon.svg', './icons/apple-touch-icon.png', './icons/icon-192.png']
 const FONT_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com']
+// Fotos de las noticias guardadas (las guarda la app al pulsar Guardar): se sirven sin conexión.
+const SAVED_PHOTOS = 'renivya-saved'
 
 self.addEventListener('install', (event) => {
   // Toda la app (incluidas las pantallas que se cargan bajo demanda) queda disponible sin conexión.
@@ -19,7 +22,7 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== VERSION).map((k) => caches.delete(k)))).then(() => self.clients.claim())
+    caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== VERSION && k !== SAVED_PHOTOS).map((k) => caches.delete(k)))).then(() => self.clients.claim())
   )
 })
 
@@ -61,6 +64,12 @@ self.addEventListener('fetch', (event) => {
   }
   if (FONT_HOSTS.includes(url.hostname)) {
     event.respondWith(cacheFirst(request))
+    return
+  }
+  if (request.destination === 'image' && url.origin !== self.location.origin) {
+    event.respondWith(
+      caches.open(SAVED_PHOTOS).then((c) => c.match(request.url)).then((hit) => hit || fetch(request))
+    )
   }
 })
 

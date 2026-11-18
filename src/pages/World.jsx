@@ -1,78 +1,155 @@
-import { lazy, Suspense, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import SectionHeader from '@/components/common/SectionHeader'
-import Spinner from '@/components/common/Spinner'
+import { AnimatePresence, motion } from 'framer-motion'
+import { Globe2 } from 'lucide-react'
+import LeadCard from '@/components/front/LeadCard'
+import NewsRow from '@/components/front/NewsRow'
+import CategoryChips from '@/components/front/CategoryChips'
 import FeedError from '@/components/story/FeedError'
-import WorldFilters from '@/components/world/WorldFilters'
-import WorldMetricRow from '@/components/world/WorldMetricRow'
-import WorldCountryChips from '@/components/world/WorldCountryChips'
-import CountryStoryPanel from '@/components/world/CountryStoryPanel'
-import RegionCard from '@/components/world/RegionCard'
-import { useWorldReport } from '@/components/world/useWorldReport'
-import { useWorldCountryFeed } from '@/components/world/useWorldCountryFeed'
-import { webglAvailable } from '@/lib/webgl'
+import { byFront, storyCountries, storyInEdition, useEdition, useNews } from '@/lib/news/useNews'
+import { buildWorldReport } from '../../engine/world.js'
 import { useI18n } from '@/lib/i18n/I18nContext'
+import { CATEGORY_PARENT } from '@/lib/categories'
+import { getCountryName } from '@/lib/countries'
+import { getLanguageName } from '@/lib/languages'
+import { flagEmoji } from '@/lib/flags'
+import { haptic } from '@/lib/haptics'
+import { webglAvailable } from '@/lib/webgl'
+import { cn } from '@/lib/utils'
 
-// three.js y Leaflet se cargan solo al entrar en Mundo.
 const WorldGlobe = lazy(() => import('@/components/world/WorldGlobe'))
 const WorldMap = lazy(() => import('@/components/world/WorldMap'))
 
+const section = (c) => CATEGORY_PARENT[c] || c || 'society'
+
+/** Mundo: lo que pasa fuera del país del lector. Globo de calor + banderas + secciones. */
 export default function World() {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const edition = useEdition()
+  const { stories, data: raw, isLoading, isError, refetch } = useNews()
   const [params, setParams] = useSearchParams()
   const selected = params.get('country')
-  const hasWebgl = useMemo(() => webglAvailable(), [])
-  const [view, setView] = useState(hasWebgl ? 'globe' : 'map')
-  const [region, setRegion] = useState(null)
   const [category, setCategory] = useState(null)
-  const { report, stories, isLoading, isError, refetch } = useWorldReport({ category, region })
-  const countryStories = useWorldCountryFeed(stories, selected)
+  const hasWebgl = useMemo(() => webglAvailable(), [])
+  const chipsRef = useRef(null)
+
+  // Importancia por país (todas las historias, en cualquier idioma: el globo no muestra texto).
+  const report = useMemo(() => {
+    const all = (raw || []).map((s) => ({ ...s, countries: storyCountries(s).filter((c) => c !== edition) }))
+    return buildWorldReport(all)
+  }, [raw, edition])
 
   const select = (code) => {
+    haptic()
+    setCategory(null)
     const next = new URLSearchParams(params)
     if (code) next.set('country', code)
     else next.delete('country')
     setParams(next, { replace: true })
   }
 
+  // La bandera elegida (también desde el globo) se desliza a la vista.
+  useEffect(() => {
+    const el = chipsRef.current?.querySelector(`[data-code="${selected || 'all'}"]`)
+    el?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+  }, [selected])
+
+  const pool = useMemo(() => {
+    // Todo el mundo: lo que ocurre fuera del país del lector (aunque lo cuente su prensa)
+    // y lo que publica la prensa extranjera sin ubicación concreta.
+    const international = (s) => ((s.countries || []).length ? s.countries.some((c) => c !== edition) : !storyInEdition(s, edition))
+    const list = selected ? stories.filter((s) => storyInEdition(s, selected)) : stories.filter(international)
+    return list.sort(byFront)
+  }, [stories, selected, edition])
+  const categories = useMemo(() => [...new Set(pool.map((s) => section(s.category)))], [pool])
+  const visible = category ? pool.filter((s) => section(s.category) === category) : pool
+
   return (
-    <div className="space-y-8">
-      <SectionHeader as="h1" size="display" title={t('page.world.title')} description={t('world.subtitle')} action={report && <WorldMetricRow totals={report.totals} />} />
-      <WorldFilters view={view} onView={setView} region={region} onRegion={setRegion} category={category} onCategory={setCategory} />
-      {view === 'globe' && !hasWebgl && <p className="type-small text-muted-foreground">{t('world.noWebgl')}</p>}
-      {isLoading ? (
-        <Spinner label={t('common.loading')} />
-      ) : isError ? (
-        <FeedError onRetry={refetch} />
+    <div className="space-y-5">
+      <header className="safe-x pt-3">
+        <h1 className="font-display text-[34px] font-bold leading-tight">{t('world.title')}</h1>
+        <p className="mt-1 text-[15px] text-muted-foreground">{t('world.subtitle', { country: getCountryName(edition, locale) })}</p>
+      </header>
+
+      {isError ? (
+        <div className="safe-x">
+          <FeedError onRetry={refetch} />
+        </div>
       ) : (
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
-          <div className="space-y-6">
-            <Suspense fallback={<div className="skeleton aspect-square w-full rounded-2xl" />}>
-              {view === 'globe' && hasWebgl ? (
-                <WorldGlobe countries={report.countries} selected={selected} onSelect={select} className="mx-auto aspect-square w-full max-w-[680px]" />
+        <>
+          <div className="relative">
+            <Suspense fallback={<div className="skeleton mx-auto aspect-square w-[92%] rounded-full" />}>
+              {hasWebgl ? (
+                <WorldGlobe countries={report.countries} selected={selected} onSelect={select} className="mx-auto aspect-square w-full max-w-[560px]" />
               ) : (
-                <WorldMap countries={report.countries} selected={selected} onSelect={select} className="h-[460px] w-full sm:h-[560px]" />
+                <div className="safe-x">
+                  <WorldMap countries={report.countries} selected={selected} onSelect={select} className="h-[360px] w-full overflow-hidden rounded-2xl" />
+                </div>
               )}
             </Suspense>
-            <p className="type-caption text-center text-muted-foreground/70">{t('world.attribution')}</p>
-          </div>
-          <aside className="space-y-6">
-            {selected ? (
-              <CountryStoryPanel code={selected} stories={countryStories} onClear={() => select(null)} />
-            ) : (
-              <p className="type-small text-muted-foreground">{t('world.selectCountry')}</p>
-            )}
-            <WorldCountryChips countries={report.countries} selected={selected} onSelect={select} />
-            <div>
-              <p className="eyebrow mb-3">{t('world.regions')}</p>
-              <div className="grid grid-cols-2 gap-2">
-                {report.regions.map((r) => (
-                  <RegionCard key={r.region} region={r} active={region === r.region} onClick={() => setRegion(region === r.region ? null : r.region)} />
-                ))}
-              </div>
+            <div className="safe-x mx-auto mt-1 flex max-w-[320px] items-center gap-2 text-[11px] text-muted-foreground">
+              <span>{t('world.legendLow')}</span>
+              <span className="h-1.5 flex-1 rounded-full" style={{ background: 'linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent)), hsl(var(--destructive)))' }} />
+              <span>{t('world.legendHigh')}</span>
             </div>
-          </aside>
-        </div>
+          </div>
+
+          <div ref={chipsRef} className="no-scrollbar safe-x flex gap-2 overflow-x-auto py-1">
+            <button
+              type="button"
+              data-code="all"
+              onClick={() => select(null)}
+              className={cn('flex shrink-0 items-center gap-2 rounded-2xl border px-3.5 py-2.5 text-[14px] font-medium transition', !selected ? 'border-foreground bg-foreground text-background' : 'border-border bg-card')}
+            >
+              <Globe2 className="h-[18px] w-[18px]" strokeWidth={1.7} />
+              {t('world.everywhere')}
+            </button>
+            {report.countries.map((c) => (
+              <button
+                key={c.code}
+                type="button"
+                data-code={c.code}
+                onClick={() => select(c.code)}
+                className={cn(
+                  'flex shrink-0 items-center gap-2 rounded-2xl border px-3.5 py-2.5 text-[14px] font-medium transition',
+                  selected === c.code ? 'border-foreground bg-foreground text-background' : 'border-border bg-card'
+                )}
+              >
+                <span className="text-[20px] leading-none">{flagEmoji(c.code)}</span>
+                {getCountryName(c.code, locale)}
+              </button>
+            ))}
+          </div>
+
+          {categories.length > 1 && <CategoryChips categories={categories} value={category} onChange={setCategory} />}
+
+          <AnimatePresence mode="wait">
+            <motion.section key={`${selected}-${category}`} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.28 }} className="safe-x">
+              {selected && <h2 className="mb-4 border-b-2 border-foreground pb-2 font-display text-[22px] font-bold">{t('world.countryNews', { country: getCountryName(selected, locale) })}</h2>}
+              {isLoading ? (
+                <div className="skeleton aspect-[16/10] w-full rounded-2xl" />
+              ) : visible.length ? (
+                <>
+                  <LeadCard story={visible[0]} />
+                  <div className="mt-4 divide-y divide-border border-t">
+                    {visible.slice(1, 40).map((s) => (
+                      <NewsRow key={s.id} story={s} />
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="py-10 text-center">
+                  <p className="font-display text-[18px] font-semibold">
+                    {selected
+                      ? t('world.noneInLanguage', { country: getCountryName(selected, locale), language: getLanguageName(locale, locale).toLowerCase() })
+                      : t('world.noneEverywhere', { language: getLanguageName(locale, locale).toLowerCase() })}
+                  </p>
+                  <p className="mt-2 text-[14px] text-muted-foreground">{t('world.translationsPending')}</p>
+                </div>
+              )}
+            </motion.section>
+          </AnimatePresence>
+        </>
       )}
     </div>
   )

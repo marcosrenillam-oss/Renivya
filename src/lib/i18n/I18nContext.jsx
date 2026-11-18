@@ -1,8 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import moment from 'moment'
 import 'moment/dist/locale/es'
-import 'moment/dist/locale/fr'
-import 'moment/dist/locale/pt'
 import { dictionaries } from '@/lib/i18n/dictionaries'
 import { DEFAULT_LOCALE, UI_LOCALES, detectBrowserLocale, isUiLocale } from '@/lib/languages'
 

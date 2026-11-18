@@ -98,6 +98,8 @@ export async function upsertStoryFromMembers(db, { story, oldMembers = [], newMe
     contradiction_flags: analysis.contradictions.map((c) => c.label),
     source_count: members.length,
     countries,
+    // Países de la prensa que la cuenta (edición de país = su prensa + lo que ocurre allí).
+    source_countries: uniq(members.map((m) => m.country)),
     languages,
     keywords: extractKeywords(members.map((m) => m.title).join(' '), allText, 8),
     sources,

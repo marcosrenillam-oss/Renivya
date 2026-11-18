@@ -10,8 +10,6 @@ export const DEFAULT_LOCALE = 'es'
 export const UI_LOCALES = [
   { code: 'es', label: 'Español', short: 'ES', momentLocale: 'es' },
   { code: 'en', label: 'English', short: 'EN', momentLocale: 'en' },
-  { code: 'fr', label: 'Français', short: 'FR', momentLocale: 'fr' },
-  { code: 'pt', label: 'Português', short: 'PT', momentLocale: 'pt' },
 ]
 
 export const UI_LOCALE_CODES = UI_LOCALES.map((l) => l.code)

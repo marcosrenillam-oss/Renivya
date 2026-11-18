@@ -1,7 +1,7 @@
 /* RENIVYA — service worker.
  * - Navegación: red primero; sin red → shell cacheado (la app sigue abriendo).
  * - Recursos estáticos propios (/assets, /icons) y fuentes: caché primero.
- * - Nunca cachea las noticias (data/snapshot.json): siempre se piden a la red;
+ * - Nunca cachea las noticias (data/app.json, data/snapshot.json): siempre se piden a la red;
  *   sin conexión, la app sigue mostrando las que ya guardó en el dispositivo.
  */
 // VERSION y PRECACHE los rellena scripts/postbuild.mjs en cada publicación.

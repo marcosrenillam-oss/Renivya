@@ -1,80 +1,178 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
-import { Check, Pencil, Settings as SettingsIcon, Smartphone } from 'lucide-react'
-import SectionHeader from '@/components/common/SectionHeader'
+import { Bookmark, Check, ChevronRight, LogOut, Mail } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
 import InstallPrompt from '@/components/common/InstallPrompt'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { getPreference, queryKeys } from '@/lib/dataService'
-import { getCountryFlag, getCountryName } from '@/lib/countries'
-import { useSavedStories } from '@/hooks/useSavedStories'
-import { formatDate } from '@/lib/format'
 import { useAuth } from '@/lib/AuthContext'
 import { useI18n } from '@/lib/i18n/I18nContext'
+import { useTheme } from '@/lib/ThemeContext'
+import { getCountryName } from '@/lib/countries'
+import { flagEmoji } from '@/lib/flags'
+import { haptic } from '@/lib/haptics'
+import { formatRelativeTime } from '@/lib/format'
+import { getSnapshotMeta } from '@/lib/snapshotSync'
+import { cn } from '@/lib/utils'
+import { EDITIONS } from '../../engine/sourceCatalog.js'
 
+function Group({ title, children }) {
+  return (
+    <section>
+      <h2 className="mb-2 px-1 text-[12px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{title}</h2>
+      <div className="overflow-hidden rounded-2xl border bg-card">{children}</div>
+    </section>
+  )
+}
+
+function Segmented({ options, value, onChange }) {
+  return (
+    <div className="flex rounded-xl bg-muted p-1">
+      {options.map((o) => (
+        <button
+          key={o.value}
+          type="button"
+          onClick={() => {
+            haptic()
+            onChange(o.value)
+          }}
+          className={cn('flex-1 rounded-lg py-2 text-[14px] font-medium transition', value === o.value ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground')}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+/** Perfil: cuenta, país de la edición, idioma, aspecto y resumen semanal. */
 export default function Profile() {
-  const { t, locale } = useI18n()
-  const { user, updateMe } = useAuth()
-  const [editing, setEditing] = useState(false)
+  const { user, updateMe, logout } = useAuth()
+  const { t, locale, setLocale } = useI18n()
+  const { theme, setTheme } = useTheme()
+  const qc = useQueryClient()
   const [name, setName] = useState(user?.full_name || '')
-  const pref = useQuery({ queryKey: queryKeys.preference(user?.id), queryFn: getPreference, enabled: Boolean(user) })
-  const { ids } = useSavedStories()
-  const p = pref.data
-  const initials = (user?.full_name || '?').split(/\s+/).slice(0, 2).map((x) => x[0]?.toUpperCase()).join('')
-  const rows = p
-    ? [
-        [t('profile.mode'), p.world_mode_enabled ? t('home.worldMode') : t('home.personalMode')],
-        [t('profile.primaryCountry'), `${getCountryFlag(p.primary_country)} ${getCountryName(p.primary_country, locale)}`],
-        [t('profile.categories'), p.preferred_categories?.length ? p.preferred_categories.map((c) => t(`category.${c}`)).join(', ') : t('profile.none')],
-        [t('profile.savedCount'), String(ids.size)],
-      ]
-    : []
+  const [savedName, setSavedName] = useState(false)
+  const meta = getSnapshotMeta()
+  const country = user?.country || 'ES'
 
-  async function saveName(e) {
-    e.preventDefault()
-    if (name.trim()) await updateMe({ full_name: name.trim() })
-    setEditing(false)
+  const saveName = async () => {
+    if (!name.trim() || name.trim() === user?.full_name) return
+    await updateMe({ full_name: name.trim() })
+    haptic()
+    setSavedName(true)
+    setTimeout(() => setSavedName(false), 1500)
   }
 
+  const changeLocale = async (code) => {
+    setLocale(code)
+    await updateMe({ locale: code })
+  }
+
+  const changeCountry = async (code) => {
+    haptic()
+    await updateMe({ country: code })
+    qc.invalidateQueries()
+  }
+
+  const initial = (user?.full_name || '?').trim().charAt(0).toUpperCase()
+
   return (
-    <div className="space-y-8">
-      <SectionHeader as="h1" size="display" title={t('page.profile.title')} description={t('profile.subtitle')} />
-      <div className="glass-card flex flex-col gap-5 p-6 sm:flex-row sm:items-center sm:p-8">
-        <Avatar className="h-16 w-16 border text-lg"><AvatarFallback>{initials}</AvatarFallback></Avatar>
-        <div className="min-w-0 flex-1">
-          {editing ? (
-            <form onSubmit={saveName} className="flex max-w-sm gap-2">
-              <Input autoFocus value={name} onChange={(e) => setName(e.target.value)} aria-label={t('profile.name')} maxLength={40} />
-              <Button type="submit" size="icon" aria-label={t('common.save')}><Check /></Button>
-            </form>
-          ) : (
-            <button onClick={() => setEditing(true)} className="group inline-flex items-center gap-2 text-left">
-              <span className="type-h1 truncate">{user?.full_name}</span>
-              <Pencil className="h-4 w-4 text-muted-foreground group-hover:text-foreground" aria-label={t('profile.editName')} />
-            </button>
+    <div className="safe-x space-y-7 pt-3">
+      <header className="flex items-center gap-4">
+        <span className="flex h-16 w-16 items-center justify-center rounded-full bg-primary font-display text-[28px] font-bold text-primary-foreground">{initial}</span>
+        <div className="min-w-0">
+          <h1 className="truncate font-display text-[28px] font-bold leading-tight">{user?.full_name}</h1>
+          <p className="truncate text-[14px] text-muted-foreground">{user?.email}</p>
+        </div>
+      </header>
+
+      <Group title={t('profile.name')}>
+        <div className="flex items-center gap-2 p-2">
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onBlur={saveName}
+            onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
+            className="min-w-0 flex-1 bg-transparent px-2 py-2 text-[16px] outline-none"
+            aria-label={t('profile.name')}
+          />
+          {savedName && (
+            <span className="flex items-center gap-1 pr-2 text-[13px] text-accent">
+              <Check className="h-4 w-4" /> {t('profile.saved')}
+            </span>
           )}
-          {user?.created_date && <p className="type-caption mt-1 text-muted-foreground">{t('profile.memberSince', { date: formatDate(user.created_date, locale) })}</p>}
-          <p className="type-caption mt-2 flex items-center gap-1.5 text-muted-foreground"><Smartphone className="h-3.5 w-3.5" aria-hidden="true" />{t('profile.deviceData')}</p>
         </div>
-      </div>
-      <div className="glass-card p-6 sm:p-8">
-        <div className="mb-5 flex items-center justify-between gap-3">
-          <h2 className="type-h2">{t('profile.preferences')}</h2>
-          <Button variant="ghost" size="sm" asChild><Link to="/settings"><SettingsIcon />{t('profile.editPreferences')}</Link></Button>
-        </div>
-        <dl className="divide-y">
-          {rows.map(([label, value]) => (
-            <div key={label} className="flex justify-between gap-6 py-3">
-              <dt className="type-small text-muted-foreground">{label}</dt>
-              <dd className="type-small text-right font-medium">{value}</dd>
-            </div>
+      </Group>
+
+      <Group title={t('profile.country')}>
+        <div className="grid grid-cols-2 gap-px bg-border">
+          {EDITIONS.map((code) => (
+            <button key={code} type="button" onClick={() => changeCountry(code)} className={cn('flex items-center gap-2.5 bg-card px-4 py-3.5 text-left text-[15px]', country === code && 'font-semibold')}>
+              <span className="text-[22px] leading-none">{flagEmoji(code)}</span>
+              <span className="flex-1 truncate">{getCountryName(code, locale)}</span>
+              {country === code && <Check className="h-4 w-4 text-accent" />}
+            </button>
           ))}
-        </dl>
+        </div>
+      </Group>
+
+      <Group title={t('profile.language')}>
+        <div className="p-2">
+          <Segmented options={[{ value: 'es', label: 'Español' }, { value: 'en', label: 'English' }]} value={locale} onChange={changeLocale} />
+        </div>
+      </Group>
+
+      <Group title={t('profile.theme')}>
+        <div className="p-2">
+          <Segmented
+            options={[
+              { value: 'light', label: t('profile.themeLight') },
+              { value: 'dark', label: t('profile.themeDark') },
+              { value: 'system', label: t('profile.themeSystem') },
+            ]}
+            value={theme}
+            onChange={setTheme}
+          />
+        </div>
+      </Group>
+
+      <Group title={t('profile.weekly')}>
+        <div className="flex items-start gap-3 p-4">
+          <Mail className="mt-0.5 h-5 w-5 shrink-0 text-accent" strokeWidth={1.7} />
+          <div className="flex-1">
+            <p className="text-[15px]">{t('profile.weeklyBody')}</p>
+            <p className="mt-0.5 text-[13px] text-muted-foreground">{user?.email}</p>
+          </div>
+          <span className="rounded-full bg-muted px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t('profile.soon')}</span>
+        </div>
+      </Group>
+
+      <div className="overflow-hidden rounded-2xl border bg-card">
+        <Link to="/saved" className="flex items-center gap-3 px-4 py-4 text-[15px] active:bg-muted">
+          <Bookmark className="h-5 w-5 text-accent" strokeWidth={1.7} />
+          <span className="flex-1">{t('nav.saved')}</span>
+          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+        </Link>
       </div>
-      <div className="glass-card p-6 sm:p-8">
-        <InstallPrompt variant="inline" />
+
+      <section>
+        <h2 className="mb-2 px-1 text-[12px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t('profile.app')}</h2>
+        <InstallPrompt />
+      </section>
+
+      <button
+        type="button"
+        onClick={() => {
+          haptic('medium')
+          logout()
+        }}
+        className="flex w-full items-center justify-center gap-2 rounded-2xl border py-3.5 text-[15px] font-semibold text-destructive active:bg-muted"
+      >
+        <LogOut className="h-4 w-4" /> {t('profile.logout')}
+      </button>
+
+      <div className="space-y-1 pb-4 text-center text-[12px] text-muted-foreground">
+        <p>{t('profile.storage')}</p>
+        {meta?.generated_at && <p>{t('profile.updated', { time: formatRelativeTime(meta.generated_at) })}</p>}
       </div>
     </div>
   )

@@ -9,8 +9,8 @@ export default function StoryStateBadge({ story, className }) {
   if (!story) return null
   if (story.is_breaking) {
     return (
-      <span className={cn('inline-flex items-center gap-1.5 rounded-full bg-primary px-2.5 py-0.5 text-[10.5px] font-semibold uppercase tracking-[0.12em] text-primary-foreground', className)}>
-        <span className="h-1.5 w-1.5 animate-pulse-glow rounded-full bg-primary-foreground" aria-hidden="true" />
+      <span className={cn('inline-flex items-center gap-1.5 rounded-full bg-destructive px-2.5 py-0.5 text-[10.5px] font-semibold uppercase tracking-[0.12em] text-destructive-foreground', className)}>
+        <span className="h-1.5 w-1.5 animate-pulse-glow rounded-full bg-destructive-foreground" aria-hidden="true" />
         {t('story.breaking')}
       </span>
     )

@@ -1,10 +1,12 @@
 import { client } from '@/api/client'
 
 /**
- * Sincroniza las NOTICIAS publicadas en data/snapshot.json (generado por GitHub Actions
+ * Sincroniza las NOTICIAS publicadas en data/app.json (generado por GitHub Actions
  * cada hora) con el almacén de este dispositivo. Nunca toca Preference ni SavedStory.
  */
 export const NEWS_ENTITIES = ['Story', 'NewsItem', 'Source', 'StorySource', 'StoryUpdate', 'Entity', 'StoryEntity', 'EntityRelation', 'Media']
+// data/app.json: versión ligera (historias con sus traducciones). Las entidades que no trae
+// se vacían para no dejar datos antiguos de versiones anteriores de la app.
 const META_KEY = 'renivya:snapshot-meta'
 
 export function getSnapshotMeta() {
@@ -28,7 +30,7 @@ function setSnapshotMeta(meta) {
  * Devuelve { updated, meta } o lanza si no hay red ni snapshot.
  */
 export async function syncSnapshot({ force = false } = {}) {
-  const url = `${import.meta.env.BASE_URL}data/snapshot.json`
+  const url = `${import.meta.env.BASE_URL}data/app.json`
   const res = await fetch(url, { cache: 'no-store' })
   if (!res.ok) throw new Error(`snapshot ${res.status}`)
   const snap = await res.json()

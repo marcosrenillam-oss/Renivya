@@ -53,6 +53,8 @@ export default {
         heading: ['var(--font-heading)'],
         body: ['var(--font-body)'],
         display: ['var(--font-display)'],
+        serif: ['var(--font-serif)'],
+        masthead: ['var(--font-masthead)'],
         mono: ['var(--font-mono)'],
       },
       keyframes: {

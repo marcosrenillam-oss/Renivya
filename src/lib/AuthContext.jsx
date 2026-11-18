@@ -2,10 +2,13 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { client } from '@/api/client'
 
 /**
- * Sin cuentas ni contraseñas: cada dispositivo tiene un "lector" local que es el
- * propietario de sus preferencias y guardadas. Se crea solo la primera vez.
+ * Cuenta del lector: nombre, correo y contraseña (sin códigos de verificación), país de su
+ * edición e idioma. Todo se guarda en el dispositivo; la contraseña, solo como hash.
+ * El antiguo "lector local" anónimo cuenta como sin cuenta (sus guardadas pasan a la nueva).
  */
 const AuthContext = createContext(null)
+
+const isAccount = (u) => Boolean(u && u.id !== 'local-reader' && u.email)
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
@@ -13,22 +16,31 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     let alive = true
-    ;(async () => {
-      let me = null
-      try {
-        me = await client.auth.me()
-      } catch {
-        await client.auth.loginAsLocalGuest()
-        me = await client.auth.me()
-      }
-      if (alive) {
-        setUser(me)
-        setIsLoadingAuth(false)
-      }
-    })()
+    client.auth
+      .me()
+      .then((me) => alive && setUser(isAccount(me) ? me : null))
+      .catch(() => {})
+      .finally(() => alive && setIsLoadingAuth(false))
     return () => {
       alive = false
     }
+  }, [])
+
+  const register = useCallback(async (data) => {
+    const { user: next } = await client.auth.register(data)
+    setUser(next)
+    return next
+  }, [])
+
+  const login = useCallback(async (email, password) => {
+    const { user: next } = await client.auth.loginViaEmailPassword(email, password)
+    setUser(next)
+    return next
+  }, [])
+
+  const logout = useCallback(() => {
+    client.auth.logout()
+    setUser(null)
   }, [])
 
   const updateMe = useCallback(async (data) => {
@@ -38,17 +50,9 @@ export function AuthProvider({ children }) {
   }, [])
 
   const value = useMemo(
-    () => ({
-      user,
-      isAuthenticated: Boolean(user),
-      isLoadingAuth,
-      isLoadingPublicSettings: false,
-      authError: null,
-      updateMe,
-    }),
-    [user, isLoadingAuth, updateMe]
+    () => ({ user, isAuthenticated: Boolean(user), isLoadingAuth, register, login, logout, updateMe }),
+    [user, isLoadingAuth, register, login, logout, updateMe]
   )
-
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 

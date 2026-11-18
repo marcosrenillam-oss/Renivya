@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 /**
- * Genera public/data/snapshot.json con las noticias que verá la app.
+ * Genera las noticias que verá la app:
+ *   public/data/snapshot.json  estado completo del motor (lo lee la próxima ejecución)
+ *   public/data/app.json       versión ligera para el móvil (historias + traducciones)
  *
  *   node scripts/build-snapshot.mjs            # real: feeds RSS (si ninguno responde, demo)
  *   node scripts/build-snapshot.mjs --demo     # solo datos de demostración
@@ -16,6 +18,8 @@ import { dirname } from 'node:path'
 import { createLocalClient } from '../src/api/localClient.js'
 import { buildSnapshot } from '../engine/snapshot.js'
 import { createRealNewsProvider } from '../engine/realIngestion.js'
+import { appView } from '../engine/appView.js'
+import { translateStories } from './translate-stories.mjs'
 
 const OUT = process.env.SNAPSHOT_OUT || 'public/data/snapshot.json'
 const DEMO_ONLY = process.argv.includes('--demo')
@@ -48,7 +52,13 @@ const snapshot = await buildSnapshot({
   provider: DEMO_ONLY ? null : createRealNewsProvider({ timeoutMs: 15000 }),
   log,
 })
+if (snapshot.mode === 'real') await translateStories(snapshot.entities.Story, { log: (...a) => log(...a) })
+
 mkdirSync(dirname(OUT), { recursive: true })
 const json = JSON.stringify(snapshot)
 writeFileSync(OUT, json)
-log(`escrito ${OUT} · modo ${snapshot.mode} · ${snapshot.counts.Story} historias · ${(Buffer.byteLength(json) / 1024).toFixed(0)} KB`)
+const appOut = process.env.APP_DATA_OUT || OUT.replace(/snapshot\.json$/, 'app.json')
+const appJson = JSON.stringify(appView(snapshot))
+writeFileSync(appOut, appJson)
+const kb = (t) => `${(Buffer.byteLength(t) / 1024).toFixed(0)} KB`
+log(`escrito ${OUT} (${kb(json)}) y ${appOut} (${kb(appJson)}) · modo ${snapshot.mode} · ${snapshot.counts.Story} historias`)

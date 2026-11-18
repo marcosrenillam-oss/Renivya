@@ -4,6 +4,9 @@ import { REAL_SOURCES } from './sourceCatalog.js'
 
 export const SNAPSHOT_ENTITIES = ['Story', 'NewsItem', 'Source', 'StorySource', 'StoryUpdate', 'Entity', 'StoryEntity', 'EntityRelation', 'Media']
 const MAX_STORIES = 500
+// Sube cuando cambia la forma de las historias: un estado anterior de otra versión se descarta
+// (v2: idioma único por historia, ediciones por país, traducciones).
+export const STATE_VERSION = 2
 
 /**
  * entities: almacén en memoria (client.entities con replaceAll).
@@ -14,7 +17,7 @@ export async function buildSnapshot({ entities, previous = null, provider = null
   const count = async (name, q = {}) => (await db[name].filterAll(q, undefined, 100000)).length
 
   // 1. Estado anterior: solo si era real (la demo nunca se mezcla con noticias reales).
-  if (previous?.mode === 'real') {
+  if (previous?.mode === 'real' && previous.state_version === STATE_VERSION) {
     for (const name of SNAPSHOT_ENTITIES) await entities[name].replaceAll(previous.entities?.[name] || [])
   }
 
@@ -67,6 +70,7 @@ export async function buildSnapshot({ entities, previous = null, provider = null
   }
   return {
     version: 1,
+    state_version: STATE_VERSION,
     generated_at: new Date(now).toISOString(),
     mode,
     counts: Object.fromEntries(Object.entries(out).map(([k, v]) => [k, v.length])),

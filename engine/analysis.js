@@ -194,6 +194,7 @@ export function analyzeCluster(members) {
     disputedValues.set(klass, new Set(nums))
     contradictions.push({
       severity: rel > 0.25 ? 'major' : 'minor',
+      data: { klass, lo: { source: lo.source, value: min, unit: lo.unit }, hi: { source: hi.source, value: max, unit: hi.unit } },
       label: `${QUANTITY_LABEL[klass] || klass}: ${lo.source} ${formatN(min)}${lo.unit} / ${hi.source} ${formatN(max)}${hi.unit}`,
     })
   }
@@ -214,6 +215,7 @@ export function analyzeCluster(members) {
     const sources = dedupeSources(c.items.map((f) => members[f.member]))
     knownFacts.push({
       text: rep.text,
+      language: members[rep.member]?.language ?? null,
       type: status === 'context' ? 'interpretation' : 'fact',
       status: disputed && status === 'confirmed' ? 'reported' : status,
       disputed,
@@ -250,8 +252,13 @@ export function analyzeCluster(members) {
     minorDiscrepancies: contradictions.length - majors.length,
     agreementRatio,
     primarySource: primaryMember
-      ? { found: true, description: `${primaryMember.source_name}${PRIMARY_SOURCE_TYPES.has(primaryMember.source_type) ? ' (fuente oficial)' : ' cita un comunicado oficial'}` }
-      : { found: false, description: null },
+      ? {
+          found: true,
+          source_name: primaryMember.source_name ?? null,
+          official: PRIMARY_SOURCE_TYPES.has(primaryMember.source_type),
+          description: `${primaryMember.source_name}${PRIMARY_SOURCE_TYPES.has(primaryMember.source_type) ? ' (fuente oficial)' : ' cita un comunicado oficial'}`,
+        }
+      : { found: false, source_name: null, official: false, description: null },
     contrast: {
       coincidencias: confirmed.slice(0, 5).map((f) => f.text),
       diferencias: contradictions.slice(0, 5).map((c) => c.label),

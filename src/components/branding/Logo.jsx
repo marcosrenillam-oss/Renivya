@@ -1,40 +1,31 @@
-import { useMemo } from 'react'
 import { cn } from '@/lib/utils'
-import { LOGO_COLORS, buildLogoShapes } from '@/components/branding/logoGeometry'
+import { LOGO_COLORS, STARS, starPath } from '@/components/branding/logoGeometry'
 
 /**
- * Símbolo RENIVYA (estrella-rosa de 16 puntas).
- * `withWordmark` añade el nombre en Newsreader junto al símbolo.
+ * Símbolo RENIVYA (Cruz del Sur). `bare` dibuja solo las estrellas (en currentColor),
+ * para usarlo como botón del menú sobre cualquier fondo.
  */
-export default function Logo({ size = 36, withWordmark = false, className, title = 'RENIVYA' }) {
-  const shapes = useMemo(() => buildLogoShapes(), [])
+export default function Logo({ size = 36, bare = false, withWordmark = false, className, title = 'RENIVYA' }) {
   return (
     <span className={cn('inline-flex items-center gap-2.5', className)}>
-      <svg
-        width={size}
-        height={size}
-        viewBox="0 0 64 64"
-        role="img"
-        aria-label={title}
-        className="shrink-0 drop-shadow-[0_6px_14px_rgba(74,53,40,0.18)]"
-      >
-        <rect x="0" y="0" width="64" height="64" rx="15" fill={LOGO_COLORS.ivory} />
-        <rect x="0.5" y="0.5" width="63" height="63" rx="14.5" fill="none" stroke={LOGO_COLORS.brown} strokeOpacity="0.12" />
-        {shapes.short.map((p, i) => (
-          <polygon key={`s${i}`} points={p} fill={LOGO_COLORS.terracotta} />
+      <svg width={size} height={size} viewBox="0 0 64 64" role="img" aria-label={title} className="shrink-0">
+        {!bare && (
+          <>
+            <defs>
+              <radialGradient id="renivya-sky" cx="35%" cy="25%" r="90%">
+                <stop offset="0" stopColor="#1B2D57" />
+                <stop offset="0.55" stopColor={LOGO_COLORS.night} />
+                <stop offset="1" stopColor={LOGO_COLORS.nightDeep} />
+              </radialGradient>
+            </defs>
+            <rect x="0" y="0" width="64" height="64" rx="15" fill="url(#renivya-sky)" />
+          </>
+        )}
+        {STARS.map((s, i) => (
+          <path key={i} d={starPath(s)} fill={bare ? 'currentColor' : LOGO_COLORS.gold} />
         ))}
-        {shapes.longLight.map((p, i) => (
-          <polygon key={`l${i}`} points={p} fill={LOGO_COLORS.brown} />
-        ))}
-        {shapes.longDark.map((p, i) => (
-          <polygon key={`d${i}`} points={p} fill={LOGO_COLORS.brown} fillOpacity="0.78" />
-        ))}
-        <circle cx="32" cy="32" r="6.4" fill={LOGO_COLORS.ivory} />
-        <circle cx="32" cy="32" r="4.2" fill={LOGO_COLORS.brown} />
       </svg>
-      {withWordmark && (
-        <span className="font-heading text-[1.35rem] font-semibold leading-none tracking-[0.08em] text-foreground">RENIVYA</span>
-      )}
+      {withWordmark && <span className="font-display text-[1.3rem] font-bold leading-none tracking-[0.14em] text-foreground">RENIVYA</span>}
     </span>
   )
 }

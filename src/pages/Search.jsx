@@ -5,6 +5,7 @@ import { Search as SearchIcon, X } from 'lucide-react'
 import SectionHeader from '@/components/common/SectionHeader'
 import SearchDiscovery from '@/components/search/SearchDiscovery'
 import { searchStories } from '@/components/search/searchStories'
+import { storyInLocale } from '../../engine/translation.js'
 import StoryListItem from '@/components/story/StoryListItem'
 import FeedError from '@/components/story/FeedError'
 import Spinner from '@/components/common/Spinner'
@@ -12,7 +13,7 @@ import { listStories, queryKeys, STORY_SORT } from '@/lib/dataService'
 import { useI18n } from '@/lib/i18n/I18nContext'
 
 export default function SearchPage() {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const [params, setParams] = useSearchParams()
   const [input, setInput] = useState(params.get('q') || '')
   const q = params.get('q') || ''
@@ -30,7 +31,8 @@ export default function SearchPage() {
     return () => clearTimeout(id)
   }, [input]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const results = useMemo(() => (pool.data && q ? searchStories(pool.data, q) : []), [pool.data, q])
+  const localized = useMemo(() => (pool.data || []).map((s) => storyInLocale(s, locale)).filter(Boolean), [pool.data, locale])
+  const results = useMemo(() => (q ? searchStories(localized, q) : []), [localized, q])
 
   return (
     <div className="space-y-8">
@@ -57,7 +59,7 @@ export default function SearchPage() {
       ) : pool.isError ? (
         <FeedError onRetry={pool.refetch} />
       ) : !q ? (
-        <SearchDiscovery stories={pool.data} onPick={(term) => setInput(term)} />
+        <SearchDiscovery stories={localized} onPick={(term) => setInput(term)} />
       ) : results.length ? (
         <div>
           <p className="type-caption mb-2 text-muted-foreground">{t('search.results', { count: results.length })}</p>

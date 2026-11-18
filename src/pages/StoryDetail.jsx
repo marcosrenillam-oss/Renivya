@@ -17,12 +17,12 @@ import StoryTimeline from '@/components/story/StoryTimeline'
 import { Button } from '@/components/ui/button'
 import { toast } from '@/components/ui/use-toast'
 import {
-  getStory, getStoriesByIds, listStoryEntities, listStoryMedia, listStorySources, listStoryUpdates, queryKeys,
+  getStory, getStoriesByIds, listStoryMedia, listStorySources, listStoryUpdates, queryKeys,
 } from '@/lib/dataService'
 import { formatDateTime, readingMinutes } from '@/lib/format'
 import { getStoryImage } from '@/lib/storyImage'
 import { getLanguageName } from '@/lib/languages'
-import { getOriginalLocale, getStoryInLocale } from '@/lib/i18n/storyLocale'
+import { contentLanguage, storyInLocale } from '../../engine/translation.js'
 import { useI18n } from '@/lib/i18n/I18nContext'
 
 function DetailSkeleton() {
@@ -46,7 +46,6 @@ export default function StoryDetail() {
   const storyQ = useQuery({ queryKey: queryKeys.story(id), queryFn: () => getStory(id), retry: false })
   const sourcesQ = useQuery({ queryKey: queryKeys.storySources(id), queryFn: () => listStorySources(id), enabled: storyQ.isSuccess })
   const updatesQ = useQuery({ queryKey: queryKeys.storyUpdates(id), queryFn: () => listStoryUpdates(id), enabled: storyQ.isSuccess })
-  const entitiesQ = useQuery({ queryKey: queryKeys.storyEntities(id), queryFn: () => listStoryEntities(id), enabled: storyQ.isSuccess })
   const mediaQ = useQuery({ queryKey: queryKeys.storyMedia(id), queryFn: () => listStoryMedia(id), enabled: storyQ.isSuccess })
   const relatedIds = storyQ.data?.related_stories || []
   const relatedQ = useQuery({ queryKey: ['story', id, 'related', relatedIds], queryFn: () => getStoriesByIds(relatedIds), enabled: relatedIds.length > 0 })
@@ -68,8 +67,20 @@ export default function StoryDetail() {
     )
   }
 
-  const { story, isTranslated, needsTranslation } = getStoryInLocale(storyQ.data, locale)
-  const original = getOriginalLocale(storyQ.data)
+  // La historia se lee entera en el idioma del lector (original o traducción completa), nunca mezclada.
+  const story = storyInLocale(storyQ.data, locale)
+  if (!story) {
+    return (
+      <div className="mx-auto max-w-xl pt-10">
+        <div className="glass-card p-10 text-center">
+          <p className="type-h2 mb-5">{t('story.notAvailable')}</p>
+          <Button variant="outline" asChild><Link to="/">{t('notFound.home')}</Link></Button>
+        </div>
+      </div>
+    )
+  }
+  const isTranslated = story.is_translated
+  const original = contentLanguage(storyQ.data)
   const image = getStoryImage(story, mediaQ.data || [])
   const minutes = readingMinutes(story.summary, story.body)
 
@@ -124,20 +135,16 @@ export default function StoryDetail() {
           </div>
         </div>
 
-        {(needsTranslation || isTranslated) && (
+        {isTranslated && (
           <div className="type-small mt-4 flex flex-wrap items-center gap-3 text-muted-foreground">
             <Languages className="h-4 w-4" aria-hidden="true" />
-            {isTranslated ? (
-              <span>{t('story.translated', { lang: getLanguageName(original, locale) })}</span>
-            ) : (
-              <span>{t('story.originalIn', { lang: getLanguageName(original, locale) })}</span>
-            )}
+            <span>{t('story.translated', { language: getLanguageName(original, locale).toLowerCase() })}</span>
           </div>
         )}
         {story.insufficient_info && <p className="type-small mt-4 rounded-xl border border-warning/30 bg-warning/5 p-3 text-muted-foreground">{t('story.insufficient')}</p>}
-        {story.has_corrections && story.last_correction_summary && (
+        {story.has_corrections && (
           <p className="type-small mt-4 rounded-xl border p-3 text-muted-foreground">
-            <strong className="text-foreground">{t('story.correction')}:</strong> {story.last_correction_summary}
+            <strong className="text-foreground">{t('story.correction')}</strong>
           </p>
         )}
       </header>
@@ -174,23 +181,11 @@ export default function StoryDetail() {
 
         <aside className="space-y-8 lg:sticky lg:top-24 lg:self-start">
           <StoryBreakdown story={story} />
-          {(entitiesQ.data || []).length > 0 && (
-            <div>
-              <p className="eyebrow mb-3">{t('story.entities')}</p>
-              <div className="flex flex-wrap gap-2">
-                {entitiesQ.data.slice(0, 14).map((e) => (
-                  <Link key={e.entity_id} to={`/search?q=${encodeURIComponent(e.entity_name)}`} className="rounded-full border bg-card/50 px-3 py-1 text-xs hover:border-foreground/30">
-                    {e.entity_name}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
           {(relatedQ.data || []).length > 0 && (
             <div>
               <p className="eyebrow mb-1">{t('story.related')}</p>
               <div className="divide-y">
-                {relatedQ.data.map((s) => (
+                {relatedQ.data.map((s) => storyInLocale(s, locale)).filter(Boolean).map((s) => (
                   <StoryCard key={s.id} story={s} variant="compact" />
                 ))}
               </div>

@@ -1,54 +1,71 @@
-import { useEffect, useState } from 'react'
-import DigestHeader from '@/components/digest/DigestHeader'
-import DigestSkeleton from '@/components/digest/DigestSkeleton'
-import DigestEmpty from '@/components/digest/DigestEmpty'
-import DailySummary from '@/components/digest/DailySummary'
-import HomeLead from '@/components/digest/HomeLead'
-import HomeBreaking from '@/components/digest/HomeBreaking'
-import { HomeByCategory, HomePrimaryCountry, HomeTop } from '@/components/digest/HomeSections'
-import { useBriefing } from '@/components/digest/useBriefing'
+import { useMemo, useState } from 'react'
+import Greeting from '@/components/front/Greeting'
+import BreakingTicker from '@/components/front/BreakingTicker'
+import FrontPageCarousel from '@/components/front/FrontPageCarousel'
+import NewsRow from '@/components/front/NewsRow'
+import EmptyEdition from '@/components/front/EmptyEdition'
 import FeedError from '@/components/story/FeedError'
-import InstallPrompt from '@/components/common/InstallPrompt'
+import { useEditionNews } from '@/lib/news/useNews'
 import { useI18n } from '@/lib/i18n/I18nContext'
+import { getCountryName } from '@/lib/countries'
+import { getLanguageName } from '@/lib/languages'
 
+const FRONT = 7
+const PAGE = 20
+
+/** Portada: saludo, última hora, primeras planas (carrusel) y el resto de noticias del país. */
 export default function Home() {
-  const { t } = useI18n()
-  const [mode, setMode] = useState(null)
-  const { digest, preference, isLoading, isError, refetch, isEmpty } = useBriefing(mode)
+  const { t, locale } = useI18n()
+  const { stories, edition, isLoading, isError, refetch } = useEditionNews()
+  const [shown, setShown] = useState(PAGE)
 
-  // Modo inicial según las preferencias guardadas.
-  useEffect(() => {
-    if (mode === null && preference) setMode(preference.world_mode_enabled ? 'world' : 'personal')
-  }, [preference, mode])
+  const { breaking, front, rest } = useMemo(() => {
+    const breaking = stories.filter((s) => s.is_breaking).slice(0, 5)
+    const front = stories.slice(0, FRONT)
+    const used = new Set(front.map((s) => s.id))
+    return { breaking, front, rest: stories.filter((s) => !used.has(s.id)) }
+  }, [stories])
 
   return (
-    <div>
-      <InstallPrompt />
-      <DigestHeader mode={mode ?? 'world'} onModeChange={setMode} />
-      {isLoading ? (
-        <DigestSkeleton />
-      ) : isError ? (
-        <FeedError onRetry={refetch} />
-      ) : isEmpty || !digest?.lead ? (
-        <DigestEmpty />
-      ) : (
-        <div className="space-y-16">
-          <div>
-            <HomeBreaking stories={digest.breaking.filter((s) => s.id !== digest.lead.id)} />
-            <HomeLead story={digest.lead} />
-          </div>
-          <div className="grid gap-12 xl:grid-cols-[1fr_320px]">
-            <HomeTop stories={digest.top.slice(0, 6)} />
-            <aside className="xl:pt-11">
-              <DailySummary stories={digest.briefing} />
-            </aside>
-          </div>
-          <HomePrimaryCountry code={digest.primaryCountry.code} stories={digest.primaryCountry.stories} />
-          <HomeByCategory sections={digest.sections} />
-          {digest.excluded > 0 && mode === 'personal' && (
-            <p className="type-caption text-center text-muted-foreground">{t('home.filtered', { count: digest.excluded })}</p>
-          )}
+    <div className="space-y-7">
+      <Greeting />
+      {isError ? (
+        <div className="safe-x">
+          <FeedError onRetry={refetch} />
         </div>
+      ) : isLoading ? (
+        <div className="safe-x space-y-4">
+          <div className="skeleton h-[52px] w-full rounded-2xl" />
+          <div className="skeleton mx-auto h-[min(132vw,560px)] w-[82vw] max-w-[380px] rounded-md" />
+        </div>
+      ) : !stories.length ? (
+        <EmptyEdition title={t('home.empty', { country: getCountryName(edition, locale), language: getLanguageName(locale, locale).toLowerCase() })} hint={t('home.emptyHint')} />
+      ) : (
+        <>
+          <BreakingTicker stories={breaking} />
+          <section>
+            <div className="safe-x flex items-baseline justify-between">
+              <h2 className="font-display text-[22px] font-bold">{t('home.frontPages')}</h2>
+              <span className="text-[12px] font-medium uppercase tracking-[0.14em] text-muted-foreground">{t('home.swipe')} →</span>
+            </div>
+            <FrontPageCarousel stories={front} edition={edition} />
+          </section>
+          {rest.length > 0 && (
+            <section className="safe-x">
+              <h2 className="border-b-2 border-foreground pb-2 font-display text-[22px] font-bold">{t('home.more')}</h2>
+              <div className="divide-y divide-border">
+                {rest.slice(0, shown).map((s) => (
+                  <NewsRow key={s.id} story={s} />
+                ))}
+              </div>
+              {rest.length > shown && (
+                <button type="button" onClick={() => setShown((n) => n + PAGE)} className="mt-4 w-full rounded-2xl border py-3.5 text-[15px] font-semibold text-foreground active:bg-muted">
+                  {t('home.showMore')}
+                </button>
+              )}
+            </section>
+          )}
+        </>
       )}
     </div>
   )

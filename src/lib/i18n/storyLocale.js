@@ -1,45 +1,16 @@
 /**
- * Lectura de una Story en un idioma.
- *
- * Regla: la traducción se LEE de Story.translations[locale]. Solo si falta se
- * invocaría un traductor, y NUNCA desde el feed: `getStoryInLocale` es puro y no
- * dispara llamadas. Sin servidor, si falta la traducción se muestra el original.
+ * Lectura de una Story en un idioma (ver engine/translation.js). Las listas deben filtrar
+ * antes con storyInLocale(): una historia sin versión completa en el idioma no se muestra.
  */
+import { contentLanguage, storyInLocale } from '../../../engine/translation.js'
 
-const TRANSLATABLE_FIELDS = ['summary', 'body', 'key_points', 'why_it_matters', 'context', 'timeline', 'keywords', 'contrast']
+export { storyInLocale }
 
 export function getOriginalLocale(story) {
-  return story?.editorial_locale || 'es'
+  return contentLanguage(story)
 }
 
-/** Devuelve la traducción lista para `locale`, o null si no existe o no está lista. */
-export function getReadyTranslation(story, locale) {
-  const tr = story?.translations?.[locale]
-  if (!tr) return null
-  if (tr.status && tr.status !== 'ready') return null
-  return tr
-}
-
-/**
- * Story fusionada con su traducción (si existe). Nunca modifica el original.
- * Devuelve { story, locale, isTranslated, needsTranslation }.
- */
 export function getStoryInLocale(story, locale) {
-  if (!story) return { story: null, locale, isTranslated: false, needsTranslation: false }
-  const original = getOriginalLocale(story)
-  if (!locale || locale === original) {
-    return { story, locale: original, isTranslated: false, needsTranslation: false }
-  }
-  const tr = getReadyTranslation(story, locale)
-  if (!tr) {
-    return { story, locale: original, isTranslated: false, needsTranslation: true }
-  }
-  const merged = { ...story }
-  if (tr.headline) merged.title = tr.headline
-  TRANSLATABLE_FIELDS.forEach((field) => {
-    const value = tr[field]
-    const present = Array.isArray(value) ? value.length > 0 : value != null && value !== ''
-    if (present) merged[field] = value
-  })
-  return { story: merged, locale, isTranslated: true, needsTranslation: false }
+  const localized = storyInLocale(story, locale)
+  return { story: localized ?? story, locale, isTranslated: Boolean(localized?.is_translated), needsTranslation: !localized }
 }

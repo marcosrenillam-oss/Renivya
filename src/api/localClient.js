@@ -135,6 +135,25 @@ function pickFields(record, fields) {
 
 const SESSION_KEY = '__session'
 const USERS_KEY = '__users'
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
+
+function normalizeEmail(email) {
+  return String(email || '').trim().toLowerCase()
+}
+
+function randomSalt() {
+  const bytes = new Uint8Array(16)
+  crypto.getRandomValues(bytes)
+  return [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('')
+}
+
+/** PBKDF2-SHA-256 (WebCrypto), 150 000 iteraciones. */
+async function hashPassword(password, salt) {
+  const enc = new TextEncoder()
+  const key = await crypto.subtle.importKey('raw', enc.encode(String(password)), 'PBKDF2', false, ['deriveBits'])
+  const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: enc.encode(salt), iterations: 150000 }, key, 256)
+  return [...new Uint8Array(bits)].map((b) => b.toString(16).padStart(2, '0')).join('')
+}
 
 function createAuth(store) {
   const { read: readStore, write: writeStore, remove: removeStore } = store
@@ -163,41 +182,55 @@ function createAuth(store) {
       if (!user) throw new LocalError('No autenticado', 401, 'auth_required')
       const next = { ...user, ...data, id: user.id, email: user.email, updated_date: new Date().toISOString() }
       writeStore(SESSION_KEY, next)
+      const all = users()
+      if (user.email && all[user.email]) {
+        all[user.email] = { ...all[user.email], user: next }
+        writeStore(USERS_KEY, all)
+      }
       return next
     },
+    /** Entrada con correo y contraseña (comprobada contra el hash guardado en el dispositivo). */
     async loginViaEmailPassword(email, password) {
-      const key = String(email || '').trim().toLowerCase()
+      const key = normalizeEmail(email)
       const record = users()[key]
-      if (!record || record.password !== password) throw new LocalError('Credenciales no válidas', 401, 'invalid_credentials')
+      if (!record || !record.hash || (await hashPassword(password, record.salt)) !== record.hash) {
+        throw new LocalError('Correo o contraseña incorrectos', 401, 'invalid_credentials')
+      }
       return startSession(record.user)
     },
-    async register({ email, password }) {
-      const key = String(email || '').trim().toLowerCase()
-      if (!key || !password) throw new LocalError('Email y contraseña obligatorios', 400, 'invalid_params')
+    /**
+     * Alta de cuenta: nombre, correo y contraseña, sin códigos de verificación.
+     * La contraseña nunca se guarda: solo su hash PBKDF2 con sal.
+     */
+    async register({ name, email, password, country = null, locale = null }) {
+      const key = normalizeEmail(email)
+      if (!EMAIL_RE.test(key)) throw new LocalError('Correo no válido', 400, 'invalid_email')
+      if (!password || String(password).length < 6) throw new LocalError('La contraseña necesita al menos 6 caracteres', 400, 'weak_password')
       const all = users()
-      if (all[key]) throw new LocalError('Ese email ya está registrado', 409, 'already_registered')
+      if (all[key]) throw new LocalError('Ese correo ya tiene cuenta en este dispositivo', 409, 'already_registered')
       const now = new Date().toISOString()
-      const user = { id: uid(), email: key, full_name: key.split('@')[0], role: 'admin', created_date: now, updated_date: now }
-      all[key] = { password, user, verified: false }
+      const user = {
+        id: uid(),
+        email: key,
+        full_name: String(name || '').trim() || key.split('@')[0],
+        country,
+        locale,
+        role: 'admin',
+        created_date: now,
+        updated_date: now,
+      }
+      const salt = randomSalt()
+      all[key] = { salt, hash: await hashPassword(password, salt), user }
       writeStore(USERS_KEY, all)
-      return { email: key, requires_verification: true }
-    },
-    async verifyOtp({ email }) {
-      const key = String(email || '').trim().toLowerCase()
-      const all = users()
-      if (!all[key]) throw new LocalError('Usuario no encontrado', 404, 'not_found')
-      all[key].verified = true
-      writeStore(USERS_KEY, all)
-      return startSession(all[key].user)
-    },
-    async resendOtp() {
-      return { ok: true }
-    },
-    async resetPasswordRequest() {
-      return { ok: true }
-    },
-    async resetPassword() {
-      return { ok: true }
+      // Lo que el lector anónimo ya tenía (guardadas, preferencias) pasa a la cuenta nueva.
+      const previous = currentUser()
+      if (previous?.id === 'local-reader') {
+        for (const entity of ['Preference', 'SavedStory']) {
+          const rows = readStore(`entity:${entity}`) || []
+          writeStore(`entity:${entity}`, rows.map((r) => (r.created_by_id === 'local-reader' ? { ...r, created_by_id: user.id } : r)))
+        }
+      }
+      return startSession(user)
     },
     /** Solo en modo local: sesión de invitado para explorar sin servidor. */
     async loginAsLocalGuest() {

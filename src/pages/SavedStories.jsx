@@ -7,6 +7,7 @@ import FeedError from '@/components/story/FeedError'
 import Spinner from '@/components/common/Spinner'
 import { Button } from '@/components/ui/button'
 import { listSavedStories } from '@/lib/dataService'
+import { storyInLocale } from '../../engine/translation.js'
 import { formatRelativeTime } from '@/lib/format'
 import { useAuth } from '@/lib/AuthContext'
 import { useI18n } from '@/lib/i18n/I18nContext'
@@ -15,7 +16,7 @@ export default function SavedStories() {
   const { t, locale } = useI18n()
   const { user } = useAuth()
   const q = useQuery({ queryKey: ['saved-stories', user?.id], queryFn: listSavedStories, enabled: Boolean(user) })
-  const stories = [...(q.data || [])].sort((a, b) => String(b.saved_at || '').localeCompare(String(a.saved_at || '')))
+  const stories = (q.data || []).map((s) => storyInLocale(s, locale)).filter(Boolean).sort((a, b) => String(b.saved_at || '').localeCompare(String(a.saved_at || '')))
   return (
     <div className="space-y-8">
       <SectionHeader as="h1" size="display" title={t('page.saved.title')} description={t('saved.subtitle')} />

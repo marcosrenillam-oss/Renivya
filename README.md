@@ -1,7 +1,9 @@
 # RENIVYA — Inteligencia informativa global
 
-Agrupa noticias de muchas fuentes en una sola **historia**, contrasta versiones y
-calcula de forma **determinista** su relevancia y su solidez (dos medidas distintas).
+Las noticias de tu país y del mundo: agrupa muchas fuentes en una sola **historia**,
+contrasta versiones y calcula de forma **determinista** su relevancia y su solidez.
+Cada lector elige su país (su portada muestra solo la prensa de ese país y lo que ocurre allí)
+y su idioma (español o inglés, nunca mezclados).
 
 **App:** https://marcosrenillam-oss.github.io/Renivya/
 En el iPhone: ábrela en Safari → Compartir → **Añadir a pantalla de inicio**.
@@ -11,16 +13,22 @@ En el iPhone: ábrela en Safari → Compartir → **Añadir a pantalla de inicio
 ```
 GitHub Actions (cada hora)                       Móvil / navegador
 ───────────────────────────                      ─────────────────────────────
-feeds RSS ─► motor (engine/) ─► data/snapshot.json ─► la app lo descarga al abrir
-                ▲                                     y lo guarda en el dispositivo
-                └── snapshot anterior (las historias evolucionan entre ejecuciones)
+feeds RSS ─► motor (engine/) ─► traducción es/en ─► data/app.json ─► la app lo descarga
+   por país     ▲                 (API de Claude)                        al abrir
+                └── data/snapshot.json anterior (estado del motor: las historias evolucionan)
 ```
 
 - **Noticias:** `scripts/build-snapshot.mjs` descarga los feeds de `engine/sourceCatalog.js`,
   agrupa, contrasta, puntúa y redacta con el motor, y publica el resultado junto a la web.
   Si ningún feed responde, publica datos de demostración (`is_demo: true`) para que la app
   nunca salga vacía.
-- **Preferencias y guardadas:** solo en el dispositivo (sin cuentas ni contraseñas).
+- **Idiomas:** el texto de cada historia sale de artículos en un único idioma. Si el lector
+  usa otro, solo se muestra cuando existe la traducción completa (`Story.translations`),
+  que hace `scripts/translate-stories.mjs` con la API de Claude si el repositorio tiene el
+  secreto `ANTHROPIC_API_KEY`. Variables opcionales: `TRANSLATE_MODEL` (por defecto
+  `claude-opus-5-5`) y `TRANSLATE_MAX` (traducciones por hora, por defecto 30).
+- **Cuenta:** nombre, correo y contraseña, sin códigos de verificación. Se guarda en el
+  dispositivo (la contraseña solo como hash PBKDF2), junto con el país y el idioma.
 - **Sin conexión:** la app entera queda guardada al instalarla; muestra las últimas noticias
   descargadas.
 
@@ -43,6 +51,8 @@ GitHub Pages en cada push a `main`, cada hora y a mano (pestaña *Actions*).
 Configuración única del repositorio:
 1. *Settings › General › Default branch* → `main`.
 2. *Settings › Pages › Build and deployment › Source* → **GitHub Actions**.
+3. (Traducción) *Settings › Secrets and variables › Actions › New repository secret* →
+   `ANTHROPIC_API_KEY`. Opcional, en *Variables*: `TRANSLATE_MODEL`, `TRANSLATE_MAX`.
 
 ## Estructura
 
@@ -53,7 +63,7 @@ engine/          motor determinista (normalización, firma semántica, clusterin
 scripts/         build-snapshot.mjs (noticias) · postbuild.mjs (404.html + precarga offline)
 src/api/         almacén local con API de entidades
 src/lib/         datos, i18n, sincronización de noticias, PWA
-src/components/  interfaz (portada, historia, mundo 3D, red, analítica…)
+src/components/  interfaz (portada con primeras planas, historia, mundo 3D, analítica…)
 src/pages/       pantallas
 docs/entities/   modelo de datos (12 entidades)
 ```
@@ -69,7 +79,5 @@ docs/entities/   modelo de datos (12 entidades)
 
 ## Pendiente
 
-- Comprobar con la primera ejecución en GitHub qué feeds RSS responden (página *Cerebro*
-  muestra el estado de cada fuente) y ajustar el catálogo.
-- Traducción automática de historias (necesitaría un servicio externo).
-- Traducciones de interfaz: `es` y `en` completas; `fr` y `pt` parciales.
+- Resumen semanal en PDF por correo (necesita un servicio de envío de correo).
+- Cuentas sincronizadas entre dispositivos (hoy viven en cada dispositivo).

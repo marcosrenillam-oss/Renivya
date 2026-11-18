@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;0,900;1,500&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Inter:wght@400;500;600;700&family=UnifrakturMaguntia&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -6,43 +6,45 @@
 @layer base {
   /* MODO CLARO — marfil cálido, tinta oscura, terracota + cian mineral */
   :root {
-    --background: 44 38% 96%;
-    --foreground: 222 24% 12%;
+    --background: 40 22% 96%;
+    --foreground: 226 30% 11%;
     --card: 40 30% 99%;
-    --card-foreground: 222 24% 12%;
+    --card-foreground: 226 30% 11%;
     --popover: 40 30% 99%;
-    --popover-foreground: 222 24% 12%;
-    --primary: 12 72% 52%;
-    --primary-foreground: 40 30% 99%;
-    --secondary: 42 24% 93%;
-    --secondary-foreground: 222 24% 12%;
-    --muted: 42 20% 93%;
-    --muted-foreground: 222 12% 40%;
-    --accent: 186 42% 42%;
-    --accent-foreground: 40 30% 99%;
-    --destructive: 4 64% 50%;
-    --destructive-foreground: 40 30% 99%;
-    --border: 36 16% 88%;
-    --input: 36 16% 88%;
-    --ring: 12 72% 52%;
-    --chart-1: 12 72% 52%;
-    --chart-2: 186 42% 42%;
-    --chart-3: 38 62% 48%;
-    --chart-4: 160 38% 40%;
-    --chart-5: 320 28% 52%;
+    --popover-foreground: 226 30% 11%;
+    --primary: 224 58% 26%;
+    --primary-foreground: 40 30% 98%;
+    --secondary: 40 16% 92%;
+    --secondary-foreground: 226 30% 11%;
+    --muted: 40 14% 91%;
+    --muted-foreground: 226 10% 40%;
+    --accent: 41 68% 44%;
+    --accent-foreground: 226 40% 8%;
+    --destructive: 352 74% 44%;
+    --destructive-foreground: 40 30% 98%;
+    --border: 38 12% 86%;
+    --input: 38 12% 86%;
+    --ring: 224 58% 36%;
+    --chart-1: 224 58% 36%;
+    --chart-2: 41 68% 44%;
+    --chart-3: 352 64% 48%;
+    --chart-4: 168 40% 36%;
+    --chart-5: 268 30% 50%;
     --radius: 1rem;
-    --font-heading: "Newsreader", Georgia, "Times New Roman", serif;
+    --font-heading: "Playfair Display", Georgia, "Times New Roman", serif;
     --font-body: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
-    --font-display: "Newsreader", Georgia, "Times New Roman", serif;
+    --font-display: "Playfair Display", Georgia, "Times New Roman", serif;
+    --font-serif: "Source Serif 4", Georgia, serif;
+    --font-masthead: "UnifrakturMaguntia", "Old English Text MT", Georgia, serif;
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     --sidebar-background: 44 34% 96%;
     --sidebar-foreground: 222 24% 14%;
-    --sidebar-primary: 12 72% 52%;
+    --sidebar-primary: 224 58% 26%;
     --sidebar-primary-foreground: 40 30% 99%;
     --sidebar-accent: 42 24% 92%;
     --sidebar-accent-foreground: 222 24% 12%;
     --sidebar-border: 36 16% 88%;
-    --sidebar-ring: 12 72% 52%;
+    --sidebar-ring: 224 58% 36%;
 
     /* Glass */
     --glass-panel-bg: rgba(255, 252, 247, 0.92);
@@ -58,9 +60,9 @@
     --glass-hover-shadow: 0 18px 44px -24px rgba(60, 40, 30, 0.22);
     --scrollbar-thumb: 38 16% 78%;
     --scrollbar-thumb-hover: 38 16% 70%;
-    --orb-1: hsl(12 72% 52% / 0.07);
-    --orb-2: hsl(186 42% 42% / 0.05);
-    --selection: hsl(12 72% 52% / 0.18);
+    --orb-1: hsl(224 58% 36% / 0.05);
+    --orb-2: hsl(41 68% 44% / 0.05);
+    --selection: hsl(41 68% 44% / 0.22);
 
     /* Paleta categórica de gráficos (validada: banda de luminosidad, croma, CVD y contraste) */
     --viz-1: #d5502b;
@@ -85,38 +87,38 @@
 
   /* MODO OSCURO — carbón suave */
   .dark {
-    --background: 220 16% 7%;
-    --foreground: 36 24% 94%;
-    --card: 222 14% 11%;
-    --card-foreground: 36 24% 94%;
-    --popover: 222 14% 11%;
-    --popover-foreground: 36 24% 94%;
-    --primary: 12 70% 58%;
-    --primary-foreground: 40 30% 99%;
-    --secondary: 222 14% 16%;
-    --secondary-foreground: 36 24% 94%;
-    --muted: 222 14% 15%;
-    --muted-foreground: 36 14% 66%;
-    --accent: 184 46% 52%;
-    --accent-foreground: 220 16% 8%;
-    --destructive: 4 66% 60%;
-    --destructive-foreground: 40 30% 99%;
-    --border: 220 12% 18%;
-    --input: 220 12% 18%;
-    --ring: 12 70% 58%;
-    --chart-1: 12 70% 60%;
-    --chart-2: 184 46% 54%;
-    --chart-3: 38 64% 60%;
-    --chart-4: 160 40% 52%;
-    --chart-5: 320 32% 64%;
+    --background: 225 36% 6%;
+    --foreground: 40 24% 92%;
+    --card: 225 28% 10%;
+    --card-foreground: 40 24% 92%;
+    --popover: 225 28% 10%;
+    --popover-foreground: 40 24% 92%;
+    --primary: 218 80% 76%;
+    --primary-foreground: 225 36% 7%;
+    --secondary: 225 22% 14%;
+    --secondary-foreground: 40 24% 92%;
+    --muted: 225 22% 13%;
+    --muted-foreground: 225 12% 64%;
+    --accent: 42 72% 62%;
+    --accent-foreground: 225 36% 7%;
+    --destructive: 352 78% 62%;
+    --destructive-foreground: 40 30% 98%;
+    --border: 225 18% 17%;
+    --input: 225 18% 17%;
+    --ring: 218 80% 76%;
+    --chart-1: 218 80% 72%;
+    --chart-2: 42 72% 62%;
+    --chart-3: 352 72% 64%;
+    --chart-4: 168 44% 52%;
+    --chart-5: 268 40% 70%;
     --sidebar-background: 220 16% 8%;
     --sidebar-foreground: 36 18% 90%;
-    --sidebar-primary: 12 70% 58%;
+    --sidebar-primary: 218 80% 76%;
     --sidebar-primary-foreground: 40 30% 99%;
     --sidebar-accent: 222 14% 14%;
     --sidebar-accent-foreground: 36 24% 94%;
     --sidebar-border: 220 12% 16%;
-    --sidebar-ring: 12 70% 58%;
+    --sidebar-ring: 218 80% 76%;
 
     --glass-panel-bg: rgba(255, 250, 245, 0.04);
     --glass-panel-border: rgba(255, 245, 235, 0.08);
@@ -131,9 +133,9 @@
     --glass-hover-shadow: 0 18px 44px -24px rgba(0, 0, 0, 0.55);
     --scrollbar-thumb: 36 12% 22%;
     --scrollbar-thumb-hover: 36 12% 28%;
-    --orb-1: hsl(12 70% 58% / 0.06);
-    --orb-2: hsl(184 46% 52% / 0.045);
-    --selection: hsl(12 70% 58% / 0.26);
+    --orb-1: hsl(218 80% 60% / 0.07);
+    --orb-2: hsl(42 72% 62% / 0.04);
+    --selection: hsl(42 72% 62% / 0.26);
 
     --viz-1: #df5f3b;
     --viz-2: #1b9db3;
@@ -295,3 +297,21 @@
 .dark .world-map .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.82) contrast(0.88) saturate(0.6); }
 .world-map .leaflet-control-attribution { font-size: 10px; background: hsl(var(--card) / 0.8); color: hsl(var(--muted-foreground)); }
 .world-map .leaflet-control-zoom a { background: hsl(var(--card)); color: hsl(var(--foreground)); border-color: hsl(var(--border)); }
+
+/* Prensa: periódicos de época en la portada */
+@layer components {
+  .font-masthead { font-family: var(--font-masthead); font-weight: 400; letter-spacing: 0; }
+  .font-serif-text { font-family: var(--font-serif); }
+  .newsprint {
+    background-color: #efe8d8;
+    color: #1d1a16;
+    background-image:
+      radial-gradient(120% 80% at 50% 0%, rgba(255, 255, 255, 0.35), transparent 60%),
+      radial-gradient(90% 70% at 100% 100%, rgba(120, 90, 40, 0.16), transparent 70%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.3 0 0 0 0 0.24 0 0 0 0 0.15 0 0 0 0.09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .newsprint-photo { filter: grayscale(1) contrast(1.15) brightness(0.98) sepia(0.18); mix-blend-mode: multiply; }
+  .no-scrollbar { scrollbar-width: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .snap-x-mandatory { scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+}

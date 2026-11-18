@@ -114,10 +114,19 @@ export class GlobeScene {
     this.atmosphere.material.uniforms.glowColor.value = cssColor('--accent')
     this.atmosphere.material.uniforms.strength.value = dark ? 0.9 : 0.55
     this.markerColor = cssColor('--primary')
+    // Degradado de importancia: azul noche (poca) → oro (media) → rojo (máxima).
+    this.heat = [cssColor('--primary'), cssColor('--accent'), cssColor('--destructive')]
     this.markers.forEach((m) => {
-      m.dot.material.color = this.markerColor
-      m.halo.material.color = this.markerColor
+      const c = this.heatColor(m.weight)
+      m.dot.material.color = c
+      m.halo.material.color = c
     })
+  }
+
+  heatColor(w = 0) {
+    const [a, b, c] = this.heat || [this.markerColor, this.markerColor, this.markerColor]
+    const t = Math.max(0, Math.min(1, w))
+    return t < 0.5 ? a.clone().lerp(b, t / 0.5) : b.clone().lerp(c, (t - 0.5) / 0.5)
   }
 
   setLand(points) {
@@ -146,8 +155,9 @@ export class GlobeScene {
       const group = new THREE.Group()
       group.position.copy(pos)
       group.lookAt(pos.clone().multiplyScalar(2))
-      const dot = new THREE.Mesh(new THREE.CircleGeometry(size, 32), new THREE.MeshBasicMaterial({ color: this.markerColor, transparent: true, opacity: 0.95 }))
-      const halo = new THREE.Mesh(new THREE.RingGeometry(size * 1.35, size * 1.6, 48), new THREE.MeshBasicMaterial({ color: this.markerColor, transparent: true, opacity: 0.35, side: THREE.DoubleSide }))
+      const color = this.heatColor(c.intensity ?? 0)
+      const dot = new THREE.Mesh(new THREE.CircleGeometry(size, 32), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.55 + 0.45 * (c.intensity ?? 0.2) }))
+      const halo = new THREE.Mesh(new THREE.RingGeometry(size * 1.35, size * 1.6 + 0.01 * (c.intensity ?? 0), 48), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.35, side: THREE.DoubleSide }))
       dot.userData.code = c.code
       group.add(halo, dot)
       this.markerGroup.add(group)

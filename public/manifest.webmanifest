@@ -1,7 +1,7 @@
 {
   "name": "RENIVYA — Inteligencia informativa global",
   "short_name": "RENIVYA",
-  "description": "Muchas fuentes, una sola historia contrastada.",
+  "description": "Las noticias de tu país y del mundo, contrastadas.",
   "id": "./",
   "start_url": "./?source=pwa",
   "scope": "./",
@@ -11,8 +11,8 @@
     "minimal-ui"
   ],
   "orientation": "any",
-  "background_color": "#F7F3EA",
-  "theme_color": "#F7F3EA",
+  "background_color": "#0B0F1A",
+  "theme_color": "#0B0F1A",
   "lang": "es",
   "dir": "ltr",
   "categories": [

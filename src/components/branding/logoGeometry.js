@@ -1,66 +1,53 @@
 /**
- * Geometría del símbolo RENIVYA: estrella-rosa de 16 puntas.
- * - 8 puntas largas (cardinales + intercardinales) en marrón #4A3528.
- * - 8 puntas cortas intercaladas (22.5°) en terracota #D2691E.
- * - Núcleo marrón con halo marfil, sobre cuadrado redondeado marfil #F5EFE0.
- * Sistema de coordenadas: viewBox 0 0 64 64, centro (32, 32).
+ * Símbolo RENIVYA: la Cruz del Sur. Cinco estrellas de cuatro puntas, en oro viejo,
+ * sobre un cielo azul medianoche. Es el icono de la app y el botón del menú.
+ * Sistema de coordenadas: viewBox 0 0 64 64.
  */
 export const LOGO_COLORS = {
-  ivory: '#F5EFE0',
-  brown: '#4A3528',
-  terracotta: '#D2691E',
+  night: '#0E1A33',
+  nightDeep: '#070D1C',
+  gold: '#E2B550',
+  goldSoft: '#F3D88E',
 }
 
-const C = 32
+// Gacrux (arriba), Acrux (abajo), Mimosa (izquierda), Delta (derecha), Épsilon (pequeña).
+export const STARS = [
+  { x: 33, y: 12.5, r: 6.6 },
+  { x: 30.5, y: 51, r: 8 },
+  { x: 16.5, y: 30, r: 6.4 },
+  { x: 47, y: 27, r: 5 },
+  { x: 39.5, y: 39.5, r: 3.1 },
+]
 
-function polar(r, deg) {
-  const a = ((deg - 90) * Math.PI) / 180
-  return [C + r * Math.cos(a), C + r * Math.sin(a)]
+/** Estrella de cuatro puntas (curvas cóncavas) centrada en (x, y) con radio r. */
+export function starPath({ x, y, r }) {
+  const k = r * 0.2
+  return [
+    `M${x} ${y - r}`,
+    `Q${x + k} ${y - k} ${x + r} ${y}`,
+    `Q${x + k} ${y + k} ${x} ${y + r}`,
+    `Q${x - k} ${y + k} ${x - r} ${y}`,
+    `Q${x - k} ${y - k} ${x} ${y - r}Z`,
+  ].join(' ')
 }
 
-function fmt([x, y]) {
-  return `${x.toFixed(2)},${y.toFixed(2)}`
-}
-
-/** Punta en forma de cometa: centro → flanco izq. → vértice → flanco der. */
-function kite(angle, tipRadius, flankRadius, halfSpread) {
-  return [polar(0, angle), polar(flankRadius, angle - halfSpread), polar(tipRadius, angle), polar(flankRadius, angle + halfSpread)]
-    .map(fmt)
-    .join(' ')
-}
-
-/** Mitad de una punta (para el sombreado bicolor de las puntas largas). */
-function halfKite(angle, tipRadius, flankRadius, halfSpread, side) {
-  const flank = polar(flankRadius, angle + side * halfSpread)
-  return [polar(0, angle), flank, polar(tipRadius, angle)].map(fmt).join(' ')
-}
-
-export const LONG_POINTS = Array.from({ length: 8 }, (_, i) => i * 45)
-export const SHORT_POINTS = Array.from({ length: 8 }, (_, i) => 22.5 + i * 45)
-
-export function buildLogoShapes() {
-  return {
-    short: SHORT_POINTS.map((a) => kite(a, 18, 6.2, 15)),
-    longLight: LONG_POINTS.map((a) => halfKite(a, 27, 6.8, 20, -1)),
-    longDark: LONG_POINTS.map((a) => halfKite(a, 27, 6.8, 20, 1)),
-  }
-}
-
-/** SVG serializado (favicon / uso fuera de React). */
+/** SVG serializado (iconos de la app / favicon). `scale` < 1 deja margen (iconos maskable/iOS). */
 export function logoSvgString({ size = 64, withBackground = true, radius = 15, scale = 1 } = {}) {
-  const s = buildLogoShapes()
-  const bg = withBackground ? `<rect x="0" y="0" width="64" height="64" rx="${radius}" fill="${LOGO_COLORS.ivory}"/>` : ''
-  // `scale` < 1 deja margen de seguridad (iconos "maskable" / iOS).
   const tx = 32 - 32 * scale
+  const bg = withBackground
+    ? [
+        '<defs><radialGradient id="sky" cx="35%" cy="25%" r="90%">',
+        `<stop offset="0" stop-color="#1B2D57"/><stop offset="0.55" stop-color="${LOGO_COLORS.night}"/><stop offset="1" stop-color="${LOGO_COLORS.nightDeep}"/>`,
+        '</radialGradient></defs>',
+        `<rect x="0" y="0" width="64" height="64" rx="${radius}" fill="url(#sky)"/>`,
+      ].join('')
+    : ''
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 64 64">`,
     bg,
     `<g transform="translate(${tx} ${tx}) scale(${scale})">`,
-    ...s.short.map((p) => `<polygon points="${p}" fill="${LOGO_COLORS.terracotta}"/>`),
-    ...s.longLight.map((p) => `<polygon points="${p}" fill="${LOGO_COLORS.brown}"/>`),
-    ...s.longDark.map((p) => `<polygon points="${p}" fill="${LOGO_COLORS.brown}" fill-opacity="0.78"/>`),
-    `<circle cx="32" cy="32" r="6.4" fill="${LOGO_COLORS.ivory}"/>`,
-    `<circle cx="32" cy="32" r="4.2" fill="${LOGO_COLORS.brown}"/>`,
+    ...STARS.map((s) => `<path d="${starPath(s)}" fill="${LOGO_COLORS.gold}"/>`),
+    ...STARS.map((s) => `<circle cx="${s.x}" cy="${s.y}" r="${(s.r * 0.16).toFixed(2)}" fill="${LOGO_COLORS.goldSoft}"/>`),
     '</g>',
     '</svg>',
   ].join('')

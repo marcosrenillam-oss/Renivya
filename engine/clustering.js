@@ -75,7 +75,40 @@ export function clusterDocuments(docs, { threshold = DEFAULT_THRESHOLD } = {}) {
     if (best === -1) clusters.push([d._i])
     else clusters[best].push(d._i)
   }
-  return clusters
+  return mergeClusters(clusters, sim, threshold)
+}
+
+/**
+ * Segunda pasada: el orden de llegada puede abrir dos grupos para el mismo suceso. Se unen
+ * cuando comparten un par de artículos muy parecidos y, de media, también se parecen.
+ */
+function mergeClusters(clusters, sim, threshold) {
+  const owner = new Map()
+  clusters.forEach((c, ci) => c.forEach((i) => owner.set(i, ci)))
+  const parent = clusters.map((_, ci) => ci)
+  const find = (x) => (parent[x] === x ? x : (parent[x] = find(parent[x])))
+  const members = clusters.map((c) => [...c])
+  const strong = [...sim.entries()].filter(([, s]) => s >= threshold + 0.05).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+  for (const [key] of strong) {
+    const [i, j] = key.split(':').map(Number)
+    const a = find(owner.get(i))
+    const b = find(owner.get(j))
+    if (a === b) continue
+    let total = 0
+    let n = 0
+    for (const x of members[a]) for (const y of members[b]) {
+      const k = x < y ? `${x}:${y}` : `${y}:${x}`
+      if (sim.has(k)) {
+        total += sim.get(k)
+        n++
+      }
+    }
+    if (!n || total / n < threshold - 0.1) continue
+    parent[b] = a
+    members[a].push(...members[b])
+    members[b] = []
+  }
+  return members.filter((c) => c.length)
 }
 
 /** Centroide normalizado de varios embeddings. */

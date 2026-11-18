@@ -67,9 +67,10 @@ export async function runIngestionCycle(db, { provider, now = new Date(), embedd
   }
   if (provider.fetchArticle) report.images = await enrichArticles(db, provider)
   // Todos los artículos pendientes en esta misma ejecución (por tandas), no 200 por hora.
-  report.pipeline = await runPipeline(db, { isDemo: false, batchId, now, embeddingProvider, log })
+  // Tandas grandes: los artículos del mismo suceso se agrupan juntos en la misma pasada.
+  report.pipeline = await runPipeline(db, { isDemo: false, batchId, now, embeddingProvider, log, limit: 1200 })
   for (let round = 0; round < 25 && report.pipeline.pending > 0; round++) {
-    const more = await runPipeline(db, { isDemo: false, batchId, now, embeddingProvider, log })
+    const more = await runPipeline(db, { isDemo: false, batchId, now, embeddingProvider, log, limit: 1200 })
     if (!more.pending) break
     for (const k of ['pending', 'ignored', 'normalized', 'assigned', 'storiesCreated', 'storiesUpdated', 'versionBumps']) report.pipeline[k] += more[k] || 0
     report.pipeline.errors.push(...(more.errors || []))

@@ -27,3 +27,12 @@ test('mismo suceso contado por dos periódicos se agrupa; sucesos distintos no',
   assert.ok(similarity(a, b) > DEFAULT_THRESHOLD)
   assert.ok(similarity(a, c) < DEFAULT_THRESHOLD)
 })
+
+test('dos grupos abiertos para el mismo suceso se unen al final', async () => {
+  const { clusterDocuments } = await import('../engine/clustering.js')
+  const at = (deg, h) => ({ embedding: [Math.cos((deg * Math.PI) / 180), Math.sin((deg * Math.PI) / 180)], entities: new Set(), published_at: new Date(Date.UTC(2026, 10, 18, h)).toISOString() })
+  // a y b llegan primero y no se parecen lo bastante; c (entre ambos) los une.
+  const groups = clusterDocuments([at(0, 1), at(63.3, 2), at(31.7, 3), at(170, 4)])
+  assert.equal(groups.length, 2)
+  assert.deepEqual(groups.find((g) => g.includes(0)).sort(), [0, 1, 2])
+})

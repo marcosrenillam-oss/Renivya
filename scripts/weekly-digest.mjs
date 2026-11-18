@@ -266,9 +266,26 @@ async function renderPdf(html, file) {
   const { chromium } = await import('playwright')
   const browser = await chromium.launch()
   try {
-    const page = await browser.newPage()
+    // Ancho de un A4 a 96 ppp: las fotos se maquetan igual que en la impresión.
+    const page = await browser.newPage({ viewport: { width: 794, height: 1123 }, deviceScaleFactor: 1.6 })
+    await page.emulateMedia({ media: 'print' })
     await page.setContent(html, { waitUntil: 'networkidle', timeout: 90000 })
     await page.evaluate(() => document.fonts.ready)
+    // Fotos al tamaño al que se ven (JPEG ligero): el PDF pasa de decenas de MB a 1–3 MB.
+    for (const img of await page.$$('img')) {
+      const ok = await img.evaluate((i) => i.complete && i.naturalWidth > 0 && i.getBoundingClientRect().width > 0)
+      if (!ok) {
+        await img.evaluate((i) => i.parentNode && i.parentNode.removeChild(i))
+        continue
+      }
+      const shot = await img.screenshot({ type: 'jpeg', quality: 70 }).catch(() => null)
+      if (shot) {
+        await img.evaluate((i, src) => {
+          i.src = src
+          i.style.filter = 'none'
+        }, `data:image/jpeg;base64,${shot.toString('base64')}`)
+      }
+    }
     await page.pdf({
       path: file,
       format: 'A4',

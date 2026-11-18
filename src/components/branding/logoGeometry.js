@@ -1,53 +1,34 @@
 /**
- * Símbolo RENIVYA: la Cruz del Sur. Cinco estrellas de cuatro puntas, en oro viejo,
- * sobre un cielo azul medianoche. Es el icono de la app y el botón del menú.
- * Sistema de coordenadas: viewBox 0 0 64 64.
+ * Símbolo RENIVYA: la «R» gótica de una cabecera de periódico, en tinta sobre papel prensa,
+ * entre las rayas de portada (gruesa + fina). Es el icono de la app.
+ * Glifo: UnifrakturMaguntia (SIL Open Font License). viewBox 0 0 64 64.
  */
 export const LOGO_COLORS = {
-  night: '#0E1A33',
-  nightDeep: '#070D1C',
-  gold: '#E2B550',
-  goldSoft: '#F3D88E',
+  paper: '#F3F0E8',
+  ink: '#121212',
+  red: '#C1121F',
 }
 
-// Gacrux (arriba), Acrux (abajo), Mimosa (izquierda), Delta (derecha), Épsilon (pequeña).
-export const STARS = [
-  { x: 33, y: 12.5, r: 6.6 },
-  { x: 30.5, y: 51, r: 8 },
-  { x: 16.5, y: 30, r: 6.4 },
-  { x: 47, y: 27, r: 5 },
-  { x: 39.5, y: 39.5, r: 3.1 },
+export const R_PATH = 'M15.75 45.59L15.75 45.59Q15.37 45.90 15.12 45.62Q14.87 45.34 15.26 44.94L15.26 44.94Q18.78 41.21 20.75 41.33Q22.71 41.45 23.95 43.07L23.95 43.07Q25.50 45.16 26.61 45.44Q27.72 45.72 28.64 44.62L28.64 44.62Q30.28 42.65 30.71 39.88Q31.13 37.12 31.00 33.98L31.00 33.98Q30.84 30.20 29.35 27.06Q27.86 23.91 24.26 22.25L24.26 22.25Q19.97 20.30 16.77 22.19Q13.57 24.09 13.62 27.98L13.62 27.98Q13.62 30.65 15.23 32.56Q16.85 34.47 19.77 34.83L19.77 34.83Q22.80 35.21 25.34 33.41L25.34 33.41Q25.65 33.21 25.83 33.47Q26.01 33.73 25.59 34.13L25.59 34.13Q23.05 36.13 19.50 35.91L19.50 35.91Q16.09 35.68 13.96 33.53Q11.84 31.37 11.75 27.87L11.75 27.87Q11.84 21.49 16.52 18.50Q21.21 15.51 26.55 17.04L26.55 17.04Q30.48 18.21 32.91 22.36L32.91 22.36Q33.04 22.61 33.26 22.61Q33.47 22.61 33.58 22.27L33.58 22.27Q34.50 19.22 37.38 17.44Q40.25 15.67 43.62 17.38Q46.99 19.08 48.18 23.08L48.18 23.08Q49.22 26.18 50.18 25.78L50.18 25.78Q50.65 25.60 50.89 25.95Q51.13 26.29 50.52 26.65L50.52 26.65L42.68 31.26Q42.50 31.35 42.50 31.53L42.50 31.53Q42.46 31.71 42.59 31.84L42.59 31.84Q45.58 34.49 46.21 38.51L46.21 38.51Q47.19 42.47 48.47 44.11Q49.76 45.75 51.37 44.40L51.37 44.40Q51.82 44.04 52.14 44.42Q52.45 44.80 51.89 45.23L51.89 45.23Q50.45 46.26 49.04 47.33Q47.62 48.40 46.21 49.41L46.21 49.41Q46.07 49.52 45.85 49.45L45.85 49.45Q42.01 48.08 40.39 40.92L40.39 40.92Q39.74 37.73 38.91 36.06Q38.08 34.40 36.57 34.76L36.57 34.76Q36.01 34.92 35.93 34.59Q35.85 34.27 36.37 33.98L36.37 33.98L44.79 28.72Q44.93 28.63 44.97 28.43L44.97 28.43Q44.97 28.32 44.86 28.11L44.86 28.11Q43.80 27.17 42.93 26.14Q42.05 25.10 41.76 23.76L41.76 23.76Q41.22 21.33 39.63 20.27Q38.03 19.22 36.37 20.09L36.37 20.09Q34.75 20.95 34.45 22.86Q34.14 24.77 34.55 26.38L34.55 26.38Q35.54 30.36 35.02 34.63L35.02 34.63Q34.59 37.91 32.94 40.72Q31.29 43.54 28.53 46.49Q25.77 49.43 23.43 49.25Q21.09 49.07 19.59 47.09L19.59 47.09Q18.33 45.43 17.38 45.24Q16.42 45.05 15.75 45.59Z'
+
+/** Rayas de cabecera: [y, grosor]. */
+export const RULES = [
+  [9.2, 1.6],
+  [11.6, 0.5],
+  [52.4, 0.5],
+  [54.8, 1.6],
 ]
-
-/** Estrella de cuatro puntas (curvas cóncavas) centrada en (x, y) con radio r. */
-export function starPath({ x, y, r }) {
-  const k = r * 0.2
-  return [
-    `M${x} ${y - r}`,
-    `Q${x + k} ${y - k} ${x + r} ${y}`,
-    `Q${x + k} ${y + k} ${x} ${y + r}`,
-    `Q${x - k} ${y + k} ${x - r} ${y}`,
-    `Q${x - k} ${y - k} ${x} ${y - r}Z`,
-  ].join(' ')
-}
 
 /** SVG serializado (iconos de la app / favicon). `scale` < 1 deja margen (iconos maskable/iOS). */
 export function logoSvgString({ size = 64, withBackground = true, radius = 15, scale = 1 } = {}) {
   const tx = 32 - 32 * scale
-  const bg = withBackground
-    ? [
-        '<defs><radialGradient id="sky" cx="35%" cy="25%" r="90%">',
-        `<stop offset="0" stop-color="#1B2D57"/><stop offset="0.55" stop-color="${LOGO_COLORS.night}"/><stop offset="1" stop-color="${LOGO_COLORS.nightDeep}"/>`,
-        '</radialGradient></defs>',
-        `<rect x="0" y="0" width="64" height="64" rx="${radius}" fill="url(#sky)"/>`,
-      ].join('')
-    : ''
+  const bg = withBackground ? `<rect x="0" y="0" width="64" height="64" rx="${radius}" fill="${LOGO_COLORS.paper}"/>` : ''
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 64 64">`,
     bg,
     `<g transform="translate(${tx} ${tx}) scale(${scale})">`,
-    ...STARS.map((s) => `<path d="${starPath(s)}" fill="${LOGO_COLORS.gold}"/>`),
-    ...STARS.map((s) => `<circle cx="${s.x}" cy="${s.y}" r="${(s.r * 0.16).toFixed(2)}" fill="${LOGO_COLORS.goldSoft}"/>`),
+    ...RULES.map(([y, h]) => `<rect x="10" y="${y - h / 2}" width="44" height="${h}" fill="${LOGO_COLORS.ink}"/>`),
+    `<path d="${R_PATH}" fill="${LOGO_COLORS.ink}"/>`,
     '</g>',
     '</svg>',
   ].join('')

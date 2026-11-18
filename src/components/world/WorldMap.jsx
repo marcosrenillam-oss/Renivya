@@ -5,7 +5,7 @@ import { getCountryName } from '@/lib/countries'
 import { useI18n } from '@/lib/i18n/I18nContext'
 import { cn } from '@/lib/utils'
 
-const HEAT = ['#2a4a9b', '#c79a22', '#c0152f']
+const HEAT = ['#f5c518', '#f07a10', '#c8102e']
 function heat(w = 0) {
   const t = Math.max(0, Math.min(1, w))
   const [a, b] = t < 0.5 ? [HEAT[0], HEAT[1]] : [HEAT[1], HEAT[2]]

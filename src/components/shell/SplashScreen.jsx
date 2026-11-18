@@ -1,6 +1,5 @@
 import { useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { STARS, starPath } from '@/components/branding/logoGeometry'
 
 const TOTAL_MS = 950
 
@@ -15,28 +14,15 @@ export default function SplashScreen({ onDone }) {
 
   return (
     <motion.div
-      className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden"
-      style={{ background: 'radial-gradient(120% 80% at 30% 15%, #1B2D57 0%, #0E1A33 45%, #060B17 100%)', perspective: 900 }}
+      className="grain fixed inset-0 z-[100] flex items-center justify-center overflow-hidden"
+      style={{ background: 'radial-gradient(120% 90% at 50% 40%, #f4f1ea 0%, #e6e1d6 70%, #d9d3c6 100%)', perspective: 900 }}
       initial={{ opacity: 1 }}
       animate={{ opacity: [1, 1, 0] }}
       transition={{ duration: reduced ? 0.35 : TOTAL_MS / 1000, times: [0, 0.78, 1], ease: 'easeIn' }}
       aria-hidden="true"
     >
-      <svg className="absolute inset-0 h-full w-full opacity-60" viewBox="0 0 64 64" preserveAspectRatio="xMidYMid slice">
-        {STARS.map((s, i) => (
-          <motion.path
-            key={i}
-            d={starPath({ ...s, r: s.r * 0.35 })}
-            fill="#E2B550"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: [0, 0.9, 0.5] }}
-            transition={{ duration: 0.7, delay: 0.05 * i }}
-          />
-        ))}
-      </svg>
-
       <motion.div
-        className="newsprint relative w-[168px] rounded-[3px] px-3 pb-3 pt-2.5 shadow-[0_30px_60px_-20px_rgba(0,0,0,0.7)]"
+        className="newsprint relative w-[168px] rounded-[3px] px-3 pb-3 pt-2.5 shadow-[0_30px_50px_-20px_rgba(0,0,0,0.45),0_6px_14px_-6px_rgba(0,0,0,0.25)]"
         initial={reduced ? { opacity: 0 } : { scale: 0.04, rotate: -720, rotateX: 40, opacity: 0, y: -40 }}
         animate={reduced ? { opacity: 1 } : { scale: [0.04, 1.12, 1], rotate: [-720, 8, 0], rotateX: [40, -6, 0], opacity: [0, 1, 1], y: [-40, 4, 0] }}
         transition={{ duration: reduced ? 0.2 : 0.62, times: [0, 0.78, 1], ease: [0.2, 0.8, 0.2, 1] }}

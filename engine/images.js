@@ -2,7 +2,7 @@
 // (og:image / twitter:image) cuando el feed no trae ninguna. Nunca se inventa una imagen.
 import { decodeEntities } from './normalizer.js'
 
-const NOT_PHOTO = /\.(mp4|mp3|m3u8|svg|gif)(\?|$)|(^|\/)(logo|favicon|sprite|placeholder|blank|pixel)[^/]*\.(png|jpe?g|webp)/i
+const NOT_PHOTO = /\.(mp4|mp3|m3u8|svg|gif|ico)(\?|$)|(^|[\/_-])(logo|logos|favicon|sprite|placeholder|blank|pixel|default|fallback|no[-_]?image|noimage|avatar|icon|brand|share[-_]?image|og[-_]?default|social[-_]?default)[^/]*\.(png|jpe?g|webp)/i
 
 /** Absoluta, https y sin entidades HTML. null si no parece una foto. */
 export function cleanImageUrl(raw, base = null) {
@@ -35,4 +35,19 @@ export function extractPageImage(html, pageUrl) {
   }
   const link = head.match(/<link[^>]+rel=["']image_src["'][^>]*href=["']([^"']+)["']/i)?.[1]
   return cleanImageUrl(link, pageUrl)
+}
+
+/**
+ * Fotos genéricas: la misma imagen en artículos distintos de historias distintas suele ser el
+ * logotipo o la «foto por defecto» del medio, no una foto de la noticia. Devuelve esas URL.
+ */
+export function genericImageUrls(items, { minStories = 2 } = {}) {
+  const seen = new Map()
+  for (const it of items) {
+    if (!it.image_url) continue
+    const key = it.image_url
+    if (!seen.has(key)) seen.set(key, new Set())
+    seen.get(key).add(it.story_id || it.url || it.title)
+  }
+  return new Set([...seen.entries()].filter(([, owners]) => owners.size >= minStories).map(([url]) => url))
 }

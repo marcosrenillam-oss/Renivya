@@ -60,8 +60,8 @@ export default function WorldGlobe({ countries = [], selected, onSelect, classNa
           <span
             key={c.code}
             className={cn(
-              'absolute -translate-x-1/2 -translate-y-[170%] whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-medium shadow-sm transition-opacity',
-              c.code === selected ? 'bg-primary text-primary-foreground' : 'glass-strong text-foreground'
+              'absolute -translate-x-1/2 -translate-y-[170%] whitespace-nowrap border border-foreground px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] transition-opacity',
+              c.code === selected ? 'bg-foreground text-background' : 'bg-background text-foreground'
             )}
             style={{ left: c.x, top: c.y }}
           >

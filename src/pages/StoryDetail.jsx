@@ -11,7 +11,7 @@ import SaveButton from '@/components/story/SaveButton'
 import SourceRow from '@/components/story/SourceRow'
 import StoryBreakdown from '@/components/story/StoryBreakdown'
 import StoryCard from '@/components/story/StoryCard'
-import StoryImage from '@/components/story/StoryImage'
+import { StoryPhoto } from '@/components/front/NewsRow'
 import StorySection from '@/components/story/StorySection'
 import StoryStateBadge from '@/components/story/StoryStateBadge'
 import StoryTimeline from '@/components/story/StoryTimeline'
@@ -44,9 +44,7 @@ export default function StoryDetail() {
   const navigate = useNavigate()
   const { t, locale } = useI18n()
   const { scrollY } = useScroll()
-  const heroY = useTransform(scrollY, [0, 500], [0, 140])
-  const heroScale = useTransform(scrollY, [0, 500], [1.08, 1.22])
-  const heroFade = useTransform(scrollY, [0, 320], [1, 0.25])
+  const heroY = useTransform(scrollY, [0, 600], [0, -30])
 
   const storyQ = useQuery({ queryKey: queryKeys.story(id), queryFn: () => getStory(id), retry: false })
   const sourcesQ = useQuery({ queryKey: queryKeys.storySources(id), queryFn: () => listStorySources(id), enabled: storyQ.isSuccess })
@@ -104,34 +102,29 @@ export default function StoryDetail() {
 
   return (
     <article className="relative mx-auto max-w-6xl">
-      {/* Portada de la historia: foto a pantalla completa con paralaje y titular sobre ella */}
-      <section className="relative -mt-[calc(env(safe-area-inset-top)+4rem)] h-[min(78vh,640px)] overflow-hidden rounded-b-[36px] shadow-[0_40px_80px_-40px_rgba(0,0,0,0.7)]">
-        <motion.div className="absolute inset-0" style={{ y: heroY, scale: heroScale }}>
-          <StoryImage story={story} media={story.image_url ? [] : mediaQ.data || []} eager className="h-full w-full" />
-        </motion.div>
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/40" />
-        <motion.div style={{ opacity: heroFade }} className="safe-x absolute inset-x-0 bottom-0 pb-7 text-white">
-          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}>
-            <div className="mb-3 flex flex-wrap items-center gap-2">
-              <span className="rounded-full border border-white/25 bg-white/15 px-3 py-1 text-[10.5px] font-bold uppercase tracking-[0.14em] backdrop-blur-md">
-                <CategoryChip category={story.category} className="!text-white" />
-              </span>
-              <StoryStateBadge story={story} />
-            </div>
-            <h1 className="font-display text-[31px] font-bold leading-[1.08] tracking-[-0.015em] [text-shadow:0_4px_24px_rgba(0,0,0,0.45)]">{getHeadlineText(story)}</h1>
-            {(image?.credit || image?.sourceName) && <p className="mt-3 text-[11px] text-white/60">{t('story.imageCredit', { credit: image.credit || image.sourceName })}</p>}
-          </motion.div>
-        </motion.div>
-      </section>
-
-      <button onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))} className="glass-chip absolute left-3 top-[calc(env(safe-area-inset-top)+4.9rem)] z-20 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-medium text-foreground">
-        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-        {t('story.back')}
-      </button>
-
-      <header className="safe-x mx-auto mt-6 max-w-3xl">
-        <p className="font-serif-text text-[1.25rem] leading-[1.55] text-foreground/85">{story.summary}</p>
-        <div className="glass-premium mt-6 flex flex-wrap items-center justify-between gap-3 rounded-[22px] px-4 py-3">
+      <header className="safe-x mx-auto max-w-3xl pt-2">
+        <button onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))} className="mb-3 inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
+          <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+          {t('story.back')}
+        </button>
+        <div className="rule-thick" />
+        <div className="flex flex-wrap items-center gap-2 py-1.5">
+          <CategoryChip category={story.category} className="!text-foreground" />
+          <StoryStateBadge story={story} />
+        </div>
+        <motion.h1 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="border-t border-foreground pt-3 font-display text-[34px] font-black leading-[1.05] tracking-[-0.015em]">
+          {getHeadlineText(story)}
+        </motion.h1>
+        <p className="mt-3 font-serif-text text-[1.2rem] italic leading-[1.5] text-foreground/85">{story.summary}</p>
+        {story.image_url && (
+          <figure className="mt-5 overflow-hidden">
+            <motion.div style={{ y: heroY }} className="overflow-hidden">
+              <StoryPhoto story={story} eager className="aspect-[3/2] w-full object-cover [filter:grayscale(0.1)_contrast(1.05)]" />
+            </motion.div>
+            {(image?.credit || image?.sourceName) && <figcaption className="mt-1.5 border-b border-foreground/30 pb-1.5 text-[11px] italic text-muted-foreground">{t('story.imageCredit', { credit: image.credit || image.sourceName })}</figcaption>}
+          </figure>
+        )}
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-y border-foreground py-2.5">
           <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[12px] text-muted-foreground">
             <time dateTime={story.published_at}>{formatDateTime(story.published_at, locale)}</time>
             <span aria-hidden="true">·</span>
@@ -147,7 +140,7 @@ export default function StoryDetail() {
           </div>
           <div className="flex items-center gap-2">
             <SaveButton storyId={story.id} withLabel />
-            <button onClick={onShare} className="glass-chip inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-foreground/80">
+            <button onClick={onShare} className="inline-flex items-center gap-1.5 border border-foreground/40 px-3 py-1.5 text-xs font-medium text-foreground/80">
               <Share2 className="h-4 w-4" aria-hidden="true" />
               {t('story.share')}
             </button>

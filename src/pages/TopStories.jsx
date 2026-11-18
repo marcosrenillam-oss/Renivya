@@ -38,8 +38,9 @@ export default function TopStories() {
   return (
     <div className="space-y-6">
       <header className="safe-x pt-3">
-        <h1 className="font-display text-[38px] font-bold leading-[1.05]">{t('top.title')}</h1>
-        <p className="mt-1 text-[15px] text-muted-foreground">{t('top.subtitle', { country })}</p>
+        <div className="rule-thick" />
+        <h1 className="py-1 font-display text-[36px] font-black leading-[1.05]">{t('top.title')}</h1>
+        <p className="border-t border-foreground pt-1.5 font-serif-text text-[15px] italic text-muted-foreground">{t('top.subtitle', { country })}</p>
       </header>
 
       {isError ? (
@@ -54,20 +55,18 @@ export default function TopStories() {
         <EmptyEdition title={t('home.empty', { country, language: getLanguageName(locale, locale).toLowerCase() })} hint={t('home.emptyHint')} />
       ) : (
         <>
-          <div className="sticky top-[calc(env(safe-area-inset-top)+4.4rem)] z-30 -my-1 py-2">
+          <div className="sticky top-[calc(env(safe-area-inset-top)+3.5rem)] z-30 bg-background">
             <CategoryChips categories={groups.map(([k]) => k)} value={category} onChange={setCategory} />
           </div>
           <AnimatePresence mode="wait">
-            <motion.div key={category ?? 'all'} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} className="safe-x space-y-10">
+            <motion.div key={category ?? 'all'} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} className="safe-x space-y-8">
               {selected ? (
                 selected.length ? (
-                  <div>
+                  <div className="border-t-[3px] border-foreground">
                     <LeadCard story={selected[0]} rank={1} />
-                    <div className="mt-3 space-y-3">
+                    <div className="divide-y divide-foreground border-t border-foreground">
                       {selected.slice(1, 30).map((s) => (
-                        <Reveal key={s.id}>
-                          <NewsRow story={s} showCategory={false} />
-                        </Reveal>
+                        <NewsRow key={s.id} story={s} showCategory={false} />
                       ))}
                     </div>
                   </div>
@@ -77,25 +76,21 @@ export default function TopStories() {
               ) : (
                 groups.map(([key, list], gi) => (
                   <Reveal as="section" key={key}>
-                    <div className="mb-3 flex items-end justify-between">
-                      <div className="flex items-baseline gap-3">
-                        <span className="font-display text-[34px] font-black leading-none text-accent/80">{String(gi + 1).padStart(2, '0')}</span>
-                        <h2 className="font-display text-[24px] font-bold leading-none">{getCategoryLabel(key, t)}</h2>
-                      </div>
+                    <div className="rule-thick" />
+                    <div className="flex items-baseline justify-between py-1.5">
+                      <h2 className="font-display text-[22px] font-black uppercase tracking-[0.04em]">{getCategoryLabel(key, t)}</h2>
                       {list.length > 3 && (
-                        <button type="button" onClick={() => setCategory(key)} className="glass-chip rounded-full px-3 py-1 text-[12.5px] font-semibold text-accent">
-                          +{list.length - 3}
+                        <button type="button" onClick={() => setCategory(key)} className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+                          +{list.length - 3} →
                         </button>
                       )}
                     </div>
-                    <LeadCard story={list[0]} />
-                    {list.length > 1 && (
-                      <div className="mt-3 space-y-3">
-                        {list.slice(1, 3).map((s) => (
-                          <NewsRow key={s.id} story={s} showCategory={false} />
-                        ))}
-                      </div>
-                    )}
+                    <div className="divide-y divide-foreground border-t border-foreground">
+                      <LeadCard story={list[0]} />
+                      {list.slice(1, 3).map((s) => (
+                        <NewsRow key={s.id} story={s} showCategory={false} />
+                      ))}
+                    </div>
                   </Reveal>
                 ))
               )}

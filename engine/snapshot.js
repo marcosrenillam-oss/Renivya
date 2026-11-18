@@ -1,6 +1,7 @@
 // Construcción del snapshot de noticias que publica GitHub Actions (y que la app sincroniza).
 import { cleanOldStories, createDataAdapter, ensureSources, maintainStories, runIngestionCycle, seedDemo } from './brain.js'
 import { REAL_SOURCES } from './sourceCatalog.js'
+import { cleanImageUrl, genericImageUrls } from './images.js'
 
 export const SNAPSHOT_ENTITIES = ['Story', 'NewsItem', 'Source', 'StorySource', 'StoryUpdate', 'Entity', 'StoryEntity', 'EntityRelation', 'Media']
 const MAX_STORIES = 500
@@ -44,6 +45,9 @@ export async function buildSnapshot({ entities, previous = null, provider = null
     log('limpieza:', JSON.stringify(await cleanOldStories(db, { days: 30, now })))
   }
 
+  // 3b. Solo fotos reales de cada noticia: fuera logotipos y fotos genéricas repetidas.
+  if (mode === 'real') log('fotos genéricas descartadas:', await scrubGenericImages(db))
+
   // 4. Recorte: historias más recientes; artículos necesarios para deduplicar y para que
   //    las historias vivas sigan agrupando noticias nuevas en la próxima ejecución.
   const stories = (await db.Story.filterAll({}, '-updated_date', 100000)).slice(0, MAX_STORIES)
@@ -80,4 +84,26 @@ export async function buildSnapshot({ entities, previous = null, provider = null
     sources: perSource.map(({ name, ok, items: n, error }) => ({ name, ok, items: n, error: error ?? null })),
     entities: out,
   }
+}
+
+/**
+ * Quita de artículos, media e historias las fotos que no son de la noticia (logotipos,
+ * «foto por defecto» del medio). La historia se queda con otra foto real de sus artículos o sin foto.
+ */
+export async function scrubGenericImages(db) {
+  const items = await db.NewsItem.filterAll({ image_url: { $exists: true } }, undefined, 100000)
+  const generic = genericImageUrls(items)
+  for (const it of items) if (!cleanImageUrl(it.image_url)) generic.add(it.image_url)
+  if (!generic.size) return 0
+  for (const it of items) if (generic.has(it.image_url)) await db.NewsItem.update(it.id, { image_url: null })
+  const media = await db.Media.filterAll({}, undefined, 100000)
+  for (const m of media) if (generic.has(m.url) && m.status !== 'rejected') await db.Media.update(m.id, { status: 'rejected', is_primary: false })
+  const stories = await db.Story.filterAll({}, undefined, 100000)
+  for (const s of stories) {
+    if (!s.image_url || !generic.has(s.image_url)) continue
+    const alt = media.find((m) => m.story_id === s.id && !generic.has(m.url) && m.status !== 'rejected')
+    if (alt) await db.Media.update(alt.id, { is_primary: true })
+    await db.Story.update(s.id, { image_url: alt?.url ?? null })
+  }
+  return generic.size
 }

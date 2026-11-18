@@ -141,7 +141,7 @@ export default function FrontPageCarousel({ stories, edition }) {
             {i === active && (
               <motion.span
                 key={`p${active}`}
-                className="absolute inset-y-0 left-0 rounded-full bg-accent"
+                className="absolute inset-y-0 left-0 rounded-full bg-foreground"
                 initial={{ width: '0%' }}
                 animate={{ width: '100%' }}
                 transition={{ duration: AUTOPLAY_MS / 1000, ease: 'linear' }}

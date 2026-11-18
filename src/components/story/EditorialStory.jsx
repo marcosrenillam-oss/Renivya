@@ -30,7 +30,7 @@ export default function EditorialStory({ story }) {
     <div className="space-y-12">
       {(story.key_points || []).length > 0 && (
         <StorySection id="key-points" title={t('story.keyPoints')}>
-          <ul className="space-y-3 rounded-2xl border bg-card/60 p-5 sm:p-6">
+          <ul className="space-y-3 border-y border-foreground py-4 font-serif-text">
             {story.key_points.map((point, i) => (
               <li key={i} className="flex gap-3">
                 <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" aria-hidden="true" />
@@ -66,7 +66,7 @@ export default function EditorialStory({ story }) {
 
       {(story.known_facts || []).length > 0 && (
         <StorySection id="facts" title={t('story.whatWeKnow')}>
-          <ul className="divide-y rounded-2xl border bg-card/40">
+          <ul className="divide-y divide-foreground/30 border-y border-foreground">
             {story.known_facts.slice(0, 8).map((fact, i) => {
               const style = FACT_STYLE[fact.status] || FACT_STYLE.reported
               const Icon = style.icon
@@ -107,7 +107,7 @@ function ContrastBlock({ title, items = [], tone }) {
   if (!items?.length) return null
   const dot = { success: 'bg-success', warning: 'bg-warning', accent: 'bg-accent', destructive: 'bg-destructive' }[tone]
   return (
-    <div className="rounded-2xl border bg-card/40 p-4">
+    <div className="border-t-2 border-foreground pt-3">
       <p className="mb-3 flex items-center gap-2 text-sm font-semibold">
         <span className={cn('h-2 w-2 rounded-full', dot)} aria-hidden="true" />
         {title}

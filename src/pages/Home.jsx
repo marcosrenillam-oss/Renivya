@@ -4,7 +4,7 @@ import BreakingTicker from '@/components/front/BreakingTicker'
 import FrontPageCarousel from '@/components/front/FrontPageCarousel'
 import NewsRow from '@/components/front/NewsRow'
 import FeatureCard from '@/components/front/FeatureCard'
-import Reveal from '@/components/premium/Reveal'
+import { getStoryImage } from '@/lib/storyImage'
 import EmptyEdition from '@/components/front/EmptyEdition'
 import FeedError from '@/components/story/FeedError'
 import { useEditionNews } from '@/lib/news/useNews'
@@ -29,7 +29,7 @@ export default function Home() {
   }, [stories])
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-6">
       <Greeting />
       {isError ? (
         <div className="safe-x">
@@ -46,24 +46,24 @@ export default function Home() {
         <>
           <BreakingTicker stories={breaking} />
           <section>
-            <div className="safe-x flex items-baseline justify-between">
-              <h2 className="font-display text-[24px] font-bold">{t('home.frontPages')}</h2>
-              <span className="text-[12px] font-medium uppercase tracking-[0.14em] text-muted-foreground">{t('home.swipe')} →</span>
+            <div className="safe-x">
+              <div className="rule-thick" />
+              <div className="flex items-baseline justify-between py-1.5">
+                <h2 className="text-[13px] font-bold uppercase tracking-[0.2em]">{t('home.frontPages')}</h2>
+                <span className="text-[11px] italic text-muted-foreground">{t('home.swipe')} →</span>
+              </div>
             </div>
             <FrontPageCarousel stories={front} edition={edition} />
           </section>
           {rest.length > 0 && (
             <section className="safe-x">
-              <h2 className="mb-4 font-display text-[24px] font-bold">{t('home.more')}</h2>
-              <div className="space-y-3">
-                {rest.slice(0, shown).map((s, i) => (
-                  <Reveal key={s.id} delay={Math.min(i % 6, 3) * 0.04}>
-                    {i % 5 === 0 ? <FeatureCard story={s} /> : <NewsRow story={s} />}
-                  </Reveal>
-                ))}
+              <div className="rule-thick" />
+              <h2 className="py-1.5 text-[13px] font-bold uppercase tracking-[0.2em]">{t('home.more')}</h2>
+              <div className="divide-y divide-foreground border-t border-foreground">
+                {rest.slice(0, shown).map((s, i) => (i % 6 === 0 && getStoryImage(s) ? <FeatureCard key={s.id} story={s} /> : <NewsRow key={s.id} story={s} />))}
               </div>
               {rest.length > shown && (
-                <button type="button" onClick={() => setShown((n) => n + PAGE)} className="glass-premium mt-5 w-full rounded-full py-3.5 text-[15px] font-semibold text-foreground transition active:scale-[0.98]">
+                <button type="button" onClick={() => setShown((n) => n + PAGE)} className="mt-2 w-full border-y-2 border-foreground py-3 text-[12px] font-bold uppercase tracking-[0.18em] text-foreground active:bg-muted">
                   {t('home.showMore')}
                 </button>
               )}

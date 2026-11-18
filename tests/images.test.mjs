@@ -43,3 +43,16 @@ test('noticias sin foto en el feed: se busca la de su página una sola vez', asy
   const [one] = await db.NewsItem.filter({ url: 'https://n.com/1' })
   assert.equal(one.image_url, 'https://n.com/1.jpg')
 })
+
+test('fotos genéricas: la misma imagen en historias distintas se descarta', async () => {
+  const { genericImageUrls } = await import('../engine/images.js')
+  const g = genericImageUrls([
+    { story_id: 'a', image_url: 'https://m.com/og-site.jpg' },
+    { story_id: 'b', image_url: 'https://m.com/og-site.jpg' },
+    { story_id: 'c', image_url: 'https://m.com/foto-real.jpg' },
+    { story_id: 'c', image_url: 'https://m.com/foto-real.jpg' },
+  ])
+  assert.deepEqual([...g], ['https://m.com/og-site.jpg'])
+  assert.equal(cleanImageUrl('https://m.com/img/default-share.jpg'), null)
+  assert.equal(cleanImageUrl('https://m.com/2026/11/incendio-valencia.jpg'), 'https://m.com/2026/11/incendio-valencia.jpg')
+})

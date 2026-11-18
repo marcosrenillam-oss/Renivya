@@ -18,7 +18,7 @@ export default function SaveButton({ storyId, withLabel = false, className }) {
       aria-pressed={saved}
       aria-label={saved ? t('story.unsave') : t('story.save')}
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        'inline-flex items-center gap-1.5 border border-foreground/40 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
         withLabel ? 'border px-3 py-1.5 text-xs font-medium' : 'p-1.5',
         saved && 'text-primary hover:text-primary',
         className

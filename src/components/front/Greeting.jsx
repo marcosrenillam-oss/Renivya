@@ -2,6 +2,7 @@ import moment from 'moment'
 import { motion } from 'framer-motion'
 import { useAuth } from '@/lib/AuthContext'
 import { useI18n } from '@/lib/i18n/I18nContext'
+import { getCountryName } from '@/lib/countries'
 
 function greetingKey(hour) {
   if (hour >= 6 && hour < 14) return 'greet.morning'
@@ -9,24 +10,28 @@ function greetingKey(hour) {
   return 'greet.evening'
 }
 
-/** Fecha de hoy y saludo con el nombre del lector. */
+/** Cabecera de periódico: rayas, nombre gótico, línea de fecha y edición, y el saludo. */
 export default function Greeting() {
   const { user } = useAuth()
   const { t, locale } = useI18n()
   const now = moment().locale(locale)
   const name = (user?.full_name || '').split(' ')[0]
+  const issue = now.dayOfYear() + 1000 * (now.year() - 2025)
   return (
-    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }} className="safe-x pt-3">
-      <p className="text-[13px] font-semibold uppercase tracking-[0.16em] text-muted-foreground first-letter:uppercase">{now.format(locale === 'es' ? 'dddd, D [de] MMMM' : 'dddd, MMMM D')}</p>
-      <h1 className="mt-1.5 font-display text-[38px] font-bold leading-[1.02] tracking-[-0.015em] text-foreground">
+    <motion.header initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="safe-x">
+      <div className="rule-thick" />
+      <h1 className="font-masthead py-1 text-center text-[clamp(52px,16vw,76px)] leading-[1.05] text-foreground">Renivya</h1>
+      <div className="rule-double" />
+      <div className="flex items-center justify-between gap-2 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-foreground/80">
+        <span className="truncate first-letter:uppercase">{now.format(locale === 'es' ? 'dddd, D [de] MMMM [de] YYYY' : 'dddd, MMMM D, YYYY')}</span>
+        <span className="shrink-0">{t('home.number', { n: issue })}</span>
+      </div>
+      <div className="rule-top" />
+      <p className="py-3 text-center font-serif-text text-[19px] italic text-foreground">
         {t(greetingKey(now.hour()))}
-        {name && (
-          <>
-            ,<br />
-            <span className="text-shimmer italic">{name}</span>
-          </>
-        )}
-      </h1>
-    </motion.div>
+        {name && `, ${name}`}
+        <span className="not-italic text-muted-foreground"> · {t('home.edition', { country: getCountryName(user?.country || 'ES', locale) })}</span>
+      </p>
+    </motion.header>
   )
 }

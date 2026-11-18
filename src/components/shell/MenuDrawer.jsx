@@ -1,8 +1,7 @@
 import { useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Bookmark, ChartColumn, Flame, Globe2, Newspaper, Search, UserRound, X } from 'lucide-react'
-import Logo from '@/components/branding/Logo'
+import { X } from 'lucide-react'
 import { useI18n } from '@/lib/i18n/I18nContext'
 import { useAuth } from '@/lib/AuthContext'
 import { getCountryName } from '@/lib/countries'
@@ -13,18 +12,18 @@ import { getSnapshotMeta } from '@/lib/snapshotSync'
 import { cn } from '@/lib/utils'
 
 const MAIN = [
-  { to: '/', key: 'nav.home', icon: Newspaper, end: true },
-  { to: '/top-stories', key: 'nav.top', icon: Flame },
-  { to: '/world', key: 'nav.world', icon: Globe2 },
+  { to: '/', key: 'nav.home', end: true },
+  { to: '/top-stories', key: 'nav.top' },
+  { to: '/world', key: 'nav.world' },
 ]
 const MORE = [
-  { to: '/search', key: 'nav.search', icon: Search },
-  { to: '/saved', key: 'nav.saved', icon: Bookmark },
-  { to: '/profile', key: 'nav.profile', icon: UserRound },
-  { to: '/analytics', key: 'nav.analytics', icon: ChartColumn },
+  { to: '/search', key: 'nav.search' },
+  { to: '/saved', key: 'nav.saved' },
+  { to: '/profile', key: 'nav.profile' },
+  { to: '/analytics', key: 'nav.analytics' },
 ]
 
-/** Menú a pantalla completa desde la izquierda (cielo nocturno), con las secciones de la app. */
+/** Menú como índice de periódico: cabecera gótica, secciones entre rayas. */
 export default function MenuDrawer({ open, onClose }) {
   const { t, locale } = useI18n()
   const { user } = useAuth()
@@ -44,7 +43,7 @@ export default function MenuDrawer({ open, onClose }) {
   }, [open, onClose])
 
   const item = (it, i, big) => (
-    <motion.li key={it.to} initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.06 + i * 0.04, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}>
+    <motion.li key={it.to} initial={{ opacity: 0, x: -14 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 + i * 0.035, duration: 0.3 }} className="border-b border-foreground/20 last:border-b-0">
       <NavLink
         to={it.to}
         end={it.end}
@@ -52,16 +51,14 @@ export default function MenuDrawer({ open, onClose }) {
           haptic()
           onClose()
         }}
-        className={({ isActive }) =>
-          cn(
-            'group flex items-center gap-4 rounded-2xl px-3 transition-colors',
-            big ? 'py-3' : 'py-2.5',
-            isActive ? 'bg-white/[0.1] text-[#F3D88E] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]' : 'text-white/85 active:bg-white/[0.07]'
-          )
-        }
+        className={({ isActive }) => cn('flex items-baseline justify-between py-3', isActive ? 'text-foreground' : 'text-foreground/75')}
       >
-        <it.icon className={cn('shrink-0', big ? 'h-6 w-6' : 'h-5 w-5 opacity-70')} strokeWidth={1.6} />
-        <span className={big ? 'font-display text-[28px] font-semibold leading-none' : 'text-[16px] font-medium'}>{t(it.key)}</span>
+        {({ isActive }) => (
+          <>
+            <span className={big ? 'font-display text-[28px] font-bold leading-tight' : 'font-serif-text text-[17px]'}>{t(it.key)}</span>
+            {isActive && <span className="h-2 w-2 rounded-full bg-destructive" />}
+          </>
+        )}
       </NavLink>
     </motion.li>
   )
@@ -70,18 +67,9 @@ export default function MenuDrawer({ open, onClose }) {
     <AnimatePresence>
       {open && (
         <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label={t('nav.open')}>
-          <motion.button
-            type="button"
-            aria-label={t('nav.close')}
-            className="absolute inset-0 bg-[#050913]/40 backdrop-blur-md"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-          />
+          <motion.button type="button" aria-label={t('nav.close')} className="absolute inset-0 bg-black/40" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
           <motion.nav
-            className="safe-top absolute inset-y-2 left-2 flex w-[84%] max-w-[370px] flex-col overflow-hidden overflow-y-auto rounded-[28px] border border-white/10 text-white shadow-[0_40px_80px_-30px_rgba(0,0,0,0.8)]"
-            style={{ background: 'linear-gradient(160deg, rgba(27,45,87,0.82), rgba(9,15,31,0.86))', backdropFilter: 'blur(30px) saturate(180%)', WebkitBackdropFilter: 'blur(30px) saturate(180%)' }}
+            className="safe-top grain absolute inset-y-0 left-0 flex w-[84%] max-w-[370px] flex-col overflow-y-auto border-r border-foreground bg-background text-foreground shadow-2xl"
             initial={{ x: '-100%' }}
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
@@ -91,28 +79,27 @@ export default function MenuDrawer({ open, onClose }) {
             dragElastic={{ left: 0.4, right: 0 }}
             onDragEnd={(_, info) => info.offset.x < -80 && onClose()}
           >
-            <div aria-hidden="true" className="pointer-events-none absolute -right-20 -top-16 opacity-[0.08]">
-              <Logo size={300} bare className="text-[#E2B550]" />
-            </div>
-            <div className="relative flex items-center justify-between px-5 pt-4">
-              <Logo size={40} withWordmark className="[&>span]:text-white" />
-              <button type="button" onClick={onClose} className="rounded-full p-2 text-white/60" aria-label={t('nav.close')}>
+            <div className="flex justify-end px-3 pt-3">
+              <button type="button" onClick={onClose} className="p-2 text-foreground/70" aria-label={t('nav.close')}>
                 <X className="h-5 w-5" />
               </button>
             </div>
-
-            <ul className="mt-8 space-y-1 px-3">{MAIN.map((it, i) => item(it, i, true))}</ul>
-            <div className="mx-6 my-6 h-px bg-white/10" />
-            <ul className="space-y-0.5 px-3">{MORE.map((it, i) => item(it, i + MAIN.length, false))}</ul>
-
-            <div className="flex-1" />
-            <div className="space-y-1 px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-8 text-[13px] text-white/50">
-              <p>
-                <span className="mr-1.5">{flagEmoji(country)}</span>
-                {t('nav.edition', { country: getCountryName(country, locale) })} · {locale === 'es' ? 'Español' : 'English'}
+            <div className="px-6">
+              <div className="rule-thick" />
+              <p className="font-masthead py-1 text-center text-[46px] leading-tight">Renivya</p>
+              <div className="rule-double" />
+              <p className="py-1.5 text-center text-[10.5px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                {flagEmoji(country)} {t('nav.edition', { country: getCountryName(country, locale) })} · {locale === 'es' ? 'Español' : 'English'}
               </p>
-              {meta?.generated_at && <p>{t('nav.updated', { time: formatRelativeTime(meta.generated_at) })}</p>}
+              <div className="rule-top" />
             </div>
+            <ul className="mt-2 px-6">{MAIN.map((it, i) => item(it, i, true))}</ul>
+            <div className="mx-6 mt-4 rule-thick" />
+            <ul className="px-6">{MORE.map((it, i) => item(it, i + MAIN.length, false))}</ul>
+            <div className="flex-1" />
+            {meta?.generated_at && (
+              <p className="px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-8 text-[12px] italic text-muted-foreground">{t('nav.updated', { time: formatRelativeTime(meta.generated_at) })}</p>
+            )}
           </motion.nav>
         </div>
       )}

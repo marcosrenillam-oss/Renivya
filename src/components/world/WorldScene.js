@@ -108,14 +108,14 @@ export class GlobeScene {
     const dark = document.documentElement.classList.contains('dark')
     // Océano casi neutro (tono de tarjeta) con un matiz mínimo de cian mineral: sin azul abusivo.
     const base = cssColor(dark ? '--card' : '--surface')
-    this.ocean.material.color = base.lerp(cssColor('--accent'), dark ? 0.06 : 0.05)
+    this.ocean.material.color = base
     this.landColor = cssColor('--muted-foreground').lerp(cssColor('--foreground'), dark ? 0.1 : 0.25)
     if (this.land) this.land.material.color = this.landColor
-    this.atmosphere.material.uniforms.glowColor.value = cssColor('--accent')
-    this.atmosphere.material.uniforms.strength.value = dark ? 0.9 : 0.55
+    this.atmosphere.material.uniforms.glowColor.value = cssColor('--muted-foreground')
+    this.atmosphere.material.uniforms.strength.value = dark ? 0.5 : 0.3
     this.markerColor = cssColor('--primary')
-    // Degradado de importancia: azul noche (poca) → oro (media) → rojo (máxima).
-    this.heat = [cssColor('--primary'), cssColor('--accent'), cssColor('--destructive')]
+    // Degradado de importancia: amarillo (poca) → naranja (media) → rojo (máxima).
+    this.heat = [new THREE.Color('#f5c518'), new THREE.Color('#f07a10'), new THREE.Color('#c8102e')]
     this.markers.forEach((m) => {
       const c = this.heatColor(m.weight)
       m.dot.material.color = c

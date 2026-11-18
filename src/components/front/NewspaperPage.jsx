@@ -4,7 +4,6 @@ import { useI18n } from '@/lib/i18n/I18nContext'
 import { getCategoryLabel } from '@/lib/categories'
 import { getCountryName } from '@/lib/countries'
 import { getStoryImage } from '@/lib/storyImage'
-import { StoryArt } from '@/components/story/StoryImage'
 import { sourcesLabel } from '@/components/front/storyText'
 import { cn } from '@/lib/utils'
 
@@ -41,9 +40,9 @@ export default function NewspaperPage({ story, edition, others = [], active = fa
 
       <h2 className="mt-2.5 line-clamp-3 font-display text-[25px] font-black leading-[1.02] tracking-[-0.015em]">{story.title}</h2>
 
-      <figure className="mt-2.5">
-        <div className="relative aspect-[16/10] overflow-hidden rounded-[2px] bg-[#d9cfba] shadow-[inset_0_0_0_1px_rgba(0,0,0,0.15)]">
-          {img && imgOk ? (
+      {img && imgOk && (
+        <figure className="mt-2.5">
+          <div className="relative aspect-[16/10] overflow-hidden rounded-[2px] bg-[#d9cfba] shadow-[inset_0_0_0_1px_rgba(0,0,0,0.15)]">
             <img
               src={img.url}
               alt={img.alt}
@@ -51,17 +50,13 @@ export default function NewspaperPage({ story, edition, others = [], active = fa
               decoding="async"
               referrerPolicy="no-referrer"
               onError={() => setImgOk(false)}
-              className="h-full w-full object-cover transition-[filter,transform] [transition-duration:1200ms] ease-out"
+              className="h-full w-full object-cover [transition:filter_1.2s_ease-out,transform_1.2s_ease-out]"
               style={{ filter: photoFilter, transform: active ? 'scale(1.06)' : 'scale(1)' }}
             />
-          ) : (
-            <div className="h-full w-full transition-[filter] [transition-duration:1200ms]" style={{ filter: active ? 'none' : 'grayscale(1) sepia(0.25)' }}>
-              <StoryArt category={story.category} />
-            </div>
-          )}
-        </div>
-        {img?.credit && imgOk && <figcaption className="mt-1 truncate text-[8.5px] italic opacity-60">{img.credit}</figcaption>}
-      </figure>
+          </div>
+          {img.credit && <figcaption className="mt-1 truncate text-[8.5px] italic opacity-60">{img.credit}</figcaption>}
+        </figure>
+      )}
 
       <div className="relative mt-2.5 min-h-0 flex-1 overflow-hidden">
         <p className="font-serif-text columns-2 gap-3 text-justify text-[11px] leading-[1.42] [hyphens:auto] first-letter:float-left first-letter:mr-1 first-letter:font-display first-letter:text-[32px] first-letter:font-black first-letter:leading-[0.8]" lang={locale}>

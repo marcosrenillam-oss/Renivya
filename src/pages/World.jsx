@@ -4,7 +4,6 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Globe2 } from 'lucide-react'
 import LeadCard from '@/components/front/LeadCard'
 import NewsRow from '@/components/front/NewsRow'
-import Reveal from '@/components/premium/Reveal'
 import CategoryChips from '@/components/front/CategoryChips'
 import FeedError from '@/components/story/FeedError'
 import { byFront, storyCountries, storyInEdition, useEdition, useNews } from '@/lib/news/useNews'
@@ -68,8 +67,9 @@ export default function World() {
   return (
     <div className="space-y-5">
       <header className="safe-x pt-3">
-        <h1 className="font-display text-[38px] font-bold leading-[1.05]">{t('world.title')}</h1>
-        <p className="mt-1 text-[15px] text-muted-foreground">{t('world.subtitle', { country: getCountryName(edition, locale) })}</p>
+        <div className="rule-thick" />
+        <h1 className="py-1 font-display text-[36px] font-black leading-[1.05]">{t('world.title')}</h1>
+        <p className="border-t border-foreground pt-1.5 font-serif-text text-[15px] italic text-muted-foreground">{t('world.subtitle', { country: getCountryName(edition, locale) })}</p>
       </header>
 
       {isError ? (
@@ -82,7 +82,6 @@ export default function World() {
             <Suspense fallback={<div className="skeleton mx-auto aspect-square w-[92%] rounded-full" />}>
               {hasWebgl ? (
                 <div className="relative mx-auto aspect-square w-full max-w-[560px]">
-                  <div aria-hidden="true" className="absolute inset-[8%] rounded-full bg-primary/25 blur-[60px] dark:bg-primary/30" />
                   <WorldGlobe countries={report.countries} selected={selected} onSelect={select} className="relative h-full w-full" />
                 </div>
               ) : (
@@ -93,19 +92,19 @@ export default function World() {
             </Suspense>
             <div className="safe-x mx-auto mt-1 flex max-w-[320px] items-center gap-2 text-[11px] text-muted-foreground">
               <span>{t('world.legendLow')}</span>
-              <span className="h-1.5 flex-1 rounded-full" style={{ background: 'linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent)), hsl(var(--destructive)))' }} />
+              <span className="h-1.5 flex-1 rounded-full" style={{ background: 'linear-gradient(90deg, #f5c518, #f07a10, #c8102e)' }} />
               <span>{t('world.legendHigh')}</span>
             </div>
           </div>
 
-          <div ref={chipsRef} className="no-scrollbar safe-x flex gap-2 overflow-x-auto py-1">
+          <div className="safe-x"><div ref={chipsRef} className="no-scrollbar flex gap-4 overflow-x-auto border-y border-foreground">
             <button
               type="button"
               data-code="all"
               onClick={() => select(null)}
-              className={cn('flex shrink-0 items-center gap-2 rounded-2xl border px-3.5 py-2.5 text-[14px] font-medium transition', !selected ? 'border-foreground bg-foreground text-background' : 'glass-chip')}
+              className={cn('flex shrink-0 items-center gap-1.5 border-b-2 py-2.5 text-[12px] font-bold uppercase tracking-[0.12em] transition', !selected ? 'border-foreground text-foreground' : 'border-transparent text-muted-foreground')}
             >
-              <Globe2 className="h-[18px] w-[18px]" strokeWidth={1.7} />
+              <Globe2 className="h-4 w-4" strokeWidth={1.8} />
               {t('world.everywhere')}
             </button>
             {report.countries.map((c) => (
@@ -115,31 +114,32 @@ export default function World() {
                 data-code={c.code}
                 onClick={() => select(c.code)}
                 className={cn(
-                  'flex shrink-0 items-center gap-2 rounded-2xl border px-3.5 py-2.5 text-[14px] font-medium transition',
-                  selected === c.code ? 'border-foreground bg-foreground text-background' : 'glass-chip'
+                  'flex shrink-0 items-center gap-1.5 border-b-2 py-2.5 text-[12px] font-bold uppercase tracking-[0.12em] transition',
+                  selected === c.code ? 'border-foreground text-foreground' : 'border-transparent text-muted-foreground'
                 )}
               >
-                <span className="text-[20px] leading-none">{flagEmoji(c.code)}</span>
+                <span className="text-[17px] leading-none">{flagEmoji(c.code)}</span>
                 {getCountryName(c.code, locale)}
               </button>
             ))}
-          </div>
+          </div></div>
 
           {categories.length > 1 && <CategoryChips categories={categories} value={category} onChange={setCategory} />}
 
           <AnimatePresence mode="wait">
             <motion.section key={`${selected}-${category}`} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.28 }} className="safe-x">
-              {selected && <h2 className="mb-4 font-display text-[24px] font-bold">{t('world.countryNews', { country: getCountryName(selected, locale) })}</h2>}
+              <div className="rule-thick" />
+              {selected && <h2 className="py-1.5 text-[13px] font-bold uppercase tracking-[0.2em]">{t('world.countryNews', { country: getCountryName(selected, locale) })}</h2>}
               {isLoading ? (
                 <div className="skeleton aspect-[16/10] w-full rounded-2xl" />
               ) : visible.length ? (
                 <>
-                  <LeadCard story={visible[0]} />
-                  <div className="mt-3 space-y-3">
+                  <div className="border-t border-foreground">
+                    <LeadCard story={visible[0]} />
+                  </div>
+                  <div className="divide-y divide-foreground border-t border-foreground">
                     {visible.slice(1, 40).map((s) => (
-                      <Reveal key={s.id}>
-                        <NewsRow story={s} />
-                      </Reveal>
+                      <NewsRow key={s.id} story={s} />
                     ))}
                   </div>
                 </>

@@ -70,8 +70,9 @@ const RAW = [
   ['Al Jazeera', 'https://www.aljazeera.com', 'https://www.aljazeera.com/xml/rss/all.xml', 'QA', 'en', 'broadcast'],
 ]
 
-// Feeds comprobados como rotos en GitHub Actions: inactivos hasta encontrar su URL correcta.
-const INACTIVE = new Set(['Excélsior'])
+// Feeds comprobados como rotos en GitHub Actions (o que bloquean a los robots con 403):
+// inactivos hasta encontrar una URL que funcione.
+const INACTIVE = new Set(['Excélsior', 'The Times of Israel', 'News24'])
 
 export const REAL_SOURCES = RAW.map(([name, url, feed_url, country, language, type]) => ({
   name, url, feed_url, country, language, type,
@@ -84,4 +85,4 @@ export const REAL_SOURCES = RAW.map(([name, url, feed_url, country, language, ty
 }))
 
 /** Países con edición propia (con prensa propia en el catálogo), en orden de presentación. */
-export const EDITIONS = ['ES', 'US', 'GB', 'FR', 'MX', 'AR', 'DE']
+export const EDITIONS = ['ES', 'US', 'GB', 'MX', 'AR', 'CO', 'CL', 'PE', 'FR', 'DE', 'IE', 'CA', 'AU', 'IN']

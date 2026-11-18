@@ -14,6 +14,12 @@ export async function ensureSources(db, sources) {
   const byName = new Map(existing.map((s) => [s.name, s]))
   const missing = sources.filter((s) => !byName.has(s.name))
   if (missing.length) for (const row of await db.Source.bulkCreate(missing)) byName.set(row.name, row)
+  // El catálogo manda: si cambia el feed, el país o si está activa, se actualiza la fuente guardada.
+  for (const s of sources) {
+    const row = byName.get(s.name)
+    const diff = Object.fromEntries(['feed_url', 'url', 'country', 'language', 'type', 'is_active'].filter((k) => k in s && row[k] !== s[k]).map((k) => [k, s[k]]))
+    if (Object.keys(diff).length) byName.set(s.name, await db.Source.update(row.id, diff))
+  }
   return sources.map((s) => byName.get(s.name))
 }
 
@@ -49,7 +55,7 @@ export async function seedDemo(db, { round = 1, now = new Date(), log } = {}) {
 }
 
 /** Ciclo real: feeds activos → NewsItems → pipeline. */
-export async function runIngestionCycle(db, { provider, now = new Date(), embeddingProvider = null, maxSources = 30, log = () => {} } = {}) {
+export async function runIngestionCycle(db, { provider, now = new Date(), embeddingProvider = null, maxSources = 60, log = () => {} } = {}) {
   const batchId = newBatchId(now)
   const sources = (await db.Source.filter({ is_active: true, is_demo: false }, 'last_fetched_at', maxSources)).filter((s) => s.feed_url)
   const report = { batchId, sources: sources.length, fetched: 0, created: 0, errors: [], perSource: [] }

@@ -6,8 +6,8 @@ import { cleanImageUrl, genericImageUrls } from './images.js'
 export const SNAPSHOT_ENTITIES = ['Story', 'NewsItem', 'Source', 'StorySource', 'StoryUpdate', 'Entity', 'StoryEntity', 'EntityRelation', 'Media']
 const MAX_STORIES = 500
 // Sube cuando cambia la forma de las historias: un estado anterior de otra versión se descarta
-// (v2: idioma único por historia, ediciones por país, traducciones; v3: foto en cada noticia; v4: textos limpios y párrafos por fuente; v5: texto completo de los artículos; v6: agrupar por titular y entradilla).
-export const STATE_VERSION = 6
+// (v2: idioma único por historia, ediciones por país, traducciones; v3: foto en cada noticia; v4: textos limpios y párrafos por fuente; v5: texto completo de los artículos; v6: agrupar por titular y entradilla; v7: nombres y cifras compartidos).
+export const STATE_VERSION = 7
 
 /**
  * entities: almacén en memoria (client.entities con replaceAll).

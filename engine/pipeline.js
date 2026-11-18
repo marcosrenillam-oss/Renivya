@@ -1,5 +1,5 @@
 // ProcessNewsItems: pending → normalized → clustered → created. Determinista salvo el embedding remoto opcional.
-import { assignToStories, centroid, clusterDocuments, duplicateGroupId } from './clustering.js'
+import { assignToStories, keysOf, centroid, clusterDocuments, duplicateGroupId } from './clustering.js'
 import { getEmbeddings } from './embeddingProvider.js'
 import { extractEntities, normalizeEntityName } from './entities.js'
 import { canonicalUrl, normalizeNewsItem } from './normalizer.js'
@@ -98,7 +98,7 @@ export async function runPipeline(db, opts = {}) {
   // 2. Embeddings (caché ArticleEmbedding por content_hash).
   const docFor = (m, ents) => ({ content_hash: m.content_hash, title: m.title, text: leadOf(m.text), entities: [...ents], source_name: m.source_name, url: m.url, language: m.language })
   const { vectors: freshVectors } = await getEmbeddings(fresh.map((f) => docFor(f.member, f.entities)), { provider: embeddingProvider, cache: db.ArticleEmbedding, isDemo })
-  const docs = fresh.map((f, i) => ({ ...f.member, key: f.item.id, embedding: freshVectors[i], entities: f.entities }))
+  const docs = fresh.map((f, i) => ({ ...f.member, key: f.item.id, embedding: freshVectors[i], entities: f.entities, keys: keysOf(`${f.member.title} ${leadOf(f.member.text)}`) }))
 
   // 3. Perfiles de Stories activas recientes.
   const since = new Date(now.getTime() - 72 * 3_600_000).toISOString()
@@ -120,6 +120,7 @@ export async function runPipeline(db, opts = {}) {
       story_id: s.id,
       centroid: centroid(own.map((o) => o.v)),
       entities: new Set(own.flatMap((o) => [...o.d.entities])),
+      keySets: own.map((o) => keysOf(`${o.d.m.title} ${leadOf(o.d.m.text)}`)),
       last_published_at: own.map((o) => o.d.m.published_at).sort().pop() || s.published_at,
       urls: new Set(own.map((o) => o.d.m.canonical_url)),
     }

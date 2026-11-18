@@ -2,7 +2,23 @@
 import { cosine, jaccard } from './semantic.js'
 import { hash64, hoursBetween, stableSort } from './stats.js'
 
-export const DEFAULT_THRESHOLD = 0.5
+export const DEFAULT_THRESHOLD = 0.45
+
+const fold = (w) => w.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+const ALIAS = { barca: 'barcelona', 'barça': 'barcelona', azulgrana: 'barcelona', azulgranas: 'barcelona', merengue: 'madrid', blancos: 'madrid', eeuu: 'estados', 'ee.uu': 'estados', usa: 'estados' }
+
+/**
+ * Nombres y cifras de un texto (lo que dos periódicos comparten cuando cuentan lo mismo):
+ * palabras con mayúscula inicial, números con su unidad o marcador ("6,8", "2-1", "2%").
+ */
+const KEY_STOP = new Set('los las del una uno unos unas este esta estos estas ese esa por para con sin sobre tras ante entre como pero mas segun hoy ayer the this that these those and for with from after over into its his her their our new two'.split(' '))
+
+export function keysOf(text) {
+  const t = String(text || '')
+  const nums = (t.match(/\d+(?:[.,]\d+)?(?:\s?%|-\d+)?/g) || []).map((n) => n.replace(/\s/g, ''))
+  const names = (t.match(/\b[A-ZÁÉÍÓÚÑ][\wáéíóúñüçàèìòùâêîôûäëïö]{2,}/g) || []).map(fold).filter((w) => !KEY_STOP.has(w)).map((w) => ALIAS[w] || w)
+  return new Set([...nums, ...names])
+}
 
 /** Proximidad temporal: 1 si es simultáneo, ~0.37 a 48 h. */
 function timeProximity(a, b) {
@@ -20,6 +36,8 @@ export function similarity(a, b) {
   const sem = cosine(a.embedding, b.embedding)
   const ent = jaccard(a.entities || [], b.entities || [])
   const time = timeProximity(a.published_at, b.published_at)
+  // Con nombres y cifras disponibles se separan mucho mejor el mismo suceso y sucesos distintos.
+  if (a.keys?.size && b.keys?.size) return 0.55 * sem + 0.15 * ent + 0.2 * jaccard(a.keys, b.keys) + 0.1 * time
   return 0.7 * sem + 0.2 * ent + 0.1 * time
 }
 
@@ -74,7 +92,7 @@ export function centroid(vectors) {
  * Asigna documentos nuevos a Stories existentes (perfil = centroide + entidades + última fecha).
  * Devuelve Map<docIndex, storyId> solo para asignaciones por encima del umbral.
  */
-export function assignToStories(docs, profiles, { threshold = DEFAULT_THRESHOLD + 0.05 } = {}) {
+export function assignToStories(docs, profiles, { threshold = DEFAULT_THRESHOLD } = {}) {
   const out = new Map()
   docs.forEach((d, i) => {
     let bestId = null
@@ -85,7 +103,10 @@ export function assignToStories(docs, profiles, { threshold = DEFAULT_THRESHOLD 
         best = 1
         break
       }
-      const s = similarity(d, { embedding: p.centroid, entities: p.entities, published_at: p.last_published_at })
+      // Nombres y cifras: se compara con el artículo de la historia que más se le parece
+      // (la unión de todos crecería con la historia y diluiría la coincidencia).
+      const keys = d.keys?.size && p.keySets?.length ? p.keySets.reduce((best, k) => (jaccard(d.keys, k) > jaccard(d.keys, best) ? k : best)) : undefined
+      const s = similarity(d, { embedding: p.centroid, entities: p.entities, keys, published_at: p.last_published_at })
       if (s > best || (s === best && bestId && p.story_id < bestId)) {
         best = s
         bestId = p.story_id

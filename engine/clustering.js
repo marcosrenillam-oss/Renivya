@@ -18,8 +18,15 @@ const KEY_STOP = new Set('los las del una uno unos unas este esta estos estas es
 export function keysOf(text) {
   const t = String(text || '')
   const nums = (t.match(/\d+(?:[.,]\d+)?(?:\s?%|-\d+)?/g) || []).map((n) => n.replace(/\s/g, ''))
-  const names = (t.match(/\b[A-ZÁÉÍÓÚÑ][\wáéíóúñüçàèìòùâêîôûäëïö]{2,}/g) || []).map(fold).filter((w) => !KEY_STOP.has(w)).map((w) => ALIAS[w] || w)
-  return new Set([...nums, ...names])
+  // Mayúscula a mitad de frase = nombre propio; la primera palabra de cada frase no cuenta
+  // ("Police arrest...", "Detectives said..."), salvo que vuelva a aparecer dentro de una frase.
+  const names = []
+  for (const sentence of t.split(/(?:[.!?:;«»"“”]\s+|\n+)/)) {
+    const words = sentence.match(/[A-ZÁÉÍÓÚÑ][\wáéíóúñüçàèìòùâêîôûäëïö]{2,}|\S+/g) || []
+    words.slice(1).forEach((w) => /^[A-ZÁÉÍÓÚÑ][\wáéíóúñüçàèìòùâêîôûäëïö]{2,}$/.test(w) && names.push(w))
+  }
+  const folded = names.map(fold).filter((w) => !KEY_STOP.has(w)).map((w) => ALIAS[w] || w)
+  return new Set([...nums, ...folded])
 }
 
 /** Proximidad temporal: 1 si es simultáneo, ~0.37 a 48 h. */

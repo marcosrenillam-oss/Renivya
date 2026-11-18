@@ -35,6 +35,16 @@ export function toMember(item, normalized, source) {
   }
 }
 
+/** Comienzo del texto (titular + entradilla bastan para saber si dos artículos cuentan lo mismo). */
+const LEAD_CHARS = 600
+export function leadOf(text) {
+  const t = String(text || '')
+  if (t.length <= LEAD_CHARS) return t
+  const cut = t.slice(0, LEAD_CHARS)
+  const end = cut.lastIndexOf('. ')
+  return end > 200 ? cut.slice(0, end + 1) : cut
+}
+
 /**
  * Procesa los NewsItem pendientes.
  * opts: { isDemo, batchId, now, embeddingProvider, locale, limit, log }
@@ -66,10 +76,11 @@ export async function runPipeline(db, opts = {}) {
     }
     if (n.canonical_url) seenUrls.add(n.canonical_url)
     seenHashes.add(n.content_hash)
-    const ents = extractEntities({ title: n.title, text: n.cleaned_content }).slice(0, 12)
+    // Para agrupar se compara el titular y la entradilla (no el artículo entero, que diluye).
+    const ents = extractEntities({ title: n.title, text: leadOf(n.cleaned_content) }).slice(0, 12)
     const source = sourceByName.get(sourceKey(item.source_name))
     const member = toMember(item, n, source)
-    const signature = semanticSignature(n.title, n.cleaned_content, ents.map((e) => e.name))
+    const signature = semanticSignature(n.title, leadOf(n.cleaned_content), ents.map((e) => e.name))
     await db.NewsItem.update(item.id, {
       status: 'normalized',
       cleaned_content: n.cleaned_content,
@@ -85,7 +96,7 @@ export async function runPipeline(db, opts = {}) {
   if (!fresh.length) return stats
 
   // 2. Embeddings (caché ArticleEmbedding por content_hash).
-  const docFor = (m, ents) => ({ content_hash: m.content_hash, title: m.title, text: m.text, entities: [...ents], source_name: m.source_name, url: m.url, language: m.language })
+  const docFor = (m, ents) => ({ content_hash: m.content_hash, title: m.title, text: leadOf(m.text), entities: [...ents], source_name: m.source_name, url: m.url, language: m.language })
   const { vectors: freshVectors } = await getEmbeddings(fresh.map((f) => docFor(f.member, f.entities)), { provider: embeddingProvider, cache: db.ArticleEmbedding, isDemo })
   const docs = fresh.map((f, i) => ({ ...f.member, key: f.item.id, embedding: freshVectors[i], entities: f.entities }))
 

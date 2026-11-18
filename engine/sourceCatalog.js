@@ -48,7 +48,7 @@ const RAW = [
 ]
 
 // Feeds comprobados como rotos en GitHub Actions: inactivos hasta encontrar su URL correcta.
-const INACTIVE = new Set([])
+const INACTIVE = new Set(['El Universal', 'Excélsior'])
 
 export const REAL_SOURCES = RAW.map(([name, url, feed_url, country, language, type]) => ({
   name, url, feed_url, country, language, type,

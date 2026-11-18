@@ -14,7 +14,12 @@ const pick = (row, keys) => Object.fromEntries(keys.filter((k) => k in row).map(
 
 export function appView(snapshot) {
   const e = snapshot.entities || {}
-  const stories = (e.Story || []).filter((s) => s.status !== 'archived')
+  // Al móvil van las historias vivas de los últimos 4 días (como mucho 350): ligero cada hora.
+  const since = new Date(new Date(snapshot.generated_at || Date.now()).getTime() - 4 * 86_400_000).toISOString()
+  const stories = (e.Story || [])
+    .filter((s) => s.status !== 'archived' && (s.updated_date || s.published_at || '') >= since)
+    .sort((a, b) => String(b.updated_date || '').localeCompare(String(a.updated_date || '')))
+    .slice(0, 350)
   const keep = new Set(stories.map((s) => s.id))
   const mine = (rows) => (rows || []).filter((r) => keep.has(r.story_id))
   return {

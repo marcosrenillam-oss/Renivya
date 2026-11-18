@@ -66,7 +66,14 @@ export async function runIngestionCycle(db, { provider, now = new Date(), embedd
     if (!res.error) await db.Source.update(source.id, { last_fetched_at: now.toISOString() })
   }
   if (provider.fetchArticleImage) report.images = await enrichImages(db, provider)
+  // Todos los artículos pendientes en esta misma ejecución (por tandas), no 200 por hora.
   report.pipeline = await runPipeline(db, { isDemo: false, batchId, now, embeddingProvider, log })
+  for (let round = 0; round < 25 && report.pipeline.pending > 0; round++) {
+    const more = await runPipeline(db, { isDemo: false, batchId, now, embeddingProvider, log })
+    if (!more.pending) break
+    for (const k of ['pending', 'ignored', 'normalized', 'assigned', 'storiesCreated', 'storiesUpdated', 'versionBumps']) report.pipeline[k] += more[k] || 0
+    report.pipeline.errors.push(...(more.errors || []))
+  }
   report.maintenance = await maintainStories(db, { now, isDemo: false })
   return report
 }

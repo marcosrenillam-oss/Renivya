@@ -142,34 +142,40 @@ export function buildEditorial({ members, analysis, category, countries = [], st
   const title = cleanHeadline(lead.title, sourceNames)
   const src = (m) => ({ name: m.source_name ?? null, url: m.url ?? null })
 
-  // Entradilla: 1–2 primeras frases del artículo principal.
-  const leadSentences = splitSentences(lead.text)
-  let summary = leadSentences[0] || lead.text || title
+  // Frases completas: fuera las cortadas por el feed ("…", "[...]") o sin cierre.
+  const complete = (t) => !/(\.\.\.|…|\[\s*…?\s*\])\s*$/.test(t) && /[.!?»"”)]$/.test(t.trim())
+  const sentencesOf = (m) => splitSentences(m.text).filter(complete)
+
+  // Entradilla: 1–2 primeras frases completas del artículo principal.
+  const leadSentences = sentencesOf(lead)
+  let summary = leadSentences[0] || splitSentences(lead.text)[0] || title
   if (summary.length < 140 && leadSentences[1]) summary = `${summary} ${leadSentences[1]}`
   if (summary.length > 420) summary = `${summary.slice(0, 417).replace(/\s+\S*$/, '')}…`
 
-  // Cuerpo: frases de todas las fuentes, sin repeticiones, con su procedencia.
-  const chosen = []
-  const summaryTokens = new Set(tokenize(summary))
-  for (const m of [lead, ...ranked.filter((x) => x !== lead && sameLang(x))]) {
-    for (const s of splitSentences(m.text)) {
-      const toks = new Set(tokenize(s))
-      if (toks.size < 4) continue
-      if (jaccard(toks, summaryTokens) >= 0.4) continue
-      if (chosen.some((c) => jaccard(c.tokens, toks) >= 0.4)) continue
-      chosen.push({ text: s, tokens: toks, source: src(m) })
-      if (chosen.length >= MAX_BODY_SENTENCES) break
-    }
-    if (chosen.length >= MAX_BODY_SENTENCES) break
-  }
-  const paragraphsTarget = Math.max(chosen.length >= 4 ? 2 : 1, Math.min(6, Math.ceil(chosen.length / 3)))
-  const perParagraph = Math.max(1, Math.ceil(chosen.length / paragraphsTarget))
+  // Cuerpo: cada párrafo sale de un solo periódico (sus frases en orden), sin repetir lo ya dicho.
+  // Así se lee seguido y se entiende; primero el artículo principal, luego los demás.
+  const said = [new Set(tokenize(summary))]
   const body = []
   const bodyProv = []
-  for (let i = 0; i < chosen.length; i += perParagraph) {
-    const chunk = chosen.slice(i, i + perParagraph)
-    body.push(chunk.map((c) => c.text).join(' '))
-    bodyProv.push(uniqBy(chunk.map((c) => c.source)))
+  let total = 0
+  for (const m of [lead, ...ranked.filter((x) => x !== lead && sameLang(x))]) {
+    const para = []
+    for (const sentence of sentencesOf(m)) {
+      if (total + para.length >= MAX_BODY_SENTENCES) break
+      const toks = new Set(tokenize(sentence))
+      if (toks.size < 4) continue
+      if (said.some((prev) => jaccard(prev, toks) >= 0.4)) continue
+      said.push(toks)
+      para.push(sentence)
+    }
+    if (!para.length) continue
+    // Párrafos de 2–4 frases.
+    for (let i = 0; i < para.length; i += 3) {
+      body.push(para.slice(i, i + 3).join(' '))
+      bodyProv.push([src(m)])
+    }
+    total += para.length
+    if (total >= MAX_BODY_SENTENCES) break
   }
 
   // Puntos clave y hechos conocidos (de mayor a menor solidez).

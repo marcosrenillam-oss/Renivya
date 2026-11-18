@@ -46,13 +46,19 @@ npm run build          # compilación de producción
 ## Publicación
 
 `.github/workflows/deploy.yml` prueba, genera las noticias, compila y publica en
-GitHub Pages en cada push a `main`, cada hora y a mano (pestaña *Actions*).
+GitHub Pages en cada push, **cada 15 minutos** y a mano (pestaña *Actions*).
+`.github/workflows/weekly.yml` envía el **resumen semanal en PDF** los domingos.
 
 Configuración única del repositorio:
 1. *Settings › General › Default branch* → `main`.
 2. *Settings › Pages › Build and deployment › Source* → **GitHub Actions**.
 3. (Traducción) *Settings › Secrets and variables › Actions › New repository secret* →
    `ANTHROPIC_API_KEY`. Opcional, en *Variables*: `TRANSLATE_MODEL`, `TRANSLATE_MAX`.
+4. (Avisos de última hora) En la app instalada: *Perfil › Avisos › Activar*, copiar el código y
+   guardarlo como secreto `RENIVYA_AVISOS`.
+5. (Resumen semanal) Secretos `GMAIL_USER` y `GMAIL_APP_PASSWORD` (contraseña de aplicación de
+   Google: *Cuenta de Google › Seguridad › Verificación en dos pasos › Contraseñas de aplicaciones*).
+   Opcionales: `RESUMEN_PARA`, `RESUMEN_NOMBRE`.
 
 ## Estructura
 
@@ -79,5 +85,4 @@ docs/entities/   modelo de datos (12 entidades)
 
 ## Pendiente
 
-- Resumen semanal en PDF por correo (necesita un servicio de envío de correo).
 - Cuentas sincronizadas entre dispositivos (hoy viven en cada dispositivo).

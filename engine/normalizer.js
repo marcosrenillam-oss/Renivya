@@ -2,17 +2,49 @@
 import { hash64 } from './stats.js'
 import { CITY_GAZETTEER, COUNTRY_CODES, DEMONYMS } from './geo.js'
 
-const ENTITY_MAP = {
+// Entidades HTML con nombre: todo Latin-1 (á, ñ, ü, º…) más tipografía habitual.
+const LATIN1_NAMES = 'nbsp iexcl cent pound curren yen brvbar sect uml copy ordf laquo not shy reg macr deg plusmn sup2 sup3 acute micro para middot cedil sup1 ordm raquo frac14 frac12 frac34 iquest Agrave Aacute Acirc Atilde Auml Aring AElig Ccedil Egrave Eacute Ecirc Euml Igrave Iacute Icirc Iuml ETH Ntilde Ograve Oacute Ocirc Otilde Ouml times Oslash Ugrave Uacute Ucirc Uuml Yacute THORN szlig agrave aacute acirc atilde auml aring aelig ccedil egrave eacute ecirc euml igrave iacute icirc iuml eth ntilde ograve oacute ocirc otilde ouml divide oslash ugrave uacute ucirc uuml yacute thorn yuml'.split(' ')
+const ENTITY_MAP = Object.fromEntries(LATIN1_NAMES.map((name, i) => [name, String.fromCharCode(160 + i)]))
+Object.assign(ENTITY_MAP, {
   amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', hellip: '…', mdash: '—', ndash: '–',
-  laquo: '«', raquo: '»', ldquo: '“', rdquo: '”', lsquo: '‘', rsquo: '’', euro: '€', iexcl: '¡', iquest: '¿',
+  ldquo: '“', rdquo: '”', lsquo: '‘', rsquo: '’', sbquo: '‚', bdquo: '„', euro: '€', bull: '•', trade: '™',
+  oelig: 'œ', OElig: 'Œ', scaron: 'š', Scaron: 'Š', thinsp: ' ', ensp: ' ', emsp: ' ', zwnj: '', zwj: '', lrm: '', rlm: '',
+  prime: '′', Prime: '″', dagger: '†', permil: '‰', lsaquo: '‹', rsaquo: '›',
+})
+
+// Windows-1252: caracteres de los bytes 0x80–0x9F (para deshacer "Ã©", "â€œ"...).
+const CP1252 = '€\u0081‚ƒ„…†‡ˆ‰Š‹Œ\u008dŽ\u008f\u0090‘’“”•–—˜™š›œ\u009džŸ'
+const CP1252_BYTE = new Map([...CP1252].map((ch, i) => [ch, 0x80 + i]))
+
+/** Repara texto UTF-8 leído como Latin-1/Windows-1252 ("Ã©" → "é"). Si no cuadra, lo deja igual. */
+export function fixMojibake(text) {
+  const s = String(text || '')
+  if (!/[ÃÂ][\u0080-\u00BF€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ]|â€/.test(s)) return s
+  const bytes = []
+  for (const ch of s) {
+    const code = ch.charCodeAt(0)
+    if (code <= 0xff) bytes.push(code)
+    else if (CP1252_BYTE.has(ch)) bytes.push(CP1252_BYTE.get(ch))
+    else return s
+  }
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(Uint8Array.from(bytes))
+  } catch {
+    return s
+  }
 }
 
+/** Decodifica entidades (también dobles, como &amp;aacute;) y repara codificaciones rotas. */
 export function decodeEntities(text) {
   if (!text) return ''
-  return String(text)
-    .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
-    .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
-    .replace(/&([a-z]+);/gi, (m, name) => ENTITY_MAP[name.toLowerCase()] ?? m)
+  let out = String(text)
+  for (let pass = 0; pass < 3 && /&(#\d+|#x[0-9a-f]+|[a-z][a-z0-9]{1,8});/i.test(out); pass++) {
+    out = out
+      .replace(/&#(\d+);/g, (m, n) => (Number(n) > 0 && Number(n) < 0x110000 ? String.fromCodePoint(Number(n)) : m))
+      .replace(/&#x([0-9a-f]+);/gi, (m, n) => (parseInt(n, 16) < 0x110000 ? String.fromCodePoint(parseInt(n, 16)) : m))
+      .replace(/&([a-z][a-z0-9]{1,8});/gi, (m, name) => ENTITY_MAP[name] ?? ENTITY_MAP[name.toLowerCase()] ?? m)
+  }
+  return fixMojibake(out).replace(/ /g, ' ').replace(/[​-‏﻿]/g, '')
 }
 
 export function stripHtml(html) {
@@ -20,17 +52,26 @@ export function stripHtml(html) {
   return decodeEntities(
     String(html)
       .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
-      .replace(/<(script|style|iframe|noscript)[\s\S]*?<\/\1>/gi, ' ')
+      .replace(/<(script|style|iframe|noscript|figure|figcaption)[\s\S]*?<\/\1>/gi, ' ')
       .replace(/<br\s*\/?>/gi, '\n')
       .replace(/<\/(p|div|li|h\d)>/gi, '\n')
       .replace(/<[^>]+>/g, ' ')
   )
 }
 
+// Coletillas de los feeds que no son parte de la noticia.
+const BOILERPLATE = [
+  /\bthe post\b[\s\S]{0,200}?\bappeared first on\b[\s\S]*$/i,
+  /\b(leer más|lee más|seguir leyendo|sigue leyendo|continuar leyendo|ver más|más información|read more|continue reading|read the full (story|article)|lire la suite|weiterlesen|mehr lesen|ler mais)\b.*$/gim,
+  /\b(suscríbete|subscribe|haz clic aquí|click here)\b.*$/gim,
+  /\s*\[(…|\.\.\.|&hellip;)\]\s*$/g,
+]
+
 /** Texto limpio: sin HTML, sin restos de "Leer más", espacios normalizados. */
 export function cleanText(raw) {
-  return stripHtml(raw)
-    .replace(/\b(leer más|seguir leyendo|read more|continue reading|lire la suite|ler mais)\b.*$/gim, '')
+  let text = stripHtml(raw)
+  for (const re of BOILERPLATE) text = text.replace(re, '')
+  return text
     .replace(/\s*\[[^\]]{0,40}\]\s*/g, ' ')
     .replace(/[ \t\f\v]+/g, ' ')
     .replace(/\s*\n\s*/g, '\n')

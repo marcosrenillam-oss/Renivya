@@ -63,3 +63,39 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(cacheFirst(request))
   }
 })
+
+// Avisos de última hora (los envía GitHub Actions con Web Push).
+self.addEventListener('push', (event) => {
+  let data = {}
+  try {
+    data = event.data ? event.data.json() : {}
+  } catch {
+    data = { title: 'RENIVYA', body: event.data?.text() || '' }
+  }
+  const title = data.title || 'RENIVYA'
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body: data.body || '',
+      icon: `${BASE}icons/icon-192.png`,
+      badge: `${BASE}icons/favicon-32.png`,
+      tag: data.tag || 'renivya',
+      data: { url: data.url || BASE },
+    })
+  )
+})
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+  const url = new URL(event.notification.data?.url || BASE, self.location.origin).href
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+      for (const c of list) {
+        if ('focus' in c) {
+          c.navigate?.(url)
+          return c.focus()
+        }
+      }
+      return self.clients.openWindow(url)
+    })
+  )
+})

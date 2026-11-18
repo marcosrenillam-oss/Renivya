@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Bookmark, Check, ChevronRight, LogOut, Mail } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import InstallPrompt from '@/components/common/InstallPrompt'
+import PushSettings from '@/components/settings/PushSettings'
 import { useAuth } from '@/lib/AuthContext'
 import { useI18n } from '@/lib/i18n/I18nContext'
 import { useTheme } from '@/lib/ThemeContext'
@@ -132,6 +133,12 @@ export default function Profile() {
             value={theme}
             onChange={setTheme}
           />
+        </div>
+      </Group>
+
+      <Group title={t('push.title')}>
+        <div className="px-1">
+          <PushSettings />
         </div>
       </Group>
 

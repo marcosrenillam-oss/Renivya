@@ -1,6 +1,6 @@
 # Publica RENIVYA gratis en GitHub Pages: https://<usuario>.github.io/<repositorio>/
 #  - en cada push a main (cambios de la app),
-#  - cada hora (noticias nuevas: feeds RSS → motor → traducción → data/app.json),
+#  - cada 15 minutos (noticias nuevas: feeds RSS → motor → traducción → data/app.json),
 #  - o a mano desde la pestaña Actions.
 # Requisito único: Ajustes del repositorio › Pages › Source: «GitHub Actions».
 name: Deploy RENIVYA
@@ -9,7 +9,7 @@ on:
     # La rama de trabajo publica directamente (el entorno github-pages solo admite la rama por defecto).
     branches: [main, claude/zealous-mccarthy-gem1zx]
   schedule:
-    - cron: '23 * * * *'
+    - cron: '7,22,37,52 * * * *' # cada 15 minutos
   workflow_dispatch:
 permissions:
   contents: read
@@ -34,6 +34,7 @@ jobs:
           REPO_NAME="${GITHUB_REPOSITORY#*/}"
           echo "BASE_PATH=/${REPO_NAME}/" >> "$GITHUB_ENV"
           echo "PREVIOUS_SNAPSHOT_URL=https://${GITHUB_REPOSITORY_OWNER}.github.io/${REPO_NAME}/data/snapshot.json" >> "$GITHUB_ENV"
+          echo "APP_URL=https://${GITHUB_REPOSITORY_OWNER}.github.io/${REPO_NAME}/" >> "$GITHUB_ENV"
       # Noticias: parte del snapshot publicado (las historias evolucionan entre ejecuciones),
       # descarga los feeds RSS y ejecuta el motor. Si ningún feed responde, datos de demostración.
       # Traducción es/en con la API de Claude: solo si existe el secreto ANTHROPIC_API_KEY
@@ -44,6 +45,8 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           TRANSLATE_MODEL: ${{ vars.TRANSLATE_MODEL }}
           TRANSLATE_MAX: ${{ vars.TRANSLATE_MAX }}
+          # Avisos de última hora: código que genera la app en Perfil → Avisos.
+          RENIVYA_AVISOS: ${{ secrets.RENIVYA_AVISOS }}
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
         with:

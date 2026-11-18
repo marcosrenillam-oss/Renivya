@@ -1,0 +1,49 @@
+# Resumen semanal de RENIVYA: cada domingo por la mañana genera un PDF con aspecto de periódico
+# antiguo (índice con enlaces y titulares que abren la noticia original) y lo envía por correo.
+# También se puede lanzar a mano desde la pestaña Actions («Resumen semanal» → Run workflow).
+#
+# Secretos (Settings › Secrets and variables › Actions):
+#   GMAIL_USER          tu dirección de Gmail (envía y, si no hay RESUMEN_PARA, recibe)
+#   GMAIL_APP_PASSWORD  contraseña de aplicación de Google (no tu contraseña normal)
+#   RESUMEN_PARA        (opcional) otra dirección donde recibirlo
+#   RESUMEN_NOMBRE      (opcional) tu nombre para la portada
+# Variables opcionales: RESUMEN_EDICION (ES), RESUMEN_IDIOMA (es)
+name: Resumen semanal
+on:
+  schedule:
+    - cron: '17 7 * * 0' # domingos, 7:17 UTC (8:17 en España en invierno, 9:17 en verano)
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  resumen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Generar y enviar el resumen
+        id: resumen
+        run: |
+          REPO_NAME="${GITHUB_REPOSITORY#*/}"
+          export SNAPSHOT_URL="https://${GITHUB_REPOSITORY_OWNER}.github.io/${REPO_NAME}/data/snapshot.json"
+          export APP_URL="https://${GITHUB_REPOSITORY_OWNER}.github.io/${REPO_NAME}/"
+          node scripts/weekly-digest.mjs
+        env:
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          RESUMEN_PARA: ${{ secrets.RESUMEN_PARA }}
+          RESUMEN_NOMBRE: ${{ secrets.RESUMEN_NOMBRE }}
+          RESUMEN_EDICION: ${{ vars.RESUMEN_EDICION }}
+          RESUMEN_IDIOMA: ${{ vars.RESUMEN_IDIOMA }}
+      # Si el correo aún no está configurado, el PDF queda descargable en la ejecución (7 días).
+      - if: steps.resumen.outputs.sent != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: resumen-semanal
+          path: weekly/*.pdf
+          retention-days: 7

@@ -20,6 +20,7 @@ import { buildSnapshot } from '../engine/snapshot.js'
 import { createRealNewsProvider } from '../engine/realIngestion.js'
 import { appView } from '../engine/appView.js'
 import { translateStories } from './translate-stories.mjs'
+import { sendAlerts } from './notify.mjs'
 
 const OUT = process.env.SNAPSHOT_OUT || 'public/data/snapshot.json'
 const DEMO_ONLY = process.argv.includes('--demo')
@@ -46,13 +47,18 @@ async function loadPrevious() {
   return null
 }
 
+const previous = DEMO_ONLY ? null : await loadPrevious()
 const snapshot = await buildSnapshot({
   entities: createLocalClient({ memoryOnly: true }).entities,
-  previous: DEMO_ONLY ? null : await loadPrevious(),
+  previous,
   provider: DEMO_ONLY ? null : createRealNewsProvider({ timeoutMs: 15000 }),
   log,
 })
-if (snapshot.mode === 'real') await translateStories(snapshot.entities.Story, { log: (...a) => log(...a) })
+if (snapshot.mode === 'real') {
+  await translateStories(snapshot.entities.Story, { log: (...a) => log(...a) })
+  // Avisos de última hora (recuerda qué se ha avisado ya para no repetir).
+  snapshot.notified = await sendAlerts(snapshot, { previousNotified: previous?.notified || [], log: (...a) => log(...a), appUrl: process.env.APP_URL })
+}
 
 mkdirSync(dirname(OUT), { recursive: true })
 const json = JSON.stringify(snapshot)

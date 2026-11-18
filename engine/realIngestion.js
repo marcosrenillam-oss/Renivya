@@ -3,7 +3,21 @@ import { parseFeed } from './rss.js'
 import { extractPageImage } from './images.js'
 
 export const REAL_PROVIDER = 'RealNewsProvider'
-const MIN_MINUTES_BETWEEN_FETCHES = 15
+const MIN_MINUTES_BETWEEN_FETCHES = 10
+
+/** Texto del feed con la codificación que declara (cabecera HTTP o prólogo XML), no siempre UTF-8. */
+export async function decodeBody(res) {
+  const buf = new Uint8Array(await res.arrayBuffer())
+  const header = (res.headers?.get?.('content-type') || '').match(/charset=([\w-]+)/i)?.[1]
+  const head = new TextDecoder('latin1').decode(buf.slice(0, 300))
+  const prolog = head.match(/encoding=["']([\w-]+)["']/i)?.[1]
+  const charset = (prolog || header || 'utf-8').toLowerCase()
+  try {
+    return new TextDecoder(charset === 'iso-8859-1' || charset === 'latin1' ? 'windows-1252' : charset).decode(buf)
+  } catch {
+    return new TextDecoder('utf-8').decode(buf)
+  }
+}
 
 export function createRealNewsProvider({ fetchImpl = fetch, userAgent = 'RENIVYA-NewsBot/1.0', timeoutMs = 12000 } = {}) {
   return {
@@ -20,7 +34,7 @@ export function createRealNewsProvider({ fetchImpl = fetch, userAgent = 'RENIVYA
       try {
         const res = await fetchImpl(source.feed_url, { headers: { 'user-agent': userAgent, accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml' }, signal: controller.signal })
         if (!res.ok) return { items: [], error: `HTTP ${res.status}` }
-        const entries = parseFeed(await res.text())
+        const entries = parseFeed(await decodeBody(res))
         const retrieved = now.toISOString()
         return {
           items: entries.slice(0, 40).map((e) => ({

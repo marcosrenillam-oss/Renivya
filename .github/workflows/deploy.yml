@@ -6,7 +6,8 @@
 name: Deploy RENIVYA
 on:
   push:
-    branches: [main]
+    # La rama de trabajo publica directamente (el entorno github-pages solo admite la rama por defecto).
+    branches: [main, claude/zealous-mccarthy-gem1zx]
   schedule:
     - cron: '23 * * * *'
   workflow_dispatch:
